@@ -1,0 +1,90 @@
+/* src/pages/BillingPage.css */
+.billing-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.product-list ul, .customer-modal-list {
+    list-style: none;
+    max-height: 400px;
+    overflow-y: auto;
+    margin-top: 1rem;
+}
+
+.product-list li, .customer-modal-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+}
+
+.product-list li:hover, .customer-modal-list li:hover {
+    background-color: var(--primary-color-light);
+    cursor: pointer;
+}
+
+.product-list li button {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+.small-search {
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+}
+
+.invoice-details .customer-selection {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.cart-item .remove-btn {
+    background: none;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+}
+
+.invoice-summary {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.invoice-summary p {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.invoice-summary h4 {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
+    color: var(--primary-color);
+}
+
+.process-payment-btn {
+    width: 100%;
+    margin-top: 1.5rem;
+}

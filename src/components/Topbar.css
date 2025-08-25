@@ -1,0 +1,18 @@
+/* src/components/Topbar.css */
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    width: 100%;
+}
+
+.topbar-search {
+    flex-grow: 1;
+    max-width: 500px;
+}
+
+.topbar-user {
+    color: var(--primary-color);
+    cursor: pointer;
+}
