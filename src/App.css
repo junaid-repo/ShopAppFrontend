@@ -23,9 +23,35 @@
   font-size: calc(10px + 2vmin);
   color: white;
 }
+.main-content {
+     flex-grow
+ Sets the flex grow factor. Negative numbers are invalid.
+ Learn more
+
+ Don't show
+ : 1;
+     margin-left: 260px;
+     margin-left: var(--sidebar-width);
+     padding: 2rem;
+     transition: margin-left .3s ease;
+     background-color: #7afa001c;
+ }
+
+
 
 .App-link {
   color: #61dafb;
+}
+
+.element.style {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1.5rem;
+    border-radius: 50px;
+    background: rgb(255 255 255);
+    border-bottom: 1px solid rgba(224, 247, 255, 0.5);
+    box-shadow: rgb(0 0 0 / 0%) 0px 2px 10px;
 }
 
 @keyframes App-logo-spin {

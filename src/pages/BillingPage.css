@@ -1,0 +1,316 @@
+/* src/pages/BillingPage.css */
+.billing-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.product-list ul, .customer-modal-list {
+    list-style: none;
+    max-height: 400px;
+    overflow-y: auto;
+    margin-top: 1rem;
+}
+
+.product-list li, .customer-modal-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+}
+
+.product-list li:hover, .customer-modal-list li:hover {
+    background-color: var(--primary-color-light);
+    cursor: pointer;
+}
+
+.product-list li button {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+.small-search {
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+}
+
+.invoice-details .customer-selection {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.beautiful-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.5rem;
+}
+
+.beautiful-table th,
+.beautiful-table td {
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  text-align: left;
+}
+
+.beautiful-table thead {
+  background-color: #f4f4f4;
+}
+
+.beautiful-table tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+.beautiful-table tr:hover {
+  background-color: #f1f9ff;
+}
+
+.out-of-stock {
+  color: #999;
+  background-color: #fce4e4 !important;
+}
+
+.small-btn {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.85rem;
+}
+
+
+.cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.cart-item .remove-btn {
+    background: none;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+}
+
+.invoice-summary {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.invoice-summary p {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.invoice-summary h4 {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
+    color: var(--primary-color);
+}
+
+.process-payment-btn {
+    width: 100%;
+    margin-top: 1.5rem;
+}
+
+
+
+
+.invoice-details {
+  background: linear-gradient(135deg, #ffffff, #f9f9f9);
+  border-radius: 25px;
+  padding: 1.5rem;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.invoice-details:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+}
+
+.invoice-details h3 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: #333;
+  text-align: center;
+  border-bottom: 2px solid #e6e6e6;
+  padding-bottom: 0.5rem;
+}
+
+.cart-items {
+  margin-top: 1rem;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.cart-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 0;
+  border-bottom: 1px dashed #ddd;
+  font-size: 0.95rem;
+}
+
+.cart-item:last-child {
+  border-bottom: none;
+}
+
+.remove-btn {
+  background: #ff4d4f;
+  color: white;
+  border: none;
+  padding: 0.3rem 0.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.2s ease;
+}
+
+.remove-btn:hover {
+  background: #d9363e;
+}
+
+.invoice-summary {
+  margin-top: 1rem;
+  background: #fafafa;
+  padding: 1rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+.invoice-summary p, .invoice-summary h4 {
+  display: flex;
+  justify-content: space-between;
+  margin: 0.4rem 0;
+}
+
+.process-payment-btn {
+  width: 100%;
+  background: #4cafef;
+  color: white;
+  border: none;
+  padding: 0.8rem;
+  font-size: 1rem;
+  margin-top: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.process-payment-btn:hover {
+  background: #2196f3;
+}
+
+.mini-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.mini-popup {
+  background: #fff;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  font-size: 0.95rem;
+  text-align: center;
+  max-width: 300px;
+  animation: scaleIn 0.25s ease;
+}
+
+.mini-popup button {
+  margin-top: 0.75rem;
+  background: #4cafef;
+  color: white;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.success-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  animation: fadeIn 0.3s ease;
+}
+
+.success-card {
+  background: linear-gradient(135deg, #ffffff, #f8faff);
+  padding: 2rem;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 420px;
+  text-align: center;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+  animation: slideUp 0.3s ease;
+}
+
+.success-card h2 {
+  color: #28a745;
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+}
+
+.order-summary {
+  background: #f4f8ff;
+  border-radius: 25px;
+  padding: 1rem;
+  margin: 1rem 0;
+  font-size: 1rem;
+  text-align: left;
+}
+
+.order-summary p {
+  margin: 0.4rem 0;
+}
+
+.success-card button {
+  background: #4cafef;
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
