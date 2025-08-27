@@ -314,3 +314,22 @@
   to { transform: translateY(0); opacity: 1; }
 }
 
+.subtotal-actual {
+    color: #2c3e50;  /* dark blue-gray */
+    font-weight: 600;
+}
+
+.subtotal-selling {
+    color: #16a085;  /* teal green */
+    font-weight: 600;
+}
+
+.discount {
+    color: #e67e22;  /* orange */
+    font-weight: 600;
+}
+
+.tax {
+    color: #c0392b;  /* red */
+    font-weight: 600;
+}
