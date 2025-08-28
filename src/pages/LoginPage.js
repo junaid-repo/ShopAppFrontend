@@ -258,10 +258,10 @@ const LoginPage = ({ onLogin }) => {
                 </form>
 
                 {/* Extra Buttons */}
-                <div style={{ marginTop: "1rem", display: "flex", justifyContent: "space-between", gap: "10px" }}>
+             {/*   <div style={{ marginTop: "1rem", display: "flex", justifyContent: "space-between", gap: "10px" }}>
                     <button className="btn same-size-btn">Forgot Password</button>
                     <button className="btn same-size-btn" onClick={() => setShowRegister(true)}>Register</button>
-                </div>
+                </div>*/}
             </div>
 
             {/* Register Modal */}

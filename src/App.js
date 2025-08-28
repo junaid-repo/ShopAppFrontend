@@ -33,7 +33,7 @@ function App() {
         try {
             const payload = JSON.parse(atob(token.split('.')[1])); // decode JWT payload
             const expiry = payload.exp * 1000; // convert to ms
-            alert(expiry);
+           // alert(expiry);
             if (Date.now() >= expiry) {
                 alert("Session expired. You have been logged out.");
                 handleLogout();

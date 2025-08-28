@@ -1,10 +1,9 @@
 // src/pages/ProductsPage.js
-import React, {useState, useEffect} from 'react';
-import {mockProducts} from '../mockData';
+import React, { useState, useEffect, useRef } from 'react';
+import { mockProducts } from '../mockData';
 import Modal from '../components/Modal';
-import {useConfig} from "./ConfigProvider";
-import {MdEdit, MdDelete} from "react-icons/md";
-
+import { useConfig } from "./ConfigProvider";
+import { MdEdit, MdDelete } from "react-icons/md";
 
 const ProductsPage = () => {
     const [products, setProducts] = useState([]);
@@ -12,6 +11,7 @@ const ProductsPage = () => {
     const [name, setName] = useState("");
     const [category, setCategory] = useState("");
     const [price, setPrice] = useState("");
+    const [costPrice, setCostPrice] = useState(""); // NEW
     const [stock, setStock] = useState("");
     const [tax, setTax] = useState("");
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -22,52 +22,108 @@ const ProductsPage = () => {
     const [isUploading, setIsUploading] = useState(false);
     const [uploadError, setUploadError] = useState(null);
 
+    // Column chooser state with persistence (localStorage)
+    const COLUMN_STORAGE_KEY = 'products_visible_columns_v1';
+    const defaultVisibleColumns = {
+        id: true,
+        name: true,
+        category: true,
+        costPrice: true, // NEW
+        price: true,
+        tax: true,
+        stock: true,
+        status: true,
+        actions: true
+    };
+
+    const [visibleColumns, setVisibleColumns] = useState(() => {
+        try {
+            const saved = localStorage.getItem(COLUMN_STORAGE_KEY);
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                return { ...defaultVisibleColumns, ...parsed };
+            }
+        } catch (err) {
+            console.warn("Failed to read saved visible columns:", err);
+        }
+        return defaultVisibleColumns;
+    });
+
+    useEffect(() => {
+        try {
+            localStorage.setItem(COLUMN_STORAGE_KEY, JSON.stringify(visibleColumns));
+        } catch (err) {
+            console.warn("Failed to persist visible columns:", err);
+        }
+    }, [visibleColumns]);
+
+    const [isColumnsOpen, setIsColumnsOpen] = useState(false);
+    const columnsRef = useRef(null);
+
+    // Sorting (for category)
+    const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+
     // Added for file upload
-    // File selection/validation
     const config = useConfig();
     var apiUrl = "";
     if (config) {
         console.log(config.API_URL);
         apiUrl = config.API_URL;
     }
+
+    const token = localStorage.getItem("jwt_token");
+
+    // export CSV (updated to include costPrice)
     const handleExportCSV = () => {
         if (!products || products.length === 0) {
             alert("No products available to export.");
             return;
         }
 
-        // Define CSV headers
-        const headers = ["ID", "Name", "Category", "Price", "Tax", "Stock", "Status"];
+        // Ask for confirmation before download
+        const confirmDownload = window.confirm("Do you want to export the products CSV?");
+        if (!confirmDownload) {
+            return;
+        }
 
-        // Convert products into rows
+        const headers = ["selectedProductId", "name", "category", "costPrice", "price", "stock", "tax"];
+
         const rows = products.map(p => [
             p.id,
-            `"${p.name}"`,   // wrap in quotes to handle commas in names
+            `"${p.name}"`,
             `"${p.category}"`,
+            p.costPrice !== undefined && p.costPrice !== null ? p.costPrice : "",
             p.price,
-            p.tax,
             p.stock,
-            p.status
+            p.tax
         ]);
 
-        // Join rows with commas and newlines
         const csvContent =
             [headers, ...rows]
                 .map(row => row.join(","))
                 .join("\n");
 
-        // Create blob and trigger download
-        const blob = new Blob([csvContent], {type: "text/csv;charset=utf-8;"});
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
-        link.setAttribute("download", "products_export.csv");
+
+        // Generate timestamp in YYYYMMDD_HHmmss format
+        const now = new Date();
+        const timestamp = now.getFullYear().toString()
+            + String(now.getMonth() + 1).padStart(2, "0")
+            + String(now.getDate()).padStart(2, "0")
+            + "_"
+            + String(now.getHours()).padStart(2, "0")
+            + String(now.getMinutes()).padStart(2, "0")
+            + String(now.getSeconds()).padStart(2, "0");
+
+        link.setAttribute("download", `Products_Export_${timestamp}.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
     };
 
-    const token = localStorage.getItem("jwt_token");
     const handleCsvChange = (e) => {
         const file = e.target.files?.[0] || null;
         setUploadError(null);
@@ -77,7 +133,6 @@ const ProductsPage = () => {
             return;
         }
 
-        // Basic validation
         const isCsv = file.type === 'text/csv' || /\.csv$/i.test(file.name);
         if (!isCsv) {
             setUploadError('Please select a .csv file.');
@@ -95,7 +150,6 @@ const ProductsPage = () => {
         setCsvFile(file);
     };
 
-    // Form submit -> call the upload method
     const handleCsvSubmit = async (e) => {
         e.preventDefault();
         if (!csvFile) return;
@@ -107,8 +161,6 @@ const ProductsPage = () => {
             await uploadProductsCsv(csvFile);
             setIsCsvModalOpen(false);
             setCsvFile(null);
-            // Optionally refresh your products list here
-            // await fetchProducts();
         } catch (err) {
             setUploadError(err?.message || 'Upload failed. Please try again.');
         } finally {
@@ -118,21 +170,17 @@ const ProductsPage = () => {
 
     async function uploadProductsCsv(file) {
         const formData = new FormData();
-        // The field name "file" should match what your backend expects
         formData.append('file', file);
 
         const res = await fetch(apiUrl + '/api/shop/bulk-upload', {
             method: 'POST',
             body: formData,
-            // Do NOT set Content-Type for FormData; the browser will set the boundary.
             headers: {
                 Authorization: `Bearer ${token}`
             },
-            // credentials: 'include', // if your API needs cookies
         });
 
         if (!res.ok) {
-            // Try to surface a meaningful error
             let message = `Upload failed (${res.status})`;
             try {
                 const error = await res.json();
@@ -146,7 +194,6 @@ const ProductsPage = () => {
 
         return res.json();
     }
-
 
     useEffect(() => {
         fetch(apiUrl + "/api/shop/get/productsList", {
@@ -170,33 +217,56 @@ const ProductsPage = () => {
                 console.error("Error fetching customers:", error);
                 alert("Something went wrong while fetching customers.");
             });
+    }, [apiUrl, token]);
+
+    // close columns dropdown when clicking outside
+    useEffect(() => {
+        const onClick = (e) => {
+            if (columnsRef.current && !columnsRef.current.contains(e.target)) {
+                setIsColumnsOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', onClick);
+        return () => document.removeEventListener('mousedown', onClick);
     }, []);
 
     const filteredProducts = products.filter(p =>
         p.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    const sortedProducts = React.useMemo(() => {
+        if (!sortConfig.key) return filteredProducts;
+        const sorted = [...filteredProducts].sort((a, b) => {
+            const aVal = (a[sortConfig.key] || "").toString().toLowerCase();
+            const bVal = (b[sortConfig.key] || "").toString().toLowerCase();
+            if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+            if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+            return 0;
+        });
+        return sorted;
+    }, [filteredProducts, sortConfig]);
+
+    const toggleSort = (key) => {
+        if (sortConfig.key === key) {
+            setSortConfig(prev => ({ key, direction: prev.direction === 'asc' ? 'desc' : 'asc' }));
+        } else {
+            setSortConfig({ key, direction: 'asc' });
+        }
+    };
+
     const handleEditClick = (product) => {
         setSelectedProductId(product.id);
         setName(product.name);
         setCategory(product.category);
         setPrice(product.price);
+        setCostPrice(product.costPrice || "");
         setStock(product.stock);
         setTax(product.tax);
         setIsUpdateModalOpen(true);
     };
 
-
     const handleDeleteProduct = async (id) => {
-        console.log("Deleting product with ID:", id);
-        // e.preventDefault();
-        // API CALL: Add new product
-        // POST /api/products
-        // Payload: { name, category, price, stock }
-        // Response: { success: true, product: { ... } }
-
         if (window.confirm("Are you sure you want to delete ")) {
-
             try {
                 const response = await fetch(
                     `${apiUrl}/api/shop/product/delete/${id}`,
@@ -217,22 +287,14 @@ const ProductsPage = () => {
                 alert("Something went wrong while deleting the product.");
             }
         }
-
-        // alert('New product added! (Demo)');
         setIsModalOpen(false);
     }
 
     const handleAddProduct = async (e) => {
-
         e.preventDefault();
-        // API CALL: Add new product
-        // POST /api/products
-        // Payload: { name, category, price, stock }
-        // Response: { success: true, product: { ... } }
 
         try {
-            const payload = {name, category, price, stock, tax};
-            console.log("Payload:", payload);
+            const payload = { name, category, price, costPrice, stock, tax };
             const response = await fetch(apiUrl + "/api/shop/create/product", {
                 method: "POST",
                 headers: {
@@ -240,36 +302,43 @@ const ProductsPage = () => {
                     "Authorization": `Bearer ${token}`,
                 },
                 body: JSON.stringify(payload),
-
             });
-            //console.log(body);
-
 
             const data = await response.json();
-            console.log("API response:", data);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
+            if (data && data.id) {
+                setProducts(prev => [data, ...prev]);
+            } else {
+                fetch(apiUrl + "/api/shop/get/productsList", {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`,
+                    },
+                }).then(r => r.json()).then(setProducts).catch(() => { });
+            }
+
         } catch (error) {
-            console.error("Error adding customer:", error);
-            alert("Something went wrong while adding the customer.");
+            console.error("Error adding product:", error);
+            alert("Something went wrong while adding the product.");
         }
 
-
-        alert('New product added! (Demo)');
+        // reset form
+        setName(""); setCategory(""); setPrice(""); setStock(""); setTax(""); setCostPrice("");
         setIsModalOpen(false);
     }
 
     const handleUpdateProduct = (e) => {
         e.preventDefault();
 
-        const payload = {selectedProductId, name, category, price, stock, tax};
-        console.log(payload);
+        const payload = { selectedProductId, name, category, price, costPrice, stock, tax };
 
         fetch(`${apiUrl}/api/shop/update/product`, {
-            method: "PUT", // or "PATCH"
-            headers: {"Content-Type": "application/json", "Authorization": `Bearer ${token}`,},
+            method: "PUT",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}`, },
             body: JSON.stringify(payload),
         })
             .then((res) => {
@@ -277,9 +346,20 @@ const ProductsPage = () => {
                 return res.json();
             })
             .then((data) => {
-                console.log("Product updated:", data);
-                // Refresh product list or update state here
+                if (data && data.id) {
+                    setProducts(prev => prev.map(p => p.id === data.id ? data : p));
+                } else {
+                    fetch(apiUrl + "/api/shop/get/productsList", {
+                        method: "GET",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${token}`,
+                        },
+                    }).then(r => r.json()).then(setProducts).catch(() => { });
+                }
                 setIsUpdateModalOpen(false);
+                setSelectedProductId(null);
+                setName(""); setCategory(""); setPrice(""); setStock(""); setTax(""); setCostPrice("");
             })
             .catch((err) => {
                 console.error("Error updating product:", err);
@@ -287,112 +367,260 @@ const ProductsPage = () => {
             });
     };
 
+    const toggleColumn = (col) => {
+        setVisibleColumns(prev => ({ ...prev, [col]: !prev[col] }));
+    };
 
+    const selectedColsCount = Object.values(visibleColumns).filter(Boolean).length;
+    const columnsButtonLabel = selectedColsCount === Object.keys(visibleColumns).length
+        ? 'Columns'
+        : `Columns (${selectedColsCount})`;
+
+    // -------------------------
+    // RETURN / JSX
+    // -------------------------
     return (
         <div className="page-container">
             <h2>Products</h2>
-            <div className="page-header">
+
+            {/* Search Bar Row */}
+            <div
+                className="page-header"
+                style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}
+            >
                 <input
                     type="text"
                     placeholder="Search products..."
                     className="search-bar"
                     onChange={(e) => setSearchTerm(e.target.value)}
+                    style={{ flex: 1 }}
                 />
-                <button className="btn" style={{marginLeft: "10px"}} onClick={() => setIsModalOpen(true)}>
-                    Add Products
-                </button>
-                <button className="btn" style={{marginLeft: "10px"}} onClick={() => setIsCsvModalOpen(true)}>
-                    Upload Multiple
-                </button>
-                <button className="btn" style={{marginLeft: "10px"}} onClick={handleExportCSV}>
-                    Export CSV
-                </button>
             </div>
-            <div className="glass-card">
-                <table className="data-table">
+
+            {/* Buttons Row: actions on LEFT, Columns button on RIGHT */}
+            <div
+                style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: 12,
+                }}
+            >
+                {/* Left: Action Buttons (explicit type="button" to avoid accidental form submit) */}
+                <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                    <button
+                        type="button"
+                        className="btn"
+                        onClick={() => setIsModalOpen(true)}
+                    >
+                        Add Products
+                    </button>
+                    <button
+                        type="button"
+                        className="btn"
+                        onClick={() => setIsCsvModalOpen(true)}
+                    >
+                        Upload Multiple
+                    </button>
+                    <button
+                        type="button"
+                        className="btn"
+                        onClick={handleExportCSV}
+                    >
+                        Export CSV
+                    </button>
+                </div>
+
+                {/* Right: Columns Button + Dropdown */}
+                <div ref={columnsRef} style={{ position: "relative" }}>
+                    <button
+                        type="button"
+                        onClick={() => setIsColumnsOpen((v) => !v)}
+                        aria-expanded={isColumnsOpen}
+                        style={{
+                            backgroundColor: "#fff",
+                            border: "1px solid var(--primary-color)",
+                            color: "var(--primary-color)",
+                            padding: "4px 10px",
+                            fontSize: "13px",
+                            borderRadius: "25%", // as requested
+                            cursor: "pointer",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 8,
+                        }}
+                    >
+                        {columnsButtonLabel} ▾
+                    </button>
+
+                    {isColumnsOpen && (
+                        <div
+                            style={{
+                                position: "absolute",
+                                right: 0,
+                                top: "calc(100% + 8px)",
+                                background: "#fff",
+                                border: "1px solid #e6e6e6",
+                                borderRadius: 10,
+                                boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
+                                padding: 10,
+                                zIndex: 1000,
+                                minWidth: 220,
+                                maxWidth: 320
+                            }}
+                        >
+                            <div style={{ maxHeight: 220, overflowY: 'auto' }}>
+                                {Object.keys(visibleColumns).map(col => (
+                                    <label
+                                        key={col}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 8,
+                                            padding: '6px 6px',
+                                            borderRadius: 6,
+                                            cursor: 'pointer',
+                                            userSelect: 'none'
+                                        }}
+                                        onMouseEnter={(e) => (e.currentTarget.style.background = '#fafafa')}
+                                        onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={visibleColumns[col]}
+                                            onChange={() => toggleColumn(col)}
+                                            style={{
+                                                width: 16,
+                                                height: 16,
+                                                margin: 0,
+                                                marginRight: 8,
+                                                accentColor: 'var(--primary-color)'
+                                            }}
+                                        />
+                                        <span style={{ textTransform: 'capitalize', fontSize: 14 }}>{col.replace(/([A-Z])/g, ' $1')}</span>
+                                    </label>
+                                ))}
+                            </div>
+
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
+                                <button
+                                    type="button"
+                                    onClick={() => setVisibleColumns(defaultVisibleColumns)}
+                                    style={{
+                                        background: '#f6f6f6',
+                                        border: '1px solid #ddd',
+                                        padding: '6px 10px',
+                                        borderRadius: 6,
+                                        fontSize: 12,
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    Show All
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsColumnsOpen(false)}
+                                    style={{
+                                        background: 'var(--primary-color)',
+                                        color: '#fff',
+                                        border: 'none',
+                                        padding: '6px 10px',
+                                        borderRadius: 6,
+                                        fontSize: 12,
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    Done
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Table */}
+            <div className="glass-card" style={{ marginTop: 12 }}>
+                <table className="data-table" style={{ width: "100%" }}>
                     <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Category</th>
-                        <th>Price</th>
-                        <th>Tax Percent</th>
-                        <th>Stock</th>
-
-                        <th>Status</th>
-                        <th>Update</th>
+                        {visibleColumns.id && <th>ID</th>}
+                        {visibleColumns.name && <th>Name</th>}
+                        {visibleColumns.category && (
+                            <th style={{ cursor: "pointer" }} onClick={() => toggleSort("category")}>
+                                Category {sortConfig.key === 'category' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
+                            </th>
+                        )}
+                        {visibleColumns.costPrice && <th>Cost Price</th>}
+                        {visibleColumns.price && <th>Price</th>}
+                        {visibleColumns.tax && <th>Tax Percent</th>}
+                        {visibleColumns.stock && <th>Stock</th>}
+                        {visibleColumns.status && <th>Status</th>}
+                        {visibleColumns.actions && <th>Update</th>}
                     </tr>
                     </thead>
                     <tbody>
-                    {filteredProducts.map(product => (
+                    {sortedProducts.map(product => (
                         <tr key={product.id}>
-                            <td>{product.id}</td>
-                            <td>{product.name}</td>
-                            <td>{product.category}</td>
-                            <td>₹{product.price.toLocaleString()}</td>
-                            <td>{product.tax}</td>
-                            <td>{product.stock}</td>
-                            <td><span
-                                className={product.stock > 0 ? 'status-instock' : 'status-outofstock'}>{product.status}</span>
-                            </td>
-                            <td>
-  <span
-      onClick={() => handleEditClick(product)}
-      style={{
-          cursor: "pointer",
-          backgroundColor: "#e0f7fa", // light teal
-          borderRadius: "6px",
-          padding: "6px",
-          marginRight: "8px",
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center"
-      }}
-      title="Edit Product"
-  >
-    <MdEdit size={18} color="#00796b"/>
-  </span>
+                            {visibleColumns.id && <td>{product.id}</td>}
+                            {visibleColumns.name && <td>{product.name}</td>}
+                            {visibleColumns.category && <td>{product.category}</td>}
+                            {visibleColumns.costPrice && <td>{product.costPrice !== undefined && product.costPrice !== null ? `₹${Number(product.costPrice).toLocaleString()}` : '-'}</td>}
+                            {visibleColumns.price && <td>₹{product.price.toLocaleString()}</td>}
+                            {visibleColumns.tax && <td>{product.tax}</td>}
+                            {visibleColumns.stock && <td>{product.stock}</td>}
+                            {visibleColumns.status && <td><span className={product.stock > 0 ? 'status-instock' : 'status-outofstock'}>{product.status}</span></td>}
+                            {visibleColumns.actions && (
+                                <td>
+                                    <span
+                                        onClick={() => handleEditClick(product)}
+                                        style={{
+                                            cursor: "pointer",
+                                            backgroundColor: "#e0f7fa",
+                                            borderRadius: "6px",
+                                            padding: "6px",
+                                            marginRight: "8px",
+                                            display: "inline-flex",
+                                            alignItems: "center",
+                                            justifyContent: "center"
+                                        }}
+                                        title="Edit Product"
+                                    >
+                                        <MdEdit size={18} color="#00796b" />
+                                    </span>
 
-                                <span
-                                    onClick={() => handleDeleteProduct(product.id)}
-                                    style={{
-                                        cursor: "pointer",
-                                        backgroundColor: "#ffebee", // light red
-                                        borderRadius: "6px",
-                                        padding: "6px",
-                                        display: "inline-flex",
-                                        alignItems: "center",
-                                        justifyContent: "center"
-                                    }}
-                                    title="Delete Product"
-                                >
-    <MdDelete size={18} color="#d32f2f"/>
-  </span>
-                            </td>
-
+                                    <span
+                                        onClick={() => handleDeleteProduct(product.id)}
+                                        style={{
+                                            cursor: "pointer",
+                                            backgroundColor: "#ffebee",
+                                            borderRadius: "6px",
+                                            padding: "6px",
+                                            display: "inline-flex",
+                                            alignItems: "center",
+                                            justifyContent: "center"
+                                        }}
+                                        title="Delete Product"
+                                    >
+                                        <MdDelete size={18} color="#d32f2f" />
+                                    </span>
+                                </td>
+                            )}
                         </tr>
                     ))}
                     </tbody>
                 </table>
             </div>
 
+            {/* Add / Update / CSV Modals (unchanged) */}
             <Modal title="Add New Product" show={isModalOpen} onClose={() => setIsModalOpen(false)}>
                 <form onSubmit={handleAddProduct}>
                     <div className="form-group">
                         <label>Product Name</label>
-                        <input type="text"
-                               required
-                               value={name}
-                               onChange={(e) => setName(e.target.value)}
-                        />
+                        <input type="text" required value={name} onChange={(e) => setName(e.target.value)} />
                     </div>
                     <div className="form-group">
                         <label>Category</label>
-                        <select
-                            required
-                            value={category}
-                            onChange={(e) => setCategory(e.target.value)}
-                        >
+                        <select required value={category} onChange={(e) => setCategory(e.target.value)}>
                             <option value="">-- Select Category --</option>
                             <option value="Smatphones">Smatphones</option>
                             <option value="Laptops and Computers">Laptops and Computers</option>
@@ -404,28 +632,21 @@ const ProductsPage = () => {
                     </div>
 
                     <div className="form-group">
+                        <label>Cost Price</label>
+                        <input type="number" required value={costPrice} onChange={(e) => setCostPrice(e.target.value)} />
+                    </div>
+
+                    <div className="form-group">
                         <label>Price</label>
-                        <input type="number"
-                               required
-                               value={price}
-                               onChange={(e) => setPrice(e.target.value)}
-                        />
+                        <input type="number" required value={price} onChange={(e) => setPrice(e.target.value)} />
                     </div>
                     <div className="form-group">
                         <label>Stock Quantity</label>
-                        <input type="number"
-                               required
-                               value={stock}
-                               onChange={(e) => setStock(e.target.value)}
-                        />
+                        <input type="number" required value={stock} onChange={(e) => setStock(e.target.value)} />
                     </div>
                     <div className="form-group">
                         <label>Tax Percent</label>
-                        <input type="number"
-                               required
-                               value={tax}
-                               onChange={(e) => setTax(e.target.value)}
-                        />
+                        <input type="number" required value={tax} onChange={(e) => setTax(e.target.value)} />
                     </div>
                     <div className="form-actions">
                         <button type="submit" className="btn">Add Product</button>
@@ -433,55 +654,33 @@ const ProductsPage = () => {
                 </form>
             </Modal>
 
-            <Modal
-                title="Update Product"
-                show={isUpdateModalOpen}
-                onClose={() => setIsUpdateModalOpen(false)}
-            >
+            <Modal title="Update Product" show={isUpdateModalOpen} onClose={() => setIsUpdateModalOpen(false)}>
                 <form onSubmit={handleUpdateProduct}>
                     <div className="form-group">
                         <label>Product Name</label>
-                        <input
-                            type="text"
-                            required
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                        />
+                        <input type="text" required value={name} onChange={(e) => setName(e.target.value)} />
                     </div>
                     <div className="form-group">
                         <label>Category</label>
-                        <input
-                            type="text"
-                            required
-                            value={category}
-                            onChange={(e) => setCategory(e.target.value)}
-                        />
+                        <input type="text" required value={category} onChange={(e) => setCategory(e.target.value)} />
                     </div>
+
+                    <div className="form-group">
+                        <label>Cost Price</label>
+                        <input type="number" required value={costPrice} onChange={(e) => setCostPrice(e.target.value)} />
+                    </div>
+
                     <div className="form-group">
                         <label>Price</label>
-                        <input
-                            type="number"
-                            required
-                            value={price}
-                            onChange={(e) => setPrice(e.target.value)}
-                        />
+                        <input type="number" required value={price} onChange={(e) => setPrice(e.target.value)} />
                     </div>
                     <div className="form-group">
                         <label>Stock Quantity</label>
-                        <input
-                            type="number"
-                            required
-                            value={stock}
-                            onChange={(e) => setStock(e.target.value)}
-                        />
+                        <input type="number" required value={stock} onChange={(e) => setStock(e.target.value)} />
                     </div>
                     <div className="form-group">
                         <label>Tax Percent</label>
-                        <input type="number"
-                               required
-                               value={tax}
-                               onChange={(e) => setTax(e.target.value)}
-                        />
+                        <input type="number" required value={tax} onChange={(e) => setTax(e.target.value)} />
                     </div>
                     <div className="form-actions">
                         <button type="submit" className="btn">Update Product</button>
@@ -489,59 +688,22 @@ const ProductsPage = () => {
                 </form>
             </Modal>
 
-            <Modal
-                title="Upload Products via CSV"
-                show={isCsvModalOpen}
-                onClose={() => {
-                    setIsCsvModalOpen(false);
-                    setCsvFile(null);
-                    setUploadError(null);
-                }}
-            >
+            <Modal title="Upload Products via CSV" show={isCsvModalOpen} onClose={() => { setIsCsvModalOpen(false); setCsvFile(null); setUploadError(null); }}>
                 <form onSubmit={handleCsvSubmit}>
                     <div className="form-group">
                         <label>CSV file</label>
-                        <input
-                            type="file"
-                            accept=".csv,text/csv"
-                            onChange={handleCsvChange}
-                            required
-                        />
-                        {csvFile && (
-                            <small>Selected: {csvFile.name} ({Math.round(csvFile.size / 1024)} KB)</small>
-                        )}
-                        {uploadError && (
-                            <div className="error">{uploadError}</div>
-                        )}
-                        <div className="help-text">
-                            Expected columns: name, category, price, stock, tax (header row recommended).
-                        </div>
+                        <input type="file" accept=".csv,text/csv" onChange={handleCsvChange} required />
+                        {csvFile && (<small>Selected: {csvFile.name} ({Math.round(csvFile.size / 1024)} KB)</small>)}
+                        {uploadError && (<div className="error">{uploadError}</div>)}
+                        <div className="help-text">Expected columns: name, category, price, costPrice, stock, tax (header row recommended).</div>
                     </div>
 
                     <div className="form-actions">
-                        <button
-                            type="button"
-                            className="btn btn-link"
-                            onClick={() => {
-                                setIsCsvModalOpen(false);
-                                setCsvFile(null);
-                                setUploadError(null);
-                            }}
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            className="btn"
-                            disabled={!csvFile || isUploading}
-                        >
-                            {isUploading ? 'Uploading…' : 'Upload'}
-                        </button>
+                        <button type="button" className="btn btn-link" onClick={() => { setIsCsvModalOpen(false); setCsvFile(null); setUploadError(null); }}>Cancel</button>
+                        <button type="submit" className="btn" disabled={!csvFile || isUploading}>{isUploading ? 'Uploading…' : 'Upload'}</button>
                     </div>
                 </form>
             </Modal>
-
-
         </div>
     );
 };
