@@ -90,8 +90,6 @@ const BillingPage = () => {
         });
     }, [products]);
 
-    
-
     // --- add product handler that attaches sellingPrice to the product object ---
     const handleAddProduct = (p) => {
         const sellingPrice = sellingPrices[p.id] !== undefined ? sellingPrices[p.id] : p.price;
@@ -485,35 +483,10 @@ const BillingPage = () => {
                     style={{ width: '100%', padding: '8px', marginBottom: '15px' }}
                 />
                 <ul className="customer-modal-list">
-                    <li
-                        style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            fontWeight: "bold",
-                            borderBottom: "1px solid #ccc",
-                            padding: "8px 0",
-                            background: "#f7f7f7"
-                        }}
-                    >
-                        <span>Name</span>
-                        <span>Total Spent</span>
-                        <span>Phone</span>
-                    </li>
                     {filteredCustomers.length > 0 ? filteredCustomers.map(c => (
-                        <li
-                            style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                fontWeight: "bold",
-                                borderBottom: "0px solid #ccc",
-                                padding: "8px 0",
-                                background: "white"
-                            }}
-                            key={c.id} onClick={() => { setSelectedCustomer(c); setIsModalOpen(false); setSearchTerm(''); }}>
+                        <li key={c.id} onClick={() => { setSelectedCustomer(c); setIsModalOpen(false); setSearchTerm(''); }}>
                             <span>{c.name}</span>
-                            <span style={{ color: '#555', fontSize: '0.9em' }}>₹{c.totalSpent}</span>
                             <span style={{ color: '#555', fontSize: '0.9em' }}>{c.phone}</span>
-
                         </li>
                     )) : (
                         <li>No customers found.</li>

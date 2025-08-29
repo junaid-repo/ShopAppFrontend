@@ -12,27 +12,24 @@ export const BillingProvider = ({ children }) => {
 
   const loadProducts = (productList) => setProducts(productList);
 
-    const addProduct = (product) => {
-        setCart((prevCart) => {
-            // Check if same product id AND selling price already exists
-            const existing = prevCart.find(
-                (item) => item.id === product.id && item.sellingPrice === product.sellingPrice
-            );
-
-            if (existing) {
-                // increase quantity if same selling price
-                return prevCart.map((item) =>
-                    item.id === product.id && item.sellingPrice === product.sellingPrice
-                        ? { ...item, quantity: item.quantity + 1 }
-                        : item
-                );
-            } else {
-                // add as a new line item if selling price is different
-                return [...prevCart, { ...product, quantity: 1 }];
-            }
-        });
-    };
-
+  const addProduct = (product) => {
+    if (product.stock <= 0) return; // no stock, no adding
+    setProducts(prev =>
+      prev.map(p =>
+        p.id === product.id ? { ...p, stock: p.stock - 1 } : p
+      )
+    );
+    setCart(prev => {
+      const existing = prev.find(item => item.id === product.id);
+      return existing
+        ? prev.map(item =>
+            item.id === product.id
+              ? { ...item, quantity: item.quantity + 1 }
+              : item
+          )
+        : [...prev, { ...product, quantity: 1 }];
+    });
+  };
 
   const removeProduct = (productId) => {
     const removedItem = cart.find(item => item.id === productId);
