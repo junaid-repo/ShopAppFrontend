@@ -174,7 +174,7 @@ const AnalyticsPage = () => {
             onChange={(e) => setEndDate(e.target.value)} />
         </label>
         <select
-          className="search-bar"
+          className="time-range-selector glass-card"
           value={selectedMetric}
           onChange={(e) => setSelectedMetric(e.target.value)}
         >
@@ -188,7 +188,7 @@ const AnalyticsPage = () => {
 
         {/* 🔹 Chart type selector */}
         <select
-          className="search-bar"
+          className="time-range-selector glass-card"
           value={chartType}
           onChange={(e) => setChartType(e.target.value)}
         >

@@ -90,6 +90,8 @@ const BillingPage = () => {
         });
     }, [products]);
 
+    
+
     // --- add product handler that attaches sellingPrice to the product object ---
     const handleAddProduct = (p) => {
         const sellingPrice = sellingPrices[p.id] !== undefined ? sellingPrices[p.id] : p.price;
@@ -494,14 +496,24 @@ const BillingPage = () => {
                         }}
                     >
                         <span>Name</span>
-                        <span>Phone</span>
                         <span>Total Spent</span>
+                        <span>Phone</span>
                     </li>
                     {filteredCustomers.length > 0 ? filteredCustomers.map(c => (
-                        <li key={c.id} onClick={() => { setSelectedCustomer(c); setIsModalOpen(false); setSearchTerm(''); }}>
+                        <li
+                            style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                fontWeight: "bold",
+                                borderBottom: "0px solid #ccc",
+                                padding: "8px 0",
+                                background: "white"
+                            }}
+                            key={c.id} onClick={() => { setSelectedCustomer(c); setIsModalOpen(false); setSearchTerm(''); }}>
                             <span>{c.name}</span>
+                            <span style={{ color: '#555', fontSize: '0.9em' }}>₹{c.totalSpent}</span>
                             <span style={{ color: '#555', fontSize: '0.9em' }}>{c.phone}</span>
-                            <span style={{ color: '#555', fontSize: '0.9em' }}>₹ {c.totalSpent}</span>
+
                         </li>
                     )) : (
                         <li>No customers found.</li>
