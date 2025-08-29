@@ -5,9 +5,8 @@
     top: 0;
     left: 0;
     height: 100%;
-    background: var(--glass-bg);
     backdrop-filter: blur(20px);
-    border-right: 1px solid var(--border-color);
+    border-right: 0px solid var(--border-color);
     padding: 1.5rem;
     transition: transform 0.3s ease;
     z-index: 100;
@@ -23,6 +22,12 @@
     color: var(--primary-color);
     font-weight: 700;
     font-size: 2rem;
+/*    border-color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+    border-radius: 50px;*/
+    padding: 0.5rem 1rem;
+
+    margin-bottom: 50px;
 }
 
 .sidebar-nav {
@@ -35,6 +40,7 @@
     display: flex;
     align-items: center;
     padding: 1rem;
+    margin-right: 20px;
     margin-bottom: 0.5rem;
     border-radius: 50px;
     color: var(--text-color);

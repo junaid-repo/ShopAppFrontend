@@ -100,12 +100,45 @@ const Topbar = ({ onLogout, theme, toggleTheme }) => {
             <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
 
                 {/* Theme Toggle Button */}
-                <button className="btn" onClick={() => {
-                    console.log("clicked! theme before:", theme);
-                    toggleTheme();
-                }}>
-                    {theme === 'light' ? <FaMoon /> : <FaSun />}
+                <button
+                    onClick={() => {
+                        console.log("clicked! theme before:", theme);
+                        toggleTheme();
+                    }}
+                    style={{
+                        width: "70px",
+                        height: "36px",
+                        borderRadius: "25px",
+                        border: "2px solid #00aaff", // Primary color border
+                        background: theme === "light" ? "#f0faff" : "#002b36",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: theme === "light" ? "flex-start" : "flex-end",
+                        padding: "4px",
+                        cursor: "pointer",
+                        transition: "all 0.3s ease",
+                        boxShadow: "0 4px 10px rgba(0, 170, 255, 0.3)", // subtle glow
+                    }}
+                >
+                    <div
+                        style={{
+                            width: "28px",
+                            height: "28px",
+                            borderRadius: "50%",
+                            background: theme === "light" ? "#ffcc00" : "#00aaff",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: "#fff",
+                            fontSize: "14px",
+                            transition: "all 0.3s ease",
+                        }}
+                    >
+                        {theme === "light" ? <FaMoon /> : <FaSun />}
+                    </div>
                 </button>
+
+
 
 
                 {/* User Profile */}
@@ -161,16 +194,22 @@ const Topbar = ({ onLogout, theme, toggleTheme }) => {
                 {/* Logout button */}
                 <button
                     onClick={handleLogout}
-                    className="btn" // Use class from index.css
+                    className="btn" // still keeps your global btn styles
                     style={{
                         display: "flex",
                         alignItems: "center",
-                        gap: "8px",
-                        background: "#ff4d4f",
+                        gap: "6px",
+                        background: "#e80a0d",
+                        boxShadow: "0 6px 10px rgba(255, 107, 107, 0.3)",
+                        padding: "11px 15px",   // 🔹 smaller padding
+                        fontSize: "0.85rem",   // 🔹 slightly smaller text
+                        borderRadius: "25px",   // 🔹 keep rounded look
+                        cursor: "pointer",
                     }}
                 >
-                    <FaSignOutAlt /> Logout
+                    <FaSignOutAlt style={{ fontSize: "0.9rem" }} /> Logout
                 </button>
+
             </div>
         </header>
     );

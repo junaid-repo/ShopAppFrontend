@@ -123,11 +123,6 @@ function App() {
     return (
         <QueryClientProvider client={queryClient}>
             <Router>
-                {warning && (
-                    <div className="fixed bottom-4 right-4 bg-yellow-200 border border-yellow-500 text-yellow-900 px-4 py-3 rounded shadow">
-                        ⚠️ No activity detected. Logging out in {countdown}s...
-                    </div>
-                )}
 
                 <Routes>
                     {/* Login route */}
