@@ -1,34 +1,56 @@
+/* Light Theme Variables (Default) */
 :root {
     --primary-color: #00aaff;
     --primary-color-light: #e0f7ff;
     --background-color: #f0f8ff;
-    --glass-bg: #f0f8ff;
-    --border-color: rgba(224, 247, 255, 0.5);
+    --glass-bg: rgba(240, 248, 255, 0.85); /* Slightly more opaque for better readability */
+    --border-color: rgba(224, 247, 255, 0.7);
     --shadow-color: rgb(0 0 0 / 15%);
-    --text-color: #333;
+    --text-color: #14367f;
     --sidebar-width: 260px;
+    --body-bg: rgba(240, 248, 255, 0.85);
+    --modal-bg: #ffffff;
+    --input-bg: #ffffff;
+    --input-border: #ddd;
+    --table-hover-bg: rgba(224, 247, 255, 0.5);
+    --pagination-bg: #fff;
+    --pagination-border: #ccc;
+    --pagination-disabled-bg: #f2f2f2;
+    --pagination-disabled-color: #999;
+}
+
+/* Dark Theme Variables */
+body.dark-theme {
+    --primary-color: #00aaff; /* Keep brand color consistent */
+    --primary-color-light: rgba(0, 170, 255, 0.15);
+    --background-color: #0d1117;
+    --glass-bg: rgba(22, 27, 34, 0.75);
+    --border-color: rgba(139, 148, 158, 0.3);
+    --shadow-color: rgba(0, 0, 0, 0.5);
+    --text-color: #c9d1d9;
+    --body-bg: #010409;
+    --modal-bg: #161b22;
+    --input-bg: #0d1117;
+    --input-border: var(--border-color);
+    --table-hover-bg: rgba(0, 170, 255, 0.1);
+    --pagination-bg: #21262d;
+    --pagination-border: var(--border-color);
+    --pagination-disabled-bg: #161b22;
+    --pagination-disabled-color: #484f58;
 }
 
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'lemon_milk_pro_regular_webfont';
+    font-family: 'lemon_milk_pro_regular_webfont', sans-serif; /* Added sans-serif fallback */
 }
 
 body {
-    background-color: #00aaff14;
-    color: #0a0087;
+    background-color: var(--body-bg);
+    color: var(--text-color);
     overflow-x: hidden;
-    font-family: 'lemon_milk_pro_regular_webfont';
-}
-
-.nav-link.active {
-    background-color: var(--primary-color);
-    color: white;
-    box-shadow: 0 4px 15px rgba(0, 170, 255, 0.4);
-    transform: translateX(10px) scale(1.05);
-    border-radius: 50px;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .app-container {
@@ -36,6 +58,15 @@ body {
     min-height: 100vh;
 }
 
+.main-content {
+    flex-grow: 1;
+    margin-left: var(--sidebar-width);
+    padding: 2rem;
+    transition: margin-left 0.3s ease;
+    background-color: transparent;
+}
+
+/* Navigation Link */
 .nav-link {
     display: flex;
     align-items: center;
@@ -49,18 +80,18 @@ body {
     transform-origin: left center;
 }
 
-.main-content {
-    flex-grow: 1;
-    margin-left: var(--sidebar-width);
-    padding: 2rem;
-    transition: margin-left 0.3s ease;
-    background-color: #ffffff00;
+.nav-link.active {
+    background-color: var(--primary-color);
+    color: white;
+    box-shadow: 0 4px 15px rgba(0, 170, 255, 0.4);
+    transform: translateX(10px) scale(1.05);
 }
 
-/* Glassmorphism Styles */
+/* Glassmorphism Card */
 .glass-card {
     background: var(--glass-bg);
     backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px); /* For Safari */
     border-radius: 30px;
     border: 1px solid var(--border-color);
     box-shadow: 0 4px 30px var(--shadow-color);
@@ -70,13 +101,15 @@ body {
 
 /* Search bar */
 .search-bar {
-    width: 50%;
+    width: 20%;
     padding: 0.75rem 1.25rem;
-    border: 1px solid rgb(201 231 241 / 77%);
+    border: 2px solid var(--border-color);
     border-radius: 50px;
     background: var(--glass-bg);
+    color: var(--text-color);
     font-size: 1rem;
     outline: none;
+
     transition: all 0.2s ease;
 }
 
@@ -109,14 +142,20 @@ body {
 
 /* Cancel button modifier */
 .btn-cancel {
-    background-color: rgba(255, 107, 107, 0.2);
-    border: 1px solid rgba(255, 107, 107, 0.5);
+    background-color: rgba(255, 107, 107, 0.15);
+    border: 1px solid rgba(255, 107, 107, 0.4);
     color: #ff6b6b;
 }
 
-.btn-cancel:hover {
-    background-color: rgba(255, 107, 107, 0.3);
-    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+.btn-cancel:hover:not(:disabled) {
+    background-color: rgba(255, 107, 107, 0.25);
+    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+}
+
+body.dark-theme .btn-cancel {
+    background-color: rgba(255, 107, 107, 0.1);
+    border-color: rgba(255, 107, 107, 0.4);
+    color: #ff9a9a;
 }
 
 /* Table Styles */
@@ -144,10 +183,11 @@ body {
 }
 
 .data-table tr:hover {
-    background-color: rgba(224, 247, 255, 0.5);
+    background-color: var(--table-hover-bg);
 }
 
-.status-paid {
+/* Status Badges */
+.status-paid, .status-instock {
     background-color: #d1fae5;
     color: #065f46;
     padding: 4px 8px;
@@ -155,7 +195,7 @@ body {
     font-size: 0.8rem;
 }
 
-.status-pending {
+.status-pending, .status-outofstock {
     background-color: #fee2e2;
     color: #991b1b;
     padding: 4px 8px;
@@ -163,20 +203,16 @@ body {
     font-size: 0.8rem;
 }
 
-.status-instock {
-    background-color: #d1fae5;
-    color: #065f46;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 0.8rem;
+body.dark-theme .status-paid,
+body.dark-theme .status-instock {
+    background-color: #0c2b1f;
+    color: #35d399;
 }
 
-.status-outofstock {
-    background-color: #fee2e2;
-    color: #991b1b;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 0.8rem;
+body.dark-theme .status-pending,
+body.dark-theme .status-outofstock {
+    background-color: #3b1717;
+    color: #ff8b8b;
 }
 
 /* Modal Styles */
@@ -195,7 +231,7 @@ body {
 }
 
 .modal-content {
-    background: white;
+    background: var(--modal-bg);
     padding: 2rem;
     border-radius: 15px;
     width: 90%;
@@ -220,9 +256,10 @@ body {
     border: none;
     font-size: 1.5rem;
     cursor: pointer;
+    color: var(--text-color);
 }
 
-/* Form Groups */
+/* Form Styles */
 .form-group {
     margin-bottom: 1rem;
 }
@@ -236,12 +273,13 @@ body {
 .form-group select {
     width: 100%;
     padding: 0.75rem;
-    border: 1px solid #ddd;
+    border: 1px solid var(--input-border);
+    background-color: var(--input-bg);
+    color: var(--text-color);
     border-radius: 8px;
     font-size: 1rem;
 }
 
-/* Form actions */
 .form-actions {
     margin-top: 1.5rem;
     text-align: right;
@@ -255,8 +293,9 @@ body {
 }
 
 .pagination button {
-    background: #fff;
-    border: 1px solid #ccc;
+    background: var(--pagination-bg);
+    border: 1px solid var(--pagination-border);
+    color: var(--text-color);
     margin: 0 0.2rem;
     padding: 0.4rem 0.75rem;
     cursor: pointer;
@@ -264,14 +303,14 @@ body {
 }
 
 .pagination button.active {
-    background: #4cafef;
+    background: var(--primary-color);
     color: #fff;
-    border-color: #4cafef;
+    border-color: var(--primary-color);
 }
 
 .pagination button:disabled {
-    background: #f2f2f2;
-    color: #999;
+    background: var(--pagination-disabled-bg);
+    color: var(--pagination-disabled-color);
     cursor: default;
 }
 
@@ -284,7 +323,6 @@ body {
     padding: 0.5rem 1rem;
     border-radius: 30px;
     background: var(--glass-bg);
-    backdrop-filter: blur(10px);
     border: 1px solid var(--border-color);
     box-shadow: 0 4px 20px var(--shadow-color);
     width: fit-content;
@@ -314,31 +352,26 @@ body {
     background-size: 16px;
 }
 
+body.dark-theme .time-range-selector select {
+    background-color: rgba(33, 38, 45, 0.8);
+    background-image: url("data:image/svg+xml,%3Csvg fill='white' height='16' viewBox='0 0 24 24' width='16' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+}
+
 .time-range-selector select:focus {
     background-color: rgba(255, 255, 255, 0.8);
     box-shadow: 0 0 0 2px var(--primary-color-light);
 }
 
+body.dark-theme .time-range-selector select:focus {
+    background-color: rgba(56, 62, 70, 0.9);
+}
+
 .time-range-selector select option {
+    background-color: var(--modal-bg); /* Use modal-bg for consistency */
     color: var(--text-color);
-    background-color: #fff;
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-}
-
-@keyframes slideIn {
-    from { transform: translateY(-30px); opacity: 0; }
-    to   { transform: translateY(0); opacity: 1; }
-}
-
-/*---------------------------------------------------
-   Profile-Page Specific Styles
----------------------------------------------------*/
-
-/* Two-column Form Layout */
+/* Profile-Page Specific Styles */
 .two-column {
     display: flex;
     gap: 2rem;
@@ -350,7 +383,6 @@ body {
     min-width: 280px;
 }
 
-/* Avatar Preview */
 .avatar {
     width: 80px;
     height: 80px;
@@ -360,7 +392,6 @@ body {
     border: 2px solid var(--border-color);
 }
 
-/* Edit / Submit / Cancel / Update Password Row */
 .button-row {
     display: flex;
     align-items: center;
@@ -370,100 +401,34 @@ body {
 
 /* Validation Feedback */
 .input-error {
-    border-color: #ff6b6b;
-    background-color: rgba(255, 107, 107, 0.2);
-}
-
-.element.style {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.75rem 1.5rem;
-    border-radius: 50px;
-    background: rgb(255 255 255);
-    border-bottom: 1px solid rgba(224, 247, 255, 0.5);
-    box-shadow: rgb(0 0 0 / 0%) 0px 2px 10px;
+    border-color: #ff6b6b !important; /* Use important to override other border styles */
+    background-color: rgba(255, 107, 107, 0.15);
 }
 
 .error-message {
     color: #ff6b6b;
     font-size: 0.85rem;
-    margin-top: -0.5rem;
+    margin-top: -0.25rem;
     margin-bottom: 0.5rem;
 }
-/* Two-column layout for profile form */
-.two-column {
-  display: flex;
-  gap: 2rem;
-  flex-wrap: wrap;
-}
 
-.column {
-  flex: 1;
-  min-width: 280px;
-}
-
-/* Profile avatar image */
-.avatar {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  object-fit: cover;
-  margin-top: 0.5rem;
-  border: 2px solid #ddd;
-}
-
-/* Row of action buttons below form */
-.button-row {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-top: 1.5rem;
-}
-
-/* Cancel button style */
-.btn-cancel {
-  background-color: rgba(255, 107, 107, 0.15);
-  border: 1px solid rgba(255, 107, 107, 0.4);
-  color: #ff6b6b;
-  padding: 0.75rem 1.5rem;
-  border-radius: 25px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-cancel:hover {
-  background-color: rgba(255, 107, 107, 0.25);
-  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
-}
-
-/* Validation error styling */
-.input-error {
-  border: 1px solid #ff6b6b !important;
-  background-color: rgba(255, 107, 107, 0.15);
-}
-
-.error-message {
-  color: #ff6b6b;
-  font-size: 0.85rem;
-  margin-top: -0.25rem;
-  margin-bottom: 0.5rem;
-}
+/* Download Button */
 .download-btn {
-    background: linear-gradient(135deg, rgba(37, 180, 42, 0.46), rgba(37, 180, 42, 0.46)); /* green gradient */
+    background: linear-gradient(135deg, #25b42a, #66bb6a);
     color: white;
     border: none;
     border-radius: 50%;
-    padding: 10px;
+    width: 40px; /* Explicit size */
+    height: 40px; /* Explicit size */
     cursor: pointer;
     transition: all 0.3s ease;
     display: flex;
     align-items: center;
     justify-content: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
 }
 
 .download-btn:hover {
-    background: linear-gradient(135deg, #66bb6a, #25b42a);
     transform: scale(1.1);
     box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
@@ -472,4 +437,440 @@ body {
     transform: scale(0.95);
 }
 
+/* Keyframe Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from { transform: translateY(-30px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+}
+/* ===== BILLING PAGE LAYOUT ===== */
+/* src/pages/BillingPage.css
+   Dark-theme compatible version that preserves original styling.
+   Uses your global variables (e.g. --primary-color, --glass-bg, --border-color, --text-color).
+   Local fallbacks keep the original appearance when needed.
+*/
+
+/* Page-scoped variables mapped to global theme variables with fallbacks */
+.billing-page {
+    /* map global tokens, with fallbacks to original hard-coded colors */
+    --bp-primary: var(--primary-color, #4cafef);
+    --bp-primary-light: var(--primary-color-light, #e0f7ff);
+    --bp-background: var(--background-color, #f0f8ff);
+    --bp-glass: var(--glass-bg, rgba(240, 248, 255, 0.85));
+    --bp-border: var(--border-color, #ddd);
+    --bp-shadow: var(--shadow-color, rgba(0, 0, 0, 0.08));
+    --bp-text: var(--text-color, #333);
+    --bp-muted: rgba(0,0,0,0.45);
+    --bp-table-header: var(--modal-bg, #f4f4f4);
+    --bp-table-hover: var(--table-hover-bg, #f1f9ff);
+    --bp-out-of-stock-bg: #fce4e4;
+    --bp-out-of-stock-text: #999;
+    --bp-danger: #ef4444;
+    --bp-success: #28a745;
+    --bp-popup-bg: var(--modal-bg, #fff);
+}
+
+/* ---------- Layout ---------- */
+.billing-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-top: 2rem;
+    color: var(--bp-text);
+}
+
+/* Product list / modal list */
+.product-list ul, .customer-modal-list {
+    list-style: none;
+    max-height: 400px;
+    overflow-y: auto;
+    margin-top: 1rem;
+}
+
+/* Items in lists */
+.product-list li, .customer-modal-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+    color: var(--bp-text);
+}
+
+/* Hover state uses theme-aware light primary */
+.product-list li:hover, .customer-modal-list li:hover {
+    background-color: var(--bp-primary-light);
+    cursor: pointer;
+}
+
+/* Small circular add button */
+.product-list li button {
+    background: var(--bp-primary);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+/* small search style */
+.small-search {
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+}
+
+/* invoice customer selection divider */
+.invoice-details .customer-selection {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--bp-border);
+}
+
+/* ---------- Table ---------- */
+.beautiful-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0.5rem;
+}
+
+/* table cells */
+.beautiful-table th,
+.beautiful-table td {
+    padding: 0.75rem;
+    border: 1px solid var(--bp-border);
+    text-align: left;
+    color: var(--bp-text);
+}
+
+/* header row */
+.beautiful-table thead {
+    background-color: var(--bp-table-header);
+}
+
+/* alternate rows */
+.beautiful-table tr:nth-child(even) {
+    background-color: var(--bp-table-row-alt);
+}
+
+/* row hover */
+.beautiful-table tr:hover {
+    background-color: var(--bp-table-hover);
+}
+
+/* ========================
+   Light Theme Variables
+   ======================== */
+:root {
+    --bp-border: #ccc;
+    --bp-text: #333;
+    --bp-table-header: #f4f4f4;
+    --bp-table-row-alt: #fafafa;
+    --bp-table-hover: #f1f9ff;
+}
+
+/* ========================
+   Dark Theme Variables
+   ======================== */
+body.dark-theme {
+    --bp-border: #444;
+    --bp-text: #c9d1d9;
+    --bp-table-header: #161b22;  /* dark header */
+    --bp-table-row-alt: #1e1e1e; /* subtle zebra striping */
+    --bp-table-hover: #2a2a2a;   /* darker hover */
+}
+
+
+/* Out of stock */
+.out-of-stock {
+    color: var(--bp-out-of-stock-text);
+    background-color: var(--bp-out-of-stock-bg) !important;
+}
+
+/* small buttons */
+.small-btn {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.85rem;
+}
+
+/* ---------- Cart items ---------- */
+.cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+/* remove icon inside cart item (text-like) */
+.cart-item .remove-btn {
+    background: none;
+    border: none;
+    color: var(--bp-danger);
+    cursor: pointer;
+}
+
+/* invoice summary separator */
+.invoice-summary {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--bp-border);
+}
+
+/* invoice summary layout */
+.invoice-summary p {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+/* invoice total heading uses primary color */
+.invoice-summary h4 {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
+    color: var(--bp-primary);
+}
+
+/* ensure process button width and margin match previous */
+.process-payment-btn {
+    width: 100%;
+    margin-top: 1.5rem;
+}
+
+/* ---------- Invoice card (big visual) ---------- */
+.invoice-details {
+    background: linear-gradient(135deg, var(--bp-popup-bg), var(--bp-background));
+    border-radius: 25px;
+    padding: 1.5rem;
+    box-shadow: 0 6px 18px var(--bp-shadow);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* subtle lift on hover */
+.invoice-details:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 24px var(--bp-shadow);
+}
+
+/* title styling: keep same sizes but theme-aware color + border */
+.invoice-details h3 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--bp-text);
+    text-align: center;
+    border-bottom: 2px solid var(--bp-border);
+    padding-bottom: 0.5rem;
+}
+
+/* ---------- Cart list ---------- */
+.cart-items {
+    margin-top: 1rem;
+    max-height: 220px;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+}
+
+.cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.4rem 0;
+    border-bottom: 1px dashed var(--bp-border);
+    font-size: 0.95rem;
+}
+
+.cart-item:last-child {
+    border-bottom: none;
+}
+
+/* prominent remove button used elsewhere (small pill) */
+.remove-btn {
+    background: var(--bp-danger);
+    color: white;
+    border: none;
+    padding: 0.3rem 0.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: background 0.2s ease;
+}
+
+.remove-btn:hover {
+    background: #d9363e; /* keep strong contrast for hover - still okay in dark */
+}
+
+/* invoice summary card styling (inner) */
+.invoice-summary {
+    margin-top: 1rem;
+    background: var(--bp-order-summary-bg);
+    padding: 1rem;
+    border-radius: 8px;
+    font-size: 0.95rem;
+}
+
+/* ensure spacing for paragraph / headings */
+.invoice-summary p, .invoice-summary h4 {
+    display: flex;
+    justify-content: space-between;
+    margin: 0.4rem 0;
+}
+
+/* process payment button - primary color */
+.process-payment-btn {
+    width: 100%;
+    background: var(--bp-primary);
+    color: white;
+    border: none;
+    padding: 0.8rem;
+    font-size: 1rem;
+    margin-top: 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.process-payment-btn:hover {
+    /* slightly darker on hover; uses alpha overlay on primary */
+    background: linear-gradient(0deg, rgba(0,0,0,0.06), rgba(0,0,0,0.06)), var(--bp-primary);
+}
+
+/* ---------- Mini popup (small confirmations) ---------- */
+.mini-popup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.mini-popup {
+    background: var(--bp-popup-bg);
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    font-size: 0.95rem;
+    text-align: center;
+    max-width: 300px;
+    animation: scaleIn 0.25s ease;
+}
+
+.mini-popup button {
+    margin-top: 0.75rem;
+    background: var(--bp-primary);
+    color: white;
+    border: none;
+    padding: 0.4rem 0.8rem;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* scale animation */
+@keyframes scaleIn {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+/* ---------- Success overlay / card ---------- */
+.success-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
+    animation: fadeIn 0.3s ease;
+}
+
+.success-card {
+    background: linear-gradient(135deg, var(--bp-popup-bg), #f8faff);
+    padding: 2rem;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 420px;
+    text-align: center;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+    animation: slideUp 0.3s ease;
+}
+
+.success-card h2 {
+    color: var(--bp-success);
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+}
+
+/* order summary box inside success */
+.order-summary {
+    background: var(--bp-order-summary-bg);
+    border-radius: 25px;
+    padding: 1rem;
+    margin: 1rem 0;
+    font-size: 1rem;
+    text-align: left;
+}
+
+.order-summary p {
+    margin: 0.4rem 0;
+}
+
+/* success card button */
+.success-card button {
+    background: var(--bp-primary);
+    color: white;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    font-size: 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+/* fade & slide animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* ---------- Colored stat labels (kept original colors but use variables where possible) ---------- */
+.subtotal-actual {
+    color: #2c3e50;  /* kept original darker blue-gray for emphasis */
+    font-weight: 600;
+}
+
+.subtotal-selling {
+    color: #16a085;  /* teal green */
+    font-weight: 600;
+}
+
+.discount {
+    color: #e67e22;  /* orange */
+    font-weight: 600;
+}
+
+.tax {
+    color: #c0392b;  /* red */
+    font-weight: 600;
+}
+
+/* Small responsiveness touches so layout doesn't break on very small screens */
+@media (max-width: 900px) {
+    .billing-layout {
+        grid-template-columns: 1fr;
+    }
+}
 

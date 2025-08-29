@@ -13,6 +13,78 @@ var mockUser = {
   gstNumber: '29ABCDE1234F1Z5',
 };
 
+const getThemeStyles = () => {
+    const isDark = document.body.classList.contains("dark-theme");
+
+    return {
+        colors: {
+            primary: "#00aaff",
+            primaryLight: isDark ? "rgba(0,170,255,0.15)" : "#e0f7ff",
+            background: isDark ? "#0d1117" : "#f0f8ff",
+            glassBg: isDark ? "rgba(22,27,34,0.75)" : "rgba(240, 248, 255, 0.9)",
+            borderColor: isDark ? "rgba(139, 148, 158, 0.3)" : "rgba(224, 247, 255, 0.8)",
+            shadow: isDark ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0.15)",
+            text: isDark ? "#c9d1d9" : "#333",
+            error: "#ff6b6b",
+            errorBg: "rgba(255, 107, 107, 0.15)",
+        },
+
+        dashboard: {
+            padding: "2rem",
+            backgroundColor: isDark ? "#161b22" : "#ffffff",
+            color: isDark ? "#c9d1d9" : "#0a0087",
+            fontFamily: "'lemon_milk_pro_regular_webfont', sans-serif",
+        },
+        h2: {
+            textAlign: "center",
+            marginBottom: "2rem",
+            fontSize: "2.5rem",
+            color: isDark ? "#00aaff" : "#0a0087",
+        },
+
+        glassCard: {
+            background: isDark ? "rgba(22,27,34,0.85)" : "rgba(240, 248, 255, 0.9)",
+            backdropFilter: "blur(10px)",
+            borderRadius: "30px",
+            border: `1px solid ${isDark ? "rgba(139, 148, 158, 0.3)" : "rgba(224, 247, 255, 0.8)"}`,
+            boxShadow: `0 4px 30px ${isDark ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0.15)"}`,
+            padding: "2rem",
+        },
+
+        label: {
+            fontWeight: "bold",
+            color: isDark ? "#c9d1d9" : "#0a0087",
+        },
+
+        input: {
+            width: "100%",
+            padding: "0.75rem 1rem",
+            border: `1px solid ${isDark ? "#444c56" : "#ddd"}`,
+            borderRadius: "8px",
+            fontSize: "1rem",
+            backgroundColor: isDark ? "#0d1117" : "#fff",
+            color: isDark ? "#c9d1d9" : "#333",
+            transition: "border-color 0.3s ease, box-shadow 0.3s ease",
+        },
+
+        modalContent: {
+            background: isDark ? "#161b22" : "white",
+            padding: "2rem",
+            borderRadius: "15px",
+            width: "90%",
+            maxWidth: "500px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "1rem",
+        },
+
+        modalTitle: {
+            color: "#00aaff",
+            textAlign: "center",
+            margin: 0,
+        },
+    };
+};
 
 // --- STYLES OBJECT (derived from your index.css) ---
 const styles = {
@@ -109,15 +181,15 @@ const styles = {
     gap: '1rem',
     marginBottom: '1rem',
   },
-  avatar: {
-    width: '120px',
-    height: '120px',
-    borderRadius: '50%',
-    objectFit: 'cover',
-    border: '3px solid rgba(0, 170, 255, 0.5)',
-    cursor: 'pointer',
-    transition: 'transform 0.3s ease',
-  },
+    avatar: {
+        width: '100px',       // Medium size (fits well inside card)
+        height: '100px',
+        borderRadius: '50%',  // Round shape
+        objectFit: 'cover',
+        border: '2px solid rgba(0, 170, 255, 0.5)',
+        cursor: 'pointer',
+        transition: 'transform 0.3s ease',
+    },
    avatarHover: {
     transform: 'scale(1.05)',
     boxShadow: '0 4px 20px rgba(0, 170, 255, 0.4)',
@@ -208,6 +280,22 @@ const Hoverable = ({ onHover, offHover, children, style, hoverStyle }) => {
 };
 
 const UserProfilePage = () => {
+    const [themeStyles, setThemeStyles] = React.useState(getThemeStyles());
+    const mergedStyles = { ...styles, ...themeStyles };
+
+
+    React.useEffect(() => {
+        const observer = new MutationObserver(() => {
+            setThemeStyles(getThemeStyles()); // Recompute when body class changes
+        });
+        observer.observe(document.body, {
+            attributes: true,
+            attributeFilter: ["class"],
+        });
+
+        return () => observer.disconnect();
+    }, []);
+
   const [user, setUser] = useState({});
   const [formData, setFormData] = useState({});
   const [isEditing, setIsEditing] = useState(false);
@@ -576,7 +664,7 @@ console.log("Decoded username:", passwordData.currentPassword);
                     <img
                         src={profilePicPreview || 'https://placehold.co/150x150/e0f7ff/00aaff?text=No+Img'}
                         alt="Profile"
-                        style={styles.avatar}
+                        style={mergedStyles.avatar}
                         onClick={() => isEditing && fileInputRef.current.click()}
                     />
                 </Hoverable>

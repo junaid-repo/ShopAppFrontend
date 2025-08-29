@@ -23,6 +23,26 @@ function App() {
     const countdownRef = useRef(null);
     const inactivityTimerRef = useRef(null);
 
+    // 🔹 Initialize theme from localStorage or default to 'light'
+    const [theme, setTheme] = useState(() => {
+        const savedTheme = localStorage.getItem('theme');
+        return savedTheme || 'light';
+    });
+
+    // 🔹 Effect to apply the theme class to the body and save preference
+    useEffect(() => {
+        document.body.classList.remove('dark-theme'); // Clean up previous class
+        if (theme === 'dark') {
+            document.body.classList.add('dark-theme');
+        }
+        localStorage.setItem('theme', theme);
+    }, [theme]);
+
+    // 🔹 Function to toggle the theme
+    const toggleTheme = () => {
+        setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
+    };
+
     // 🔹 Check token validity
     const checkToken = () => {
         const token = localStorage.getItem('jwt_token');
@@ -33,7 +53,6 @@ function App() {
         try {
             const payload = JSON.parse(atob(token.split('.')[1])); // decode JWT payload
             const expiry = payload.exp * 1000; // convert to ms
-           // alert(expiry);
             if (Date.now() >= expiry) {
                 alert("Session expired. You have been logged out.");
                 handleLogout();
@@ -126,7 +145,7 @@ function App() {
                         path="/*"
                         element={
                             isAuthenticated
-                                ? <ProtectedRoutes onLogout={handleLogout} />
+                                ? <ProtectedRoutes onLogout={handleLogout} theme={theme} toggleTheme={toggleTheme} />
                                 : <Navigate to="/login" replace />
                         }
                     />
@@ -136,7 +155,7 @@ function App() {
     );
 }
 
-const ProtectedRoutes = ({ onLogout }) => {
+const ProtectedRoutes = ({ onLogout, theme, toggleTheme }) => {
     const navigate = useNavigate();
 
     const logoutAndRedirect = () => {
@@ -145,7 +164,7 @@ const ProtectedRoutes = ({ onLogout }) => {
     };
 
     return (
-        <MainLayout onLogout={logoutAndRedirect}>
+        <MainLayout onLogout={logoutAndRedirect} theme={theme} toggleTheme={toggleTheme}>
             <Routes>
                 <Route path="/" element={<DashboardPage />} />
                 <Route path="/products" element={<ProductsPage />} />

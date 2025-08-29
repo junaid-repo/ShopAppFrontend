@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useBilling } from '../context/BillingContext';
 import Modal from '../components/Modal';
 import { FaPlus, FaTrash } from 'react-icons/fa';
-import './BillingPage.css';
+import '../index.css';
 import { useConfig } from "./ConfigProvider";
 
 const BillingPage = () => {

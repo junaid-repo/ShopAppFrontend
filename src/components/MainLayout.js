@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 
-const MainLayout = ({ children, onLogout }) => {
+const MainLayout = ({ children, onLogout, toggleTheme, theme  }) => {
 const navigate = useNavigate();
    const handleLogout = () => {
         if (onLogout) {
@@ -16,7 +16,7 @@ const navigate = useNavigate();
         <div className="app-container">
             <Sidebar />
             <div className="main-content">
-                <Topbar onLogout={handleLogout}/>
+                <Topbar onLogout={handleLogout}  toggleTheme={toggleTheme} theme={theme}/>
                 <main>{children}</main>
             </div>
         </div>

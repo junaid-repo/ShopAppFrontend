@@ -393,7 +393,6 @@ const ProductsPage = () => {
                     placeholder="Search products..."
                     className="search-bar"
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    style={{ flex: 1 }}
                 />
             </div>
 
