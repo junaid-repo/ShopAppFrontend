@@ -9,7 +9,7 @@ const LoginPage = ({ onLogin }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-
+    const [isSuccess, setIsSuccess] = useState(false);
     // Unified modal controller: null | 'forgot' | 'otp' | 'result'
     const [modal, setModal] = useState(null);
 
@@ -163,6 +163,8 @@ const LoginPage = ({ onLogin }) => {
 
             if (data.success) {
                 // ✅ SUCCESS: close ALL other modals, only show final green message
+                setResultMessage("✅ Password updated successfully");
+                setIsSuccess(true);
                 setForgotMessage('');
                 setOtp('');
                 setNewPassword('');
@@ -175,6 +177,8 @@ const LoginPage = ({ onLogin }) => {
                 openResultModal("✅ Password updated successfully");
             } else {
                 // Wrong OTP or other failure
+                setResultMessage("❌ " + (data.message || "Failed to update password"));
+                setIsSuccess(false);
                 const msg = "❌ " + (data.message || "Wrong OTP, try again");
                 const nextAttempts = otpAttempts + 1;
                 setOtpAttempts(nextAttempts);
@@ -318,7 +322,7 @@ const LoginPage = ({ onLogin }) => {
             {modal === 'result' && (
                 <div className="modal-overlay">
                     <div className="modal-content" style={{ textAlign: "center" }}>
-                        <h2 style={{ color: resultMessage.startsWith("✅") ? "green" : "red" }}>
+                        <h2 style={{ color: isSuccess ? "green" : "red" }}>
                             {resultMessage}
                         </h2>
                         <div className="form-actions" style={{ marginTop: "20px", display: "flex", gap: "10px", justifyContent: "center" }}>

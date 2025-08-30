@@ -17,6 +17,7 @@
     --pagination-border: #ccc;
     --pagination-disabled-bg: #f2f2f2;
     --pagination-disabled-color: #999;
+    --bp-order-summary-bg: var(--modal-bg, #fff); /* global fallback for billing/order summary */
 }
 
 /* Dark Theme Variables */
@@ -24,7 +25,7 @@ body.dark-theme {
     --primary-color: #00aaff; /* Keep brand color consistent */
     --primary-color-light: rgba(0, 170, 255, 0.15);
     --background-color: #0d1117;
-    --glass-bg: rgba(22, 27, 34, 0.75);
+    --glass-bg: rgba(33, 60, 103, 0.65);
     --border-color: rgba(139, 148, 158, 0.3);
     --shadow-color: rgba(0, 0, 0, 0.5);
     --text-color: #c9d1d9;
@@ -37,6 +38,7 @@ body.dark-theme {
     --pagination-border: var(--border-color);
     --pagination-disabled-bg: #161b22;
     --pagination-disabled-color: #484f58;
+    --bp-order-summary-bg: var(--modal-bg, #161b22); /* ensure billing/order summaries have a bg in dark theme */
 }
 
 * {
@@ -103,7 +105,7 @@ body {
 .search-bar {
     width: 20%;
     padding: 0.75rem 1.25rem;
-    border: 2px solid var(--border-color);
+    border: rgba(39, 63, 107, 0.7);
     border-radius: 50px;
     background: var(--glass-bg);
 
@@ -473,6 +475,7 @@ body.dark-theme .time-range-selector select:focus {
     --bp-danger: #ef4444;
     --bp-success: #28a745;
     --bp-popup-bg: var(--modal-bg, #fff);
+    --bp-order-summary-bg: var(--bp-popup-bg, #fff); /* fallback used by invoice-summary */
 }
 
 /* ---------- Layout ---------- */
@@ -868,10 +871,143 @@ body.dark-theme {
     font-weight: 600;
 }
 
-/* Small responsiveness touches so layout doesn't break on very small screens */
+/* Payments stats - symmetrical cards (Dates | Total | Bars) */
+.payments-stats {
+    display: flex;
+    gap: 16px;
+    align-items: stretch; /* ensure children stretch to same height */
+    margin-top: 16px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.stats-card {
+    flex: 1 1 0; /* make all three equal width */
+    min-width: 220px;
+    padding: 16px;
+    border-radius: 16px;
+    background: var(--glass-bg);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 6px 18px var(--shadow-color);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; /* align content to top so stretched cards look consistent */
+    align-self: stretch; /* force each card to stretch to the tallest sibling (bars card) */
+}
+
+/* Ensure bars card defines the row height and its bars are vertically centered */
+.bars-card .payments-bars {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* center bars vertically within the card */
+    gap: 12px;
+}
+
+/* Center the date inputs vertically so they align with the other cards */
+.dates-card .time-range-selector-vertical {
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Slightly increase padding so content breathes evenly */
+.stats-card { padding: 20px; }
+
+/* Dates column (stacked inputs) */
+.time-range-selector-vertical {
+    display: flex;
+    flex-direction: row; /* place inputs side-by-side on larger screens */
+    gap: 10px;
+    align-items: center;
+}
+.time-range-selector-vertical label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--text-color);
+    min-width: 0;
+}
+
+.date-input {
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid var(--input-border);
+    background: var(--input-bg);
+    color: var(--text-color);
+    outline: none;
+    min-width: 0;
+    width: 100%;
+}
+
+/* ensure each label/input group can shrink properly */
+.dates-card .time-range-selector-vertical > label {
+    flex: 1 1 0;
+}
+
+/* Total card */
+.total-amount {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-color);
+}
+.total-sub {
+    font-size: 12px;
+    color: var(--text-color);
+    margin-top: 8px;
+}
+
+/* Bars column */
+.payments-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.mode-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.mode-label {
+    width: 100px;
+    font-size: 13px;
+    color: var(--text-color);
+}
+.mode-bar-wrapper {
+    flex: 1 1 0;
+    max-width: 220px; /* narrower wrapper */
+    background: rgba(0,0,0,0.06);
+    height: 20px; /* slightly taller for visibility */
+    border-radius: 10px;
+    overflow: hidden;
+}
+.mode-bar-inner {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.5s ease;
+}
+.mode-count {
+    min-width: 40px;
+    text-align: right;
+    font-size: 13px;
+    color: var(--text-color);
+}
+
+.no-data {
+    color: var(--text-color);
+}
+
+/* Responsive: stack the three cards on small screens and stack date inputs vertically */
 @media (max-width: 900px) {
+    .payments-stats {
+        flex-direction: column;
+    }
+    .time-range-selector-vertical {
+        flex-direction: column; /* stack date inputs on small screens */
+        gap: 8px;
+    }
     .billing-layout {
         grid-template-columns: 1fr;
     }
 }
-
