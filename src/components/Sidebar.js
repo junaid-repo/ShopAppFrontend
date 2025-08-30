@@ -26,52 +26,60 @@ const iconColors = {
   analytics: "#F15BB5"    // pink
 };
 
-const Sidebar = () => {
+const Sidebar = ({ isCollapsed = false, toggleSidebar }) => {
     return (
-        <aside className="sidebar">
-            <div className="sidebar-header">
-                <h1 className="logo">ShopFlow</h1>
+        <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
+            <div className="sidebar-header" style={{ display: 'flex', alignItems: 'center', justifyContent: isCollapsed ? 'center' : 'flex-start', gap: '8px' }}>
+                {/* Hamburger placed beside logo */}
+                <button onClick={toggleSidebar} aria-label="Toggle sidebar" className="sidebar-toggle-btn" style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ width: '22px', height: '14px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                        <span style={{ display: 'block', height: '2px', background: 'var(--text-color)', borderRadius: '2px', opacity: 0.9 }} />
+                        <span style={{ display: 'block', height: '2px', background: 'var(--text-color)', borderRadius: '2px', opacity: 0.7 }} />
+                        <span style={{ display: 'block', height: '2px', background: 'var(--text-color)', borderRadius: '2px', opacity: 0.5 }} />
+                    </div>
+                </button>
+                <h1 className="logo">{isCollapsed ? '' : 'ShopFlow'}</h1>
             </div>
             <nav className="sidebar-nav">
 
                 <NavLink to="/" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
                     <DashboardIcon style={{ color: iconColors.dashboard }} />
-                    <span>Dashboard</span>
+                    <span className="nav-text">Dashboard</span>
                 </NavLink>
 
                 <NavLink to="/products" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
                     <Inventory2Icon style={{ color: iconColors.products }} />
-                    <span>Products</span>
+                    <span className="nav-text">Products</span>
                 </NavLink>
 
                 <NavLink to="/sales" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
                     <ShoppingCartIcon style={{ color: iconColors.sales }} />
-                    <span>Sales</span>
+                    <span className="nav-text">Sales</span>
                 </NavLink>
 
                 <NavLink to="/billing" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
                     <ReceiptIcon style={{ color: iconColors.billing }} />
-                    <span>Billing</span>
+                    <span className="nav-text">Billing</span>
                 </NavLink>
 
                 <NavLink to="/customers" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
                     <PeopleIcon style={{ color: iconColors.customers }} />
-                    <span>Customers</span>
+                    <span className="nav-text">Customers</span>
                 </NavLink>
 
                 <NavLink to="/payments" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
                     <CreditCardIcon style={{ color: iconColors.payments }} />
-                    <span>Payments</span>
+                    <span className="nav-text">Payments</span>
                 </NavLink>
 
                 <NavLink to="/reports" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
                     <TableChartIcon style={{ color: iconColors.reports }} />
-                    <span>Reports</span>
+                    <span className="nav-text">Reports</span>
                 </NavLink>
 
                 <NavLink to="/analytics" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
                     <BarChartIcon style={{ color: iconColors.analytics }} />
-                    <span>Analytics</span>
+                    <span className="nav-text">Analytics</span>
                 </NavLink>
 
             </nav>

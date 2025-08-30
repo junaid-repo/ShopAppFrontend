@@ -64,8 +64,18 @@ body {
     flex-grow: 1;
     margin-left: var(--sidebar-width);
     padding: 2rem;
-    transition: margin-left 0.3s ease;
+    transition: margin-left 0.25s ease;
     background-color: transparent;
+}
+
+/* When the sidebar is collapsed, reduce the left margin so content aligns */
+.app-container.collapsed .main-content {
+    margin-left: 72px; /* matches .sidebar.collapsed width */
+}
+
+/* Ensure the top spacing of cards aligns well with Topbar */
+.glass-card {
+    margin-top: 20px; /* reduced so content sits closer under topbar */
 }
 
 /* Navigation Link */

@@ -1,11 +1,37 @@
 // src/components/MainLayout.js
-import React from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from 'react-router-dom';
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 
 const MainLayout = ({ children, onLogout, toggleTheme, theme  }) => {
 const navigate = useNavigate();
+    // sidebar collapsed state (persist in localStorage)
+    const [isCollapsed, setIsCollapsed] = useState(() => {
+        try {
+            const s = localStorage.getItem('sidebar_collapsed');
+            return s === 'true';
+        } catch (e) {
+            return false;
+        }
+    });
+    const toggleSidebar = () => {
+        setIsCollapsed(prev => {
+            const next = !prev;
+            try { localStorage.setItem('sidebar_collapsed', String(next)); } catch (e) {}
+            return next;
+        });
+    };
+    // if storage changed elsewhere, keep it in sync
+    useEffect(() => {
+        const handler = (e) => {
+            if (e.key === 'sidebar_collapsed') {
+                try { setIsCollapsed(e.newValue === 'true'); } catch (err) {}
+            }
+        };
+        window.addEventListener('storage', handler);
+        return () => window.removeEventListener('storage', handler);
+    }, []);
    const handleLogout = () => {
         if (onLogout) {
             onLogout(); // clear token
@@ -13,10 +39,10 @@ const navigate = useNavigate();
         navigate("/login"); // redirect to login page
     };
     return (
-        <div className="app-container">
-            <Sidebar />
+        <div className={`app-container ${isCollapsed ? 'collapsed' : ''}`}>
+            <Sidebar isCollapsed={isCollapsed} toggleSidebar={toggleSidebar} />
             <div className="main-content">
-                <Topbar onLogout={handleLogout}  toggleTheme={toggleTheme} theme={theme}/>
+                <Topbar onLogout={handleLogout}  toggleTheme={toggleTheme} theme={theme} isCollapsed={isCollapsed} />
                 <main>{children}</main>
             </div>
         </div>

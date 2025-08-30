@@ -6,7 +6,7 @@ import { jwtDecode } from "jwt-decode";
 import { useConfig } from "../pages/ConfigProvider";
 
 // Make sure to pass `theme` and `toggleTheme` from MainLayout.js
-const Topbar = ({ onLogout, theme, toggleTheme }) => {
+const Topbar = ({ onLogout, theme, toggleTheme, toggleSidebar, isCollapsed }) => {
     const [userName, setUserName] = useState('');
     const [profilePic, setProfilePic] = useState(null);
     const navigate = useNavigate();
@@ -64,40 +64,15 @@ const Topbar = ({ onLogout, theme, toggleTheme }) => {
         navigate("/login", { replace: true });
     };
 
-    // Style for the theme toggle button
-    const themeToggleStyle = {
-        background: 'var(--glass-bg)',
-        border: '1px solid var(--border-color)',
-        borderRadius: '50%',
-        width: '40px',
-        height: '40px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        cursor: 'pointer',
-        color: 'var(--primary-color)',
-        boxShadow: '0 2px 8px var(--shadow-color)',
-        transition: 'all 0.3s ease',
-    };
-
     return (
-        <header style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '0.75rem 1.5rem',
-            // Removed inline background styles to let CSS variables handle it
-        }}>
-            {/* Search */}
-            <div style={{ flex: 1, marginRight: '20px' }}>
+        <header className="topbar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1.5rem' }}>
+            {/* Left: search (sidebar toggle is in Sidebar header) */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <input
                     type="text"
                     placeholder="Search..."
-                    className="search-bar" // Use class from index.css
-                    style={{
-                        width: '90%',
-                        marginBottom: '25px',
-                    }}
+                    className="search-bar"
+                    style={{ width: '420px' }}
                 />
             </div>
 
