@@ -91,7 +91,7 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar }) => {
                 <NavLink to="/" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
                     {({ isActive }) => (
                         <>
-                            <DashboardIcon style={{ color: isCollapsed ? (isActive ? '#ffffff' : collapsedIconColor) : iconColors.dashboard }} />
+                            <DashboardIcon style={{ color: isDark ? '#ffffff' : (isCollapsed ? (isActive ? '#ffffff' : collapsedIconColor) : iconColors.dashboard) }} />
                             <span className="nav-text">Dashboard</span>
                         </>
                     )}
@@ -100,7 +100,7 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar }) => {
                 <NavLink to="/products" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
                     {({ isActive }) => (
                         <>
-                            <Inventory2Icon style={{ color: isCollapsed ? (isActive ? '#ffffff' : collapsedIconColor) : iconColors.products }} />
+                            <Inventory2Icon style={{ color: isDark ? '#ffffff' : (isCollapsed ? (isActive ? '#ffffff' : collapsedIconColor) : iconColors.products) }} />
                             <span className="nav-text">Products</span>
                         </>
                     )}
@@ -109,7 +109,7 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar }) => {
                 <NavLink to="/sales" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
                     {({ isActive }) => (
                         <>
-                            <ShoppingCartIcon style={{ color: isCollapsed ? (isActive ? '#ffffff' : collapsedIconColor) : iconColors.sales }} />
+                            <ShoppingCartIcon style={{ color: isDark ? '#ffffff' : (isCollapsed ? (isActive ? '#ffffff' : collapsedIconColor) : iconColors.sales) }} />
                             <span className="nav-text">Sales</span>
                         </>
                     )}
@@ -118,7 +118,7 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar }) => {
                 <NavLink to="/billing" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
                     {({ isActive }) => (
                         <>
-                            <ReceiptIcon style={{ color: isCollapsed ? (isActive ? '#ffffff' : collapsedIconColor) : iconColors.billing }} />
+                            <ReceiptIcon style={{ color: isDark ? '#ffffff' : (isCollapsed ? (isActive ? '#ffffff' : collapsedIconColor) : iconColors.billing) }} />
                             <span className="nav-text">Billing</span>
                         </>
                     )}
@@ -127,7 +127,7 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar }) => {
                 <NavLink to="/customers" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
                     {({ isActive }) => (
                         <>
-                            <PeopleIcon style={{ color: isCollapsed ? (isActive ? '#ffffff' : collapsedIconColor) : iconColors.customers }} />
+                            <PeopleIcon style={{ color: isDark ? '#ffffff' : (isCollapsed ? (isActive ? '#ffffff' : collapsedIconColor) : iconColors.customers) }} />
                             <span className="nav-text">Customers</span>
                         </>
                     )}
@@ -136,7 +136,7 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar }) => {
                 <NavLink to="/payments" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
                     {({ isActive }) => (
                         <>
-                            <CreditCardIcon style={{ color: isCollapsed ? (isActive ? '#ffffff' : collapsedIconColor) : iconColors.payments }} />
+                            <CreditCardIcon style={{ color: isDark ? '#ffffff' : (isCollapsed ? (isActive ? '#ffffff' : collapsedIconColor) : iconColors.payments) }} />
                             <span className="nav-text">Payments</span>
                         </>
                     )}
@@ -145,7 +145,7 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar }) => {
                 <NavLink to="/reports" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
                     {({ isActive }) => (
                         <>
-                            <TableChartIcon style={{ color: isCollapsed ? (isActive ? '#ffffff' : collapsedIconColor) : iconColors.reports }} />
+                            <TableChartIcon style={{ color: isDark ? '#ffffff' : (isCollapsed ? (isActive ? '#ffffff' : collapsedIconColor) : iconColors.reports) }} />
                             <span className="nav-text">Reports</span>
                         </>
                     )}
@@ -154,7 +154,7 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar }) => {
                 <NavLink to="/analytics" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
                     {({ isActive }) => (
                         <>
-                            <BarChartIcon style={{ color: isCollapsed ? (isActive ? '#ffffff' : collapsedIconColor) : iconColors.analytics }} />
+                            <BarChartIcon style={{ color: isDark ? '#ffffff' : (isCollapsed ? (isActive ? '#ffffff' : collapsedIconColor) : iconColors.analytics) }} />
                             <span className="nav-text">Analytics</span>
                         </>
                     )}
