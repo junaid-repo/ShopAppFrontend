@@ -172,7 +172,7 @@ const SalesPage = () => {
                         <th>Total</th>
                         <th>Status</th>
                         <th>Comments</th>
-                        <th>Actions</th>
+                        <th>Invoice</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -203,7 +203,7 @@ const SalesPage = () => {
 
                                     style={{
                                         cursor: "pointer",
-                                        backgroundColor: "#e0f7fa",
+                                        backgroundColor: "6CDB11FF",
                                         borderRadius: "6px",
                                         padding: "6px",
                                         marginRight: "8px",

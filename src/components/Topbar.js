@@ -54,7 +54,12 @@ const Topbar = ({ onLogout, theme, toggleTheme }) => {
     };
 
     const handleLogout = () => {
-        // Removed window.confirm for a smoother user experience
+
+        const confirmDownload = window.confirm("Do you really want to log out?");
+        if (!confirmDownload) {
+            return;
+        }
+
         onLogout();
         navigate("/login", { replace: true });
     };

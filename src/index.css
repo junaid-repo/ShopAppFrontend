@@ -7,7 +7,7 @@
     --border-color: rgba(224, 247, 255, 0.7);
     --shadow-color: rgb(0 0 0 / 15%);
     --text-color: #052f7f;
-    --sidebar-width: 260px;
+    --sidebar-width: 280px;
     --body-bg: rgba(240, 248, 255, 0.85);
     --modal-bg: #ffffff;
     --input-bg: #ffffff;
@@ -29,8 +29,8 @@ body.dark-theme {
     --border-color: rgba(139, 148, 158, 0.3);
     --shadow-color: rgba(0, 0, 0, 0.5);
     --text-color: #c9d1d9;
-    --body-bg: #010409;
-    --modal-bg: #161b22;
+    --body-bg: #04041b;
+    --modal-bg: rgb(33, 60, 103);
     --input-bg: #0d1117;
     --input-border: var(--border-color);
     --table-hover-bg: rgba(0, 170, 255, 0.1);
@@ -107,7 +107,7 @@ body {
     padding: 0.75rem 1.25rem;
     border: rgba(39, 63, 107, 0.7);
     border-radius: 50px;
-    background: var(--glass-bg);
+    background: var(--modal-bg);
 
     color: var(--text-color);
     font-size: 1rem;
@@ -417,12 +417,12 @@ body.dark-theme .time-range-selector select:focus {
 
 /* Download Button */
 .download-btn {
-    background: linear-gradient(135deg, #25b42a, #66bb6a);
+    background: linear-gradient(135deg, #54ff59, #34ff3d);
     color: white;
     border: none;
     border-radius: 50%;
-    width: 40px; /* Explicit size */
-    height: 40px; /* Explicit size */
+    width: 30px; /* Explicit size */
+    height: 30px; /* Explicit size */
     cursor: pointer;
     transition: all 0.3s ease;
     display: flex;
