@@ -30,13 +30,16 @@ const LoginPage = ({ onLogin }) => {
     const navigate = useNavigate();
     const config = useConfig();
     const apiUrl = config?.API_URL || "";
+    const authApiUrl = config?.AUTH_API_URL || "";
+
 
     // ---------- LOGIN ----------
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+
         try {
-            const response = await fetch(apiUrl + "/auth/authenticate", {
+            const response = await fetch(authApiUrl + "/auth/authenticate", {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })
@@ -113,7 +116,7 @@ const LoginPage = ({ onLogin }) => {
         };
 
         try {
-            const res = await fetch(apiUrl + "/auth/forgot-password", {
+            const res = await fetch(authApiUrl + "/auth/forgot-password", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
@@ -154,7 +157,7 @@ const LoginPage = ({ onLogin }) => {
         };
 
         try {
-            const res = await fetch(apiUrl + "/auth/update-password", {
+            const res = await fetch(authApiUrl + "/auth/update-password", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)

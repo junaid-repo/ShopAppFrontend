@@ -309,6 +309,7 @@ const UserProfilePage = () => {
           console.log(config.API_URL);
           apiUrl=config.API_URL;
           }
+    const authApiUrl = config?.AUTH_API_URL || "";
 
     const [profilePicFile, setProfilePicFile] = useState(null);
   const [passwordData, setPasswordData] = useState({
@@ -546,7 +547,7 @@ const UserProfilePage = () => {
         console.log("Decoded username:", username);
 console.log("Decoded username:", passwordData.currentPassword);
         // 3. Call generateToken API with username + entered currentPassword
-        const response = await fetch(apiUrl+"/auth/authenticate", {
+        const response = await fetch(authApiUrl+"/auth/authenticate", {
           method: "POST",
           headers: { "Content-Type": "application/json", "Authorization": `Bearer ${storedToken}` },
           body: JSON.stringify({

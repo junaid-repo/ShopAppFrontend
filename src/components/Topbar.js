@@ -67,12 +67,13 @@ const Topbar = ({ onLogout, theme, toggleTheme, toggleSidebar, isCollapsed }) =>
     return (
         <header className="topbar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1.5rem' }}>
             {/* Left: search (sidebar toggle is in Sidebar header) */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '42px' }}>
+
                 <input
                     type="text"
                     placeholder="Search..."
                     className="search-bar"
-                    style={{ width: '420px' }}
+                    style={{ width: '1020px' }}
                 />
             </div>
 
