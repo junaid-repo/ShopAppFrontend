@@ -90,7 +90,7 @@ const Topbar = ({ onLogout, theme, toggleTheme, toggleSidebar, isCollapsed }) =>
                         width: "70px",
                         height: "36px",
                         borderRadius: "25px",
-                        border: "2px solid #00aaff", // Primary color border
+                        border: "0px solid #00aaff", // Primary color border
                         background: theme === "light" ? "#f0faff" : "#002b36",
                         display: "flex",
                         alignItems: "center",
@@ -98,7 +98,7 @@ const Topbar = ({ onLogout, theme, toggleTheme, toggleSidebar, isCollapsed }) =>
                         padding: "4px",
                         cursor: "pointer",
                         transition: "all 0.3s ease",
-                        boxShadow: "0 4px 10px rgba(0, 170, 255, 0.3)", // subtle glow
+                        boxShadow: "0 10px 10px rgba(0, 170, 255, 0.3)", // subtle glow
                     }}
                 >
                     <div
@@ -133,7 +133,7 @@ const Topbar = ({ onLogout, theme, toggleTheme, toggleSidebar, isCollapsed }) =>
                         borderRadius: '50px',
                         background: 'var(--glass-bg)',
                         border: '1px solid var(--border-color)',
-                        boxShadow: '0 2px 8px var(--shadow-color)',
+                        boxShadow: '0 10px 10px var(--shadow-color)',
                         cursor: 'pointer'
                     }}
                 >
@@ -181,7 +181,7 @@ const Topbar = ({ onLogout, theme, toggleTheme, toggleSidebar, isCollapsed }) =>
                         alignItems: "center",
                         gap: "6px",
                         background: "#e80a0d",
-                        boxShadow: "0 6px 10px rgba(255, 107, 107, 0.3)",
+                        boxShadow: "0 10px 10px rgba(255, 107, 107, 0.3)",
                         padding: "11px 15px",   // 🔹 smaller padding
                         fontSize: "0.85rem",   // 🔹 slightly smaller text
                         borderRadius: "25px",   // 🔹 keep rounded look

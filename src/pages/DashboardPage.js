@@ -1,6 +1,7 @@
 // src/pages/DashboardPage.js
 import React, { useState, useEffect } from 'react';
-import { FaRupeeSign, FaBoxes, FaBan } from 'react-icons/fa';
+import { FaRupeeSign, FaBoxes, FaBan, FaChartLine } from 'react-icons/fa';
+import CurrencyRupeeTwoToneIcon from '@mui/icons-material/CurrencyRupeeTwoTone';
 import Modal from '../components/Modal';
 import './DashboardPage.css';
 import { useNavigate } from 'react-router-dom';
@@ -151,7 +152,7 @@ const DashboardPage = () => {
             {/* Stats */}
             <div className="stats-grid">
                 <div className="stat-card glass-card">
-                    <FaRupeeSign className="icon revenue" />
+                    <FaChartLine className="icon revenue" />
                     <div>
                         <p>Total Revenue</p>
                         <h3>₹{dashboardData.monthlyRevenue?.toLocaleString()}</h3>
