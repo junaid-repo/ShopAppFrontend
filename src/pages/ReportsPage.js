@@ -90,7 +90,8 @@ async function mockFetchRecentReports({ limit = 10 } = {}) {
     const response = await fetch('http://localhost:6062/api/shop/report/recent?limit=10', {
       method: "GET",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
       }
     });
 
@@ -226,13 +227,13 @@ const ReportsPage = () => {
     try {
       const payload = { reportType, fromDate, toDate };
       console.log("Generate Report - Payload:", payload);
-
+   // alert(token);
       // POST to backend and expect an Excel binary
       const response = await fetch(apiUrl+"/api/shop/report", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
+            Authorization: `Bearer ${token}`
         },
         body: JSON.stringify(payload),
       });

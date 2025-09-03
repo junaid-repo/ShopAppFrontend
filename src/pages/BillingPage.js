@@ -165,7 +165,7 @@ const BillingPage = () => {
             alert('Please select a customer and add products.');
             return;
         }
-        const payload = { selectedCustomer, cart: cartWithDiscounts, total, discountPercentage, tax, paymentMethod, remarks };
+        const payload = { selectedCustomer, cart: cartWithDiscounts, sellingSubtotal, discountPercentage, tax, paymentMethod, remarks };
 
         // 🔴 API may need changes here to accept `sellingPrice` for each cart item
         fetch(`${apiUrl}/api/shop/do/billing`, {
@@ -177,7 +177,7 @@ const BillingPage = () => {
             .then(res => res.json())
             .then(data => {
                 setOrderRef(data.invoiceNumber || 'N/A');
-                setPaidAmount(total);
+                setPaidAmount(sellingSubtotal);
                 setShowPopup(true);
                 handleNewBilling();
             })
@@ -197,8 +197,9 @@ const BillingPage = () => {
     // sellingSubtotal = based on sellingPrice (user editable). Totals/tax are calculated from sellingSubtotal.
     const actualSubtotal = cart.reduce((total, item) => total + item.price * item.quantity, 0);
     const sellingSubtotal = cart.reduce((total, item) => total + ((item.sellingPrice !== undefined ? item.sellingPrice : item.price) * item.quantity), 0);
-    const tax = sellingSubtotal * 0.18;
-    const total = sellingSubtotal + tax;
+    //const tax = sellingSubtotal * 0.18;
+    const tax = cart.reduce((total, item) => total + ((item.sellingPrice !== undefined ? item.sellingPrice*item.tax*0.01 : item.price*item.tax*0.01 ) * item.quantity), 0);;
+    const total = sellingSubtotal - tax;
     const discountPercentage = actualSubtotal > 0 ? (((actualSubtotal - sellingSubtotal) / actualSubtotal) * 100).toFixed(2) : 0;
 
     const filteredCustomers = customersList.filter(customer => {
@@ -322,20 +323,23 @@ const BillingPage = () => {
                         ))}
                     </div>
                     <div className="invoice-summary">
-                        <p className="subtotal-actual">
+                        <h4>Total without gst: <span>₹{total.toLocaleString()}</span></h4>
+                        <p className="tax">
+                            GST : <span>₹{tax.toLocaleString()}</span>
+                        </p>
+                        {/* <p className="subtotal-actual">
                             Subtotal (Actual): <span>₹{actualSubtotal.toLocaleString()}</span>
-                        </p>
-                        <p className="subtotal-selling">
-                            Subtotal (Selling): <span>₹{sellingSubtotal.toLocaleString()}</span>
-                        </p>
+                        </p>*/}
                         <p className="discount">
                             Discount %: <span>{discountPercentage}%</span>
                         </p>
-                        <p className="tax">
-                            Tax (18%): <span>₹{tax.toLocaleString()}</span>
+                        <p className="subtotal-selling">
+                            Final Total: <span>₹{sellingSubtotal.toLocaleString()}</span>
                         </p>
 
-                        <h4>Total: <span>₹{total.toLocaleString()}</span></h4>
+
+
+
                         <div className="remarks-section" style={{ margin: '1rem 0' }}>
                             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: 'var(--primary-color)' }}>
                                 Remarks:
@@ -518,7 +522,7 @@ const BillingPage = () => {
 
 const overlayStyle = {
     position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-    background: 'rgba(0, 0, 0, 0.5)',
+    background: 'rgba(39,0,189,0.5)',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     zIndex: 1000
 };

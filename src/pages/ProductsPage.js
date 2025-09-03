@@ -542,7 +542,7 @@ const ProductsPage = () => {
                 <table className="data-table" style={{ width: "100%" }}>
                     <thead>
                     <tr>
-                        {visibleColumns.id && <th>ID</th>}
+                     {/*   {visibleColumns.id && <th>ID</th>}*/}
                         {visibleColumns.name && <th>Name</th>}
                         {visibleColumns.category && (
                             <th style={{ cursor: "pointer" }} onClick={() => toggleSort("category")}>
@@ -560,7 +560,7 @@ const ProductsPage = () => {
                     <tbody>
                     {sortedProducts.map(product => (
                         <tr key={product.id}>
-                            {visibleColumns.id && <td>{product.id}</td>}
+                           {/* {visibleColumns.id && <td>{product.id}</td>}*/}
                             {visibleColumns.name && <td>{product.name}</td>}
                             {visibleColumns.category && <td>{product.category}</td>}
                             {visibleColumns.costPrice && <td>{product.costPrice !== undefined && product.costPrice !== null ? `₹${Number(product.costPrice).toLocaleString()}` : '-'}</td>}

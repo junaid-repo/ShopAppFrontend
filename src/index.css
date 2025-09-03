@@ -868,7 +868,9 @@ body.dark-theme {
 
 .subtotal-selling {
     color: #16a085;  /* teal green */
-    font-weight: 600;
+    font-weight: 800;
+    padding-top: 5px;
+    font-size: 20px;
 }
 
 .discount {
