@@ -50,9 +50,10 @@
     display: flex;
     flex-direction: column;
     padding-top: 2.25rem;
-    gap: 0.5rem;
+    gap: 2rem;                /* increased vertical gap between nav items */
     padding-right: 28px;
     margin-top: 16px; /* keep nav close to header */
+    padding-top: 80px;
 }
 
 /* ensure there's always some space at the bottom of the sidebar */
@@ -65,33 +66,48 @@
     align-items: center;
 
     margin-right: 10px;
-    margin-bottom: 1.25rem;
-    padding-top: 18px;
+    margin-bottom: 2rem;              /* further increased vertical gap between links */
+    padding: 1.15rem 1.25rem;         /* keep larger tappable area */
     border-radius: 50px;
     color: var(--text-color);
     text-decoration: none;
-    font-weight: 500;
+    font-weight: 600;
+    font-size: 1.05rem;               /* increase text size for nav link labels */
     transition: background-color 0.25s ease, transform 0.22s ease;
     transform-origin: left center;
 }
 
+/* ensure default button background is removed (user-agent may add a grey background) */
+.sidebar .nav-link {
+    background: transparent;
+    -webkit-appearance: none;
+    appearance: none;
+    padding-top: 20px;
+}
+
+/* Explicitly force non-active nav-links transparent to override UA or other rules while preserving .active */
+.sidebar .nav-link:not(.active) {
+    background: transparent !important;
+}
+
 .nav-link svg {
-    margin-right: 1rem;
-    font-size: 1.2rem;
-    min-width: 20px;
+    margin-right: 1.1rem;            /* slightly larger gap between icon and text */
+    font-size: 1.5rem;              /* increased icon size */
+    min-width: 24px;
     transition: transform 0.32s cubic-bezier(.2,.8,.2,1), opacity 0.25s ease;
 }
 
 /* When collapsed, center icons and hide text */
 .sidebar.collapsed .nav-link {
     justify-content: center;
-    padding: 0.6rem 0.2rem;
+    padding: 0.8rem 0.25rem;         /* keep collapsed paddings slightly larger for hit area */
     margin-right: 0;
 }
 
 .sidebar.collapsed .nav-link svg {
     margin-right: 0;
     transform: translateY(0);
+    font-size: 1.4rem;               /* slightly smaller icon in collapsed state but still bigger than before */
 }
 
 .sidebar .nav-text {
@@ -120,13 +136,14 @@
 /* In collapsed state, avoid horizontal translate on hover to keep icons centered */
 .sidebar.collapsed .nav-link:hover {
     transform: none;
-    background-color: rgba(255,255,255,0.04);
+    background-color: rgba(255, 255, 255, 0.08);
 }
 
-.nav-link.active {
-    background-color: var(--primary-color);
-    color: white;
-    box-shadow: 0 4px 15px rgba(0, 170, 255, 0.4);
+.sidebar .nav-link.active {
+    /* make active tab use theme primary color and high-contrast text */
+    background: var(--primary-color);
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(0, 170, 255, 0.28);
     transform: translateX(10px) scale(1.05);
 }
 
@@ -134,8 +151,8 @@
 .sidebar.collapsed .nav-link.active {
     transform: none;
     box-shadow: none;
-    background-color: var(--primary-color);
-    color: white;
+    color: #ffffff;
+    background: var(--primary-color);
     border-radius: 12px;
 }
 

@@ -120,6 +120,23 @@ function App() {
         return () => window.removeEventListener("storage", checkToken);
     }, []);
 
+    // ------------------ New: internal page selection (keeps URL at "/") ------------------
+    // We'll maintain an internal selectedPage state and pass a pages map to MainLayout.
+    // Sidebar/Topbar will call setSelectedPage to change visible content without altering the address bar.
+    const [selectedPage, setSelectedPage] = useState('dashboard');
+
+    const pages = {
+        dashboard: <DashboardPage />,
+        products: <ProductsPage />,
+        sales: <SalesPage />,
+        customers: <CustomersPage />,
+        payments: <PaymentsPage />,
+        billing: <BillingPage />,
+        reports: <ReportsPage />,
+        profile: <UserProfilePage />,
+        analytics: <AnalyticsPage />,
+    };
+
     return (
         <QueryClientProvider client={queryClient}>
             <Router>
@@ -135,12 +152,19 @@ function App() {
                         }
                     />
 
-                    {/* Protected routes */}
+                    {/* Protected app at root - URL will remain "/" while internal selectedPage controls content */}
                     <Route
                         path="/*"
                         element={
                             isAuthenticated
-                                ? <ProtectedRoutes onLogout={handleLogout} theme={theme} toggleTheme={toggleTheme} />
+                                ? <MainLayout
+                                    onLogout={handleLogout}
+                                    theme={theme}
+                                    toggleTheme={toggleTheme}
+                                    selectedPage={selectedPage}
+                                    setSelectedPage={setSelectedPage}
+                                    pages={pages}
+                                />
                                 : <Navigate to="/login" replace />
                         }
                     />
@@ -150,29 +174,5 @@ function App() {
     );
 }
 
-const ProtectedRoutes = ({ onLogout, theme, toggleTheme }) => {
-    const navigate = useNavigate();
-
-    const logoutAndRedirect = () => {
-        onLogout();
-        navigate("/login", { replace: true });
-    };
-
-    return (
-        <MainLayout onLogout={logoutAndRedirect} theme={theme} toggleTheme={toggleTheme}>
-            <Routes>
-                <Route path="/" element={<DashboardPage />} />
-                <Route path="/products" element={<ProductsPage />} />
-                <Route path="/sales" element={<SalesPage />} />
-                <Route path="/customers" element={<CustomersPage />} />
-                <Route path="/payments" element={<PaymentsPage />} />
-                <Route path="/billing" element={<BillingPage />} />
-                <Route path="/reports" element={<ReportsPage />} />
-                <Route path="/profile" element={<UserProfilePage />} />
-                <Route path="/analytics" element={<AnalyticsPage />} />
-            </Routes>
-        </MainLayout>
-    );
-};
 
 export default App;

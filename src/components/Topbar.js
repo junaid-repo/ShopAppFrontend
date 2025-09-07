@@ -6,7 +6,7 @@ import { jwtDecode } from "jwt-decode";
 import { useConfig } from "../pages/ConfigProvider";
 
 // Make sure to pass `theme` and `toggleTheme` from MainLayout.js
-const Topbar = ({ onLogout, theme, toggleTheme, toggleSidebar, isCollapsed }) => {
+const Topbar = ({ onLogout, theme, toggleTheme, toggleSidebar, isCollapsed, setSelectedPage }) => {
     const [userName, setUserName] = useState('');
     const [profilePic, setProfilePic] = useState(null);
     const navigate = useNavigate();
@@ -50,7 +50,11 @@ const Topbar = ({ onLogout, theme, toggleTheme, toggleSidebar, isCollapsed }) =>
     }, [apiUrl]); // Added apiUrl as a dependency
 
     const handleProfileClick = () => {
-        navigate('/profile');
+        if (setSelectedPage) {
+            setSelectedPage('profile');
+        } else {
+            navigate('/profile');
+        }
     };
 
     const handleLogout = () => {

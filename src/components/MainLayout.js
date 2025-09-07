@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 
-const MainLayout = ({ children, onLogout, toggleTheme, theme  }) => {
+const MainLayout = ({ children, onLogout, toggleTheme, theme, selectedPage, setSelectedPage, pages  }) => {
 const navigate = useNavigate();
     // sidebar collapsed state (persist in localStorage)
     const [isCollapsed, setIsCollapsed] = useState(() => {
@@ -40,10 +40,10 @@ const navigate = useNavigate();
     };
     return (
         <div className={`app-container ${isCollapsed ? 'collapsed' : ''}`}>
-            <Sidebar isCollapsed={isCollapsed} toggleSidebar={toggleSidebar} />
+            <Sidebar isCollapsed={isCollapsed} toggleSidebar={toggleSidebar} selectedPage={selectedPage} setSelectedPage={setSelectedPage} />
             <div className="main-content">
-                <Topbar onLogout={handleLogout}  toggleTheme={toggleTheme} theme={theme} isCollapsed={isCollapsed} />
-                <main>{children}</main>
+                <Topbar onLogout={handleLogout}  toggleTheme={toggleTheme} theme={theme} isCollapsed={isCollapsed} setSelectedPage={setSelectedPage} />
+                <main>{(pages && selectedPage && pages[selectedPage]) ? pages[selectedPage] : children}</main>
             </div>
         </div>
     );

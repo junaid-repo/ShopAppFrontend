@@ -1,6 +1,6 @@
 // src/components/Sidebar.js
 import React, { useState, useEffect } from 'react';
-import { NavLink } from 'react-router-dom';
+// import { NavLink } from 'react-router-dom';
 
 // ✅ Import Material Design Icons (from MUI)
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -26,7 +26,7 @@ const iconColors = {
   analytics: "#F15BB5"    // pink
 };
 
-const Sidebar = ({ isCollapsed = false, toggleSidebar }) => {
+const Sidebar = ({ isCollapsed = false, toggleSidebar, selectedPage, setSelectedPage }) => {
     const [isDark, setIsDark] = useState(() => typeof document !== 'undefined' && document.body.classList.contains('dark-theme'));
     const [primaryColor, setPrimaryColor] = useState(() => {
         try {
@@ -73,6 +73,22 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar }) => {
     const collapsedIconColor = isDark ? '#ffffff' : primaryColor || '#00aaff';
     const toggleColor = collapsedIconColor;
 
+    const makeClickHandler = (page) => (e) => {
+        e.preventDefault();
+        if (setSelectedPage) setSelectedPage(page);
+    };
+
+    // keep button base style but avoid setting background inline (so CSS .nav-link.active can take effect)
+    // IMPORTANT: do NOT set `background` inline here — inline backgrounds override stylesheet rules.
+    const navButtonBaseStyle = { border: 'none', width: '100%', textAlign: 'left', padding: '0.75rem 1rem', marginBottom: '0.5rem', borderRadius: '50px' };
+
+    const buttonStyleFor = (page) => {
+        // For non-active buttons we explicitly set a transparent background to override the browser default
+        // For the active button we must NOT set background so the stylesheet (.sidebar .nav-link.active) can apply
+        if (selectedPage === page) return navButtonBaseStyle;
+        return { ...navButtonBaseStyle, background: 'transparent' };
+    };
+
     return (
         <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
             <div className="sidebar-header" style={{ display: 'flex', alignItems: 'center', justifyContent: isCollapsed ? 'center' : 'flex-start', gap: '8px' }}>
@@ -88,77 +104,45 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar }) => {
             </div>
             <nav className="sidebar-nav">
 
-                <NavLink to="/" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
-                    {({ isActive }) => (
-                        <>
-                            <DashboardIcon style={{ color: isDark ? '#ffffff' : (isCollapsed ? (isActive ? '#ffffff' : collapsedIconColor) : iconColors.dashboard) }} />
-                            <span className="nav-text">Dashboard</span>
-                        </>
-                    )}
-                </NavLink>
+                <button type="button" onClick={makeClickHandler('dashboard')} className={`nav-link ${selectedPage === 'dashboard' ? 'active' : ''}`} title="Dashboard" style={buttonStyleFor('dashboard')}>
+                    <DashboardIcon style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'dashboard' ? '#ffffff' : collapsedIconColor) : iconColors.dashboard) }} />
+                    <span className="nav-text">Dashboard</span>
+                </button>
 
-                <NavLink to="/products" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
-                    {({ isActive }) => (
-                        <>
-                            <Inventory2Icon style={{ color: isDark ? '#ffffff' : (isCollapsed ? (isActive ? '#ffffff' : collapsedIconColor) : iconColors.products) }} />
-                            <span className="nav-text">Products</span>
-                        </>
-                    )}
-                </NavLink>
+                <button type="button" onClick={makeClickHandler('products')} className={`nav-link ${selectedPage === 'products' ? 'active' : ''}`} title="Products" style={buttonStyleFor('products')}>
+                    <Inventory2Icon style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'products' ? '#ffffff' : collapsedIconColor) : iconColors.products) }} />
+                    <span className="nav-text">Products</span>
+                </button>
 
-                <NavLink to="/sales" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
-                    {({ isActive }) => (
-                        <>
-                            <ShoppingCartIcon style={{ color: isDark ? '#ffffff' : (isCollapsed ? (isActive ? '#ffffff' : collapsedIconColor) : iconColors.sales) }} />
-                            <span className="nav-text">Sales</span>
-                        </>
-                    )}
-                </NavLink>
+                <button type="button" onClick={makeClickHandler('sales')} className={`nav-link ${selectedPage === 'sales' ? 'active' : ''}`} title="Sales" style={buttonStyleFor('sales')}>
+                    <ShoppingCartIcon style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'sales' ? '#ffffff' : collapsedIconColor) : iconColors.sales) }} />
+                    <span className="nav-text">Sales</span>
+                </button>
 
-                <NavLink to="/billing" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
-                    {({ isActive }) => (
-                        <>
-                            <ReceiptIcon style={{ color: isDark ? '#ffffff' : (isCollapsed ? (isActive ? '#ffffff' : collapsedIconColor) : iconColors.billing) }} />
-                            <span className="nav-text">Billing</span>
-                        </>
-                    )}
-                </NavLink>
+                <button type="button" onClick={makeClickHandler('billing')} className={`nav-link ${selectedPage === 'billing' ? 'active' : ''}`} title="Billing" style={buttonStyleFor('billing')}>
+                    <ReceiptIcon style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'billing' ? '#ffffff' : collapsedIconColor) : iconColors.billing) }} />
+                    <span className="nav-text">Billing</span>
+                </button>
 
-                <NavLink to="/customers" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
-                    {({ isActive }) => (
-                        <>
-                            <PeopleIcon style={{ color: isDark ? '#ffffff' : (isCollapsed ? (isActive ? '#ffffff' : collapsedIconColor) : iconColors.customers) }} />
-                            <span className="nav-text">Customers</span>
-                        </>
-                    )}
-                </NavLink>
+                <button type="button" onClick={makeClickHandler('customers')} className={`nav-link ${selectedPage === 'customers' ? 'active' : ''}`} title="Customers" style={buttonStyleFor('customers')}>
+                    <PeopleIcon style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'customers' ? '#ffffff' : collapsedIconColor) : iconColors.customers) }} />
+                    <span className="nav-text">Customers</span>
+                </button>
 
-                <NavLink to="/payments" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
-                    {({ isActive }) => (
-                        <>
-                            <CreditCardIcon style={{ color: isDark ? '#ffffff' : (isCollapsed ? (isActive ? '#ffffff' : collapsedIconColor) : iconColors.payments) }} />
-                            <span className="nav-text">Payments</span>
-                        </>
-                    )}
-                </NavLink>
+                <button type="button" onClick={makeClickHandler('payments')} className={`nav-link ${selectedPage === 'payments' ? 'active' : ''}`} title="Payments" style={buttonStyleFor('payments')}>
+                    <CreditCardIcon style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'payments' ? '#ffffff' : collapsedIconColor) : iconColors.payments) }} />
+                    <span className="nav-text">Payments</span>
+                </button>
 
-                <NavLink to="/reports" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
-                    {({ isActive }) => (
-                        <>
-                            <TableChartIcon style={{ color: isDark ? '#ffffff' : (isCollapsed ? (isActive ? '#ffffff' : collapsedIconColor) : iconColors.reports) }} />
-                            <span className="nav-text">Reports</span>
-                        </>
-                    )}
-                </NavLink>
+                <button type="button" onClick={makeClickHandler('reports')} className={`nav-link ${selectedPage === 'reports' ? 'active' : ''}`} title="Reports" style={buttonStyleFor('reports')}>
+                    <TableChartIcon style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'reports' ? '#ffffff' : collapsedIconColor) : iconColors.reports) }} />
+                    <span className="nav-text">Reports</span>
+                </button>
 
-                <NavLink to="/analytics" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
-                    {({ isActive }) => (
-                        <>
-                            <BarChartIcon style={{ color: isDark ? '#ffffff' : (isCollapsed ? (isActive ? '#ffffff' : collapsedIconColor) : iconColors.analytics) }} />
-                            <span className="nav-text">Analytics</span>
-                        </>
-                    )}
-                </NavLink>
+                <button type="button" onClick={makeClickHandler('analytics')} className={`nav-link ${selectedPage === 'analytics' ? 'active' : ''}`} title="Analytics" style={buttonStyleFor('analytics')}>
+                    <BarChartIcon style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'analytics' ? '#ffffff' : collapsedIconColor) : iconColors.analytics) }} />
+                    <span className="nav-text">Analytics</span>
+                </button>
 
             </nav>
         </aside>
