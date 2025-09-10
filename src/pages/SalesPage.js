@@ -21,7 +21,6 @@ const SalesPage = () => {
 
     const [selectedOrder, setSelectedOrder] = useState(null); // 🟢 For modal details
     const [showModal, setShowModal] = useState(false);
-    const token = localStorage.getItem("jwt_token");
     const config = useConfig();
     var apiUrl = "";
     if (config) {
@@ -69,10 +68,8 @@ const SalesPage = () => {
     useEffect(() => {
         fetch(apiUrl + "/api/shop/get/sales", {
             method: "GET",
-            headers: {
+            credentials: 'include',
 
-                'Authorization': `Bearer ${token}`
-            }
         })
             .then((response) => {
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -102,9 +99,8 @@ const SalesPage = () => {
             `${apiUrl}/api/shop/get/invoice/${saleId}`,
             {
                 responseType: "blob",
-                headers: {
-                    Authorization: `Bearer ${token}` // <-- Add your token here
-                }
+                credentials: 'include',
+
             }
         );
 
@@ -131,9 +127,8 @@ const SalesPage = () => {
             const response = await axios.get(
                 `${apiUrl}/api/shop/get/order/${saleId}`,
                 {
-                    headers: {
-                        Authorization: `Bearer ${token}` // Replace with your token variable
-                    }
+                    withCredentials: true,
+
                 }
             );
 

@@ -71,7 +71,6 @@ const ProductsPage = () => {
         apiUrl = config.API_URL;
     }
 
-    const token = localStorage.getItem("jwt_token");
 
     // export CSV (updated to include costPrice)
     const handleExportCSV = () => {
@@ -174,10 +173,9 @@ const ProductsPage = () => {
 
         const res = await fetch(apiUrl + '/api/shop/bulk-upload', {
             method: 'POST',
+            credentials: 'include',
             body: formData,
-            headers: {
-                Authorization: `Bearer ${token}`
-            },
+
         });
 
         if (!res.ok) {
@@ -198,9 +196,10 @@ const ProductsPage = () => {
     useEffect(() => {
         fetch(apiUrl + "/api/shop/get/productsList", {
             method: "GET",
+            credentials: 'include',
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`,
+                
             },
         })
             .then((response) => {
@@ -217,7 +216,7 @@ const ProductsPage = () => {
                 console.error("Error fetching customers:", error);
                 alert("Something went wrong while fetching customers.");
             });
-    }, [apiUrl, token]);
+    }, [apiUrl]);
 
     // close columns dropdown when clicking outside
     useEffect(() => {
@@ -272,9 +271,10 @@ const ProductsPage = () => {
                     `${apiUrl}/api/shop/product/delete/${id}`,
                     {
                         method: "DELETE",
+                        credentials: 'include',
                         headers: {
                             "Content-Type": "application/json",
-                            "Authorization": `Bearer ${token}`,
+                            
                         }
                     }
                 );
@@ -297,9 +297,10 @@ const ProductsPage = () => {
             const payload = { name, category, price, costPrice, stock, tax };
             const response = await fetch(apiUrl + "/api/shop/create/product", {
                 method: "POST",
+                credentials: 'include',
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`,
+                    
                 },
                 body: JSON.stringify(payload),
             });
@@ -314,9 +315,10 @@ const ProductsPage = () => {
             } else {
                 fetch(apiUrl + "/api/shop/get/productsList", {
                     method: "GET",
+                    credentials: 'include',
                     headers: {
                         "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}`,
+                        
                     },
                 }).then(r => r.json()).then(setProducts).catch(() => { });
             }
@@ -338,7 +340,8 @@ const ProductsPage = () => {
 
         fetch(`${apiUrl}/api/shop/update/product`, {
             method: "PUT",
-            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}`, },
+            credentials: 'include',
+            headers: { "Content-Type": "application/json",  },
             body: JSON.stringify(payload),
         })
             .then((res) => {
@@ -351,9 +354,10 @@ const ProductsPage = () => {
                 } else {
                     fetch(apiUrl + "/api/shop/get/productsList", {
                         method: "GET",
+                        credentials: 'include',
                         headers: {
                             "Content-Type": "application/json",
-                            "Authorization": `Bearer ${token}`,
+                            
                         },
                     }).then(r => r.json()).then(setProducts).catch(() => { });
                 }

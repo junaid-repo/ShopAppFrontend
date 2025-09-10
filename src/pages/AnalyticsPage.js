@@ -33,7 +33,6 @@ const AnalyticsPage = () => {
   const [data, setData] = useState({});
   const config = useConfig();
   let apiUrl = config ? config.API_URL : "";
-    const token = localStorage.getItem("jwt_token");
 
   const colors = {
     sales: 'rgb(75, 192, 192)',
@@ -80,7 +79,8 @@ const AnalyticsPage = () => {
     try {
       const response = await fetch(`${apiUrl}/api/shop/get/analytics`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json',"Authorization": `Bearer ${token}`, },
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json'},
         body: JSON.stringify(payload)
       });
 

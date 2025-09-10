@@ -19,7 +19,7 @@ var apiUrl="";
   useEffect(() => {
     fetchCustomers();
   }, []);
-    const token = localStorage.getItem('jwt_token');
+
   if(config){
   console.log(config.API_URL);
   apiUrl=config.API_URL;
@@ -28,9 +28,9 @@ var apiUrl="";
     const fetchCustomers = () => {
         authFetch(apiUrl + "/api/shop/get/customersList", {
             method: "GET",
+            credentials: 'include',
             headers: {
-                "Content-Type": "application/json",
-                'Authorization': `Bearer ${token}`
+                "Content-Type": "application/json"
             }
         })
             .then((response) => {
@@ -58,8 +58,7 @@ var apiUrl="";
       const response = await fetch(apiUrl+"/api/shop/create/customer", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          'Authorization': `Bearer ${token}`
+          "Content-Type": "application/json"
         },
         body: JSON.stringify(payload),
       });
@@ -76,15 +75,13 @@ var apiUrl="";
   const handleDeleteCustomer = async (id) => {
     if (!window.confirm("Are you sure you want to delete this customer?")) return;
 
-    const token = localStorage.getItem('jwt_token');
     try {
       const response = await fetch(
         `${apiUrl}/api/shop/customer/delete/${id}`,
         {
           method: "DELETE",
           headers: {
-            "Content-Type": "application/json",
-            'Authorization': `Bearer ${token}`
+            "Content-Type": "application/json"
           }
         }
       );

@@ -7,7 +7,8 @@ import './DashboardPage.css';
 import { useNavigate } from 'react-router-dom';
 import { useConfig } from "./ConfigProvider";
 
-const DashboardPage = () => {
+// Accept an optional setSelectedPage prop so shortcuts can switch pages internally
+const DashboardPage = ({ setSelectedPage }) => {
     const [dashboardData, setDashboardData] = useState({});
     const [sales, setSales] = useState([]);
     const [timeRange, setTimeRange] = useState('today');
@@ -30,15 +31,15 @@ const DashboardPage = () => {
     }
 
     // 📌 Get JWT from localStorage
-    const token = localStorage.getItem("jwt_token");
 
     // 📌 Fetch Dashboard Details
     useEffect(() => {
         fetch(`${apiUrl}/api/shop/get/dashboardDetails/${timeRange}`, {
             method: "GET",
+            credentials: 'include',
             headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`, // 🔑 Attach JWT
+                "Content-Type": "application/json"
+                // 🔑 Attach JWT
             },
         })
             .then((res) => {
@@ -50,16 +51,17 @@ const DashboardPage = () => {
                 console.error("Error fetching dashboardData:", err);
                 alert("Something went wrong while fetching dashboard details.");
             });
-    }, [timeRange, apiUrl, token]);
+    }, [timeRange, apiUrl]);
 
     // 📌 Fetch Sales
     useEffect(() => {
         //alert(token);
         fetch(`${apiUrl}/api/shop/get/sales`, {
             method: "GET",
+            credentials: 'include',
             headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`, // 🔑 Attach JWT
+                "Content-Type": "application/json"
+                // 🔑 Attach JWT
             },
         })
             .then((res) => {
@@ -71,7 +73,7 @@ const DashboardPage = () => {
                 console.error("Error fetching sales:", err);
                 alert("Something went wrong while fetching sales data.");
             });
-    }, [apiUrl, token]);
+    }, [apiUrl]);
 
     const recentSales = sales.slice(0, 3);
 
@@ -82,9 +84,10 @@ const DashboardPage = () => {
             const payload = { name, email, phone };
             const response = await fetch(`${apiUrl}/api/shop/create/customer`, {
                 method: "POST",
+                credentials: 'include',
                 headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`, // 🔑 Attach JWT
+                    "Content-Type": "application/json"
+                    // 🔑 Attach JWT
                 },
                 body: JSON.stringify(payload),
             });
@@ -108,9 +111,9 @@ const DashboardPage = () => {
             const payload = { name, category, price, stock, tax };
             const response = await fetch(`${apiUrl}/api/shop/create/product`, {
                 method: "POST",
+                credentials: 'include',
                 headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`, // 🔑 Attach JWT
+                    "Content-Type": "application/json"// 🔑 Attach JWT
                 },
                 body: JSON.stringify(payload),
             });
@@ -185,11 +188,11 @@ const DashboardPage = () => {
             <div className="quick-shortcuts glass-card">
                 <h3>Quick Shortcuts</h3>
                 <div className="shortcuts-container">
-                    <button className="btn" onClick={() => navigate("/billing")}>New Sale</button>
+                    <button className="btn" onClick={() => { if (setSelectedPage) setSelectedPage('billing'); else navigate('/billing'); }}>New Sale</button>
                     <button className="btn" onClick={() => setIsAddProdModalOpen(true)}>Add Product</button>
                     <button className="btn" onClick={() => setIsNewCusModalOpen(true)}>New Customer</button>
-                    <button className="btn" onClick={() => navigate("/reports")}>Generate Report</button>
-                    <button className="btn" onClick={() => navigate("/analytics")}>Analytics</button>
+                    <button className="btn" onClick={() => { if (setSelectedPage) setSelectedPage('reports'); else navigate('/reports'); }}>Generate Report</button>
+                    <button className="btn" onClick={() => { if (setSelectedPage) setSelectedPage('analytics'); else navigate('/analytics'); }}>Analytics</button>
                 </div>
             </div>
 

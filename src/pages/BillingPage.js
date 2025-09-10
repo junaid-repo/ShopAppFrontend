@@ -29,7 +29,6 @@ const BillingPage = () => {
     const filteredProducts = products.filter(p =>
         p.name.toLowerCase().includes(productSearchTerm.toLowerCase())
     );
-    const token = localStorage.getItem('jwt_token');
     const [searchTerm, setSearchTerm] = useState('');
 
     const config = useConfig();
@@ -43,9 +42,9 @@ const BillingPage = () => {
     useEffect(() => {
         fetch(`${apiUrl}/api/shop/get/customersList`, {
             method: "GET",
+            credentials: 'include',
             headers: {
-                "Content-Type": "application/json",
-                'Authorization': `Bearer ${token}`
+                "Content-Type": "application/json"
             }
         })
             .then(res => res.json())
@@ -61,9 +60,10 @@ const BillingPage = () => {
     const fetchProductsFromAPI = () => {
         fetch(`${apiUrl}/api/shop/get/productsList`, {
             method: "GET",
+            credentials: 'include',
             headers: {
 
-                'Authorization': `Bearer ${token}`
+
             }
         })
             .then(res => res.json())
@@ -108,9 +108,9 @@ const BillingPage = () => {
         try {
             const response = await fetch(`${apiUrl}/api/shop/create/forBilling/customer`, {
                 method: "POST",
+                credentials: 'include',
                 headers: {
-                    "Content-Type": "application/json",
-                    'Authorization': `Bearer ${token}`
+                    "Content-Type": "application/json"
                 },
                 body: JSON.stringify(payload),
             });
@@ -170,7 +170,8 @@ const BillingPage = () => {
         // 🔴 API may need changes here to accept `sellingPrice` for each cart item
         fetch(`${apiUrl}/api/shop/do/billing`, {
             method: "POST",
-            headers: { "Content-Type": "application/json",'Authorization': `Bearer ${token}` },
+            credentials: 'include',
+            headers: { "Content-Type": "application/json" },
 
             body: JSON.stringify(payload),
         })

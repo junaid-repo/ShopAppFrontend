@@ -302,7 +302,7 @@ const UserProfilePage = () => {
   const [errors, setErrors] = useState({});
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [passwordStep, setPasswordStep] = useState(1);
-    const storedToken = localStorage.getItem("jwt_token");
+    //const [userName, setUserName] = useState('');
     const config = useConfig();
         var apiUrl="";
           if(config){
@@ -334,21 +334,30 @@ const UserProfilePage = () => {
 
     const loadProfile = async () => {
       try {
-        const storedToken = localStorage.getItem("jwt_token");
-        if (!storedToken) {
-          alert("You are not logged in.");
-          return;
-        }
 
-        const { sub: username } = jwtDecode(storedToken);
+          var username="";
+
+              const userRes = await fetch(`${apiUrl}/api/shop/user/profile`, {
+                  method: "GET",
+                  credentials: 'include',
+              });
+              if (userRes.ok) {
+                  const userData = await userRes.json();
+                  alert(userData.username);
+                  username=userData.username; // Assuming your backend sends the username
+              } else {
+                  console.error('Failed to fetch user data:', userRes.statusText);
+              }
+
 
         // ======= API CALL #1 (GET JSON user details) =======
         // Example: GET /api/shop/user/{username}
         const detailsRes = await fetch(`${apiUrl}/api/shop/user/get/userprofile/${username}`, {
           method: "GET",
+            credentials: 'include',
           headers: {
             Accept: "application/json",
-           Authorization: `Bearer ${storedToken}`,
+           
           },
         });
         if (!detailsRes.ok) throw new Error(`User details fetch failed (${detailsRes.status})`);
@@ -365,8 +374,9 @@ const UserProfilePage = () => {
         // Example: GET /api/shop/user/{username}/profile-pic
         const picRes = await fetch(`${apiUrl}/api/shop/user/${username}/profile-pic`, {
           method: "GET",
+            credentials: 'include',
           headers: {
-            Authorization: `Bearer ${storedToken}`,
+            
           },
         });
 
@@ -471,9 +481,10 @@ const UserProfilePage = () => {
         // ---- API CALL 1: Update user details (JSON only) ----
         const detailsResponse = await fetch(`${apiUrl}/api/shop/user/edit/${username}`, {
           method: "PUT",
+            credentials: 'include',
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${storedToken}`,
+            
           },
           body: JSON.stringify(formData),
         });
@@ -491,6 +502,7 @@ const UserProfilePage = () => {
 
                   const picResponse = await fetch(`${apiUrl}/api/shop/user/edit/profilePic/${username}`, {
                     method: "PUT",
+                      credentials: 'include',
                     headers: { Authorization: `Bearer ${storedToken}` },
                     body: picForm,
                   });
@@ -549,6 +561,7 @@ console.log("Decoded username:", passwordData.currentPassword);
         // 3. Call generateToken API with username + entered currentPassword
         const response = await fetch(authApiUrl+"/auth/authenticate", {
           method: "POST",
+            credentials: 'include',
           headers: { "Content-Type": "application/json", "Authorization": `Bearer ${storedToken}` },
           body: JSON.stringify({
             username: username,
@@ -593,7 +606,7 @@ console.log("Decoded username:", passwordData.currentPassword);
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${storedToken}`, // send old token for authentication
+              credentials: 'include'// send old token for authentication
           },
           body: JSON.stringify({
             username: username,

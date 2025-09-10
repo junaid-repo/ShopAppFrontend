@@ -11,7 +11,6 @@ const REPORT_TYPES = [
 ];
 const userName = "junaid";
 
-const token = localStorage.getItem("jwt_token");
 
 // --- Utilities ---
 function addMonths(date, n) {
@@ -90,8 +89,7 @@ async function mockFetchRecentReports({ limit = 10 } = {}) {
     const response = await fetch('http://localhost:6062/api/shop/report/recent?limit=10', {
       method: "GET",
       headers: {
-        "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
+        "Content-Type": "application/json"
       }
     });
 
@@ -231,9 +229,9 @@ const ReportsPage = () => {
       // POST to backend and expect an Excel binary
       const response = await fetch(apiUrl+"/api/shop/report", {
         method: "POST",
+          credentials: 'include',
         headers: {
-          "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
+          "Content-Type": "application/json"
         },
         body: JSON.stringify(payload),
       });
@@ -296,7 +294,8 @@ const ReportsPage = () => {
 
       await fetch(apiUrl+"/api/shop/report/saveDetails", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          credentials: 'include',
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(saveReportPayload)
       });
 

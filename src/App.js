@@ -1,6 +1,5 @@
-// src/App.js
 import React, { useState, useEffect, useRef } from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import MainLayout from './components/MainLayout';
 import DashboardPage from './pages/DashboardPage';
@@ -13,7 +12,7 @@ import ReportsPage from './pages/ReportsPage';
 import UserProfilePage from './pages/UserProfilePage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-
+import { useConfig } from "./pages/ConfigProvider";
 const queryClient = new QueryClient();
 
 function App() {
@@ -22,68 +21,73 @@ function App() {
     const [countdown, setCountdown] = useState(60);
     const countdownRef = useRef(null);
     const inactivityTimerRef = useRef(null);
+    const config = useConfig();
+    let apiUrl = "";
+    if (config) {
+        apiUrl = config.API_URL;
+    }
 
-    // 🔹 Initialize theme from localStorage or default to 'light'
     const [theme, setTheme] = useState(() => {
         const savedTheme = localStorage.getItem('theme');
         return savedTheme || 'light';
     });
 
-    // 🔹 Effect to apply the theme class to the body and save preference
     useEffect(() => {
-        document.body.classList.remove('dark-theme'); // Clean up previous class
+        document.body.classList.remove('dark-theme');
         if (theme === 'dark') {
             document.body.classList.add('dark-theme');
         }
         localStorage.setItem('theme', theme);
     }, [theme]);
 
-    // 🔹 Function to toggle the theme
     const toggleTheme = () => {
         setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
     };
 
-    // 🔹 Check token validity
-    const checkToken = () => {
-        const token = localStorage.getItem('jwt_token');
-        if (!token) {
-            setIsAuthenticated(false);
-            return;
-        }
+    // 🔹 New: Check session from backend instead of decoding local token
+    const checkSession = async () => {
         try {
-            const payload = JSON.parse(atob(token.split('.')[1])); // decode JWT payload
-            const expiry = payload.exp * 1000; // convert to ms
-            if (Date.now() >= expiry) {
-                alert("Session expired. You have been logged out.");
-                handleLogout();
-            } else {
+            const response = await fetch(`${apiUrl}/api/shop/user/profile`,  {
+                method: 'GET',
+                credentials: 'include', // include the cookie
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log('User:', data.username); // Optional: store username in state
                 setIsAuthenticated(true);
+                resetInactivityTimer();
+            } else {
+                setIsAuthenticated(false);
             }
-        } catch (e) {
-            console.error("Invalid token:", e);
-            handleLogout();
+        } catch (error) {
+            console.error('Error checking session:', error);
+            setIsAuthenticated(false);
         }
     };
 
-    // 🔹 Handle login
     const handleLogin = () => {
         setIsAuthenticated(true);
         resetInactivityTimer();
     };
 
-    // 🔹 Handle logout
-    const handleLogout = () => {
-        localStorage.removeItem('jwt_token');
+    const handleLogout = async () => {
+        try {
+            await fetch(`${apiUrl}/auth/logout`, {
+                method: 'POST',
+                credentials: 'include'
+            });
+        } catch (e) {
+            console.error('Logout failed', e);
+        }
         setIsAuthenticated(false);
         clearTimers();
     };
 
-    // 🔹 Inactivity Timers
     const resetInactivityTimer = () => {
         clearTimers();
-        // Start inactivity timer (15 mins = 900000 ms)
         inactivityTimerRef.current = setTimeout(() => {
-            setWarning(true); // show warning at 14 min
+            setWarning(true);
             let timeLeft = 60;
             setCountdown(timeLeft);
 
@@ -96,7 +100,7 @@ function App() {
                     handleLogout();
                 }
             }, 1000);
-        }, 14 * 60 * 1000); // warning at 14 mins
+        }, 14 * 60 * 1000);
     };
 
     const clearTimers = () => {
@@ -104,7 +108,6 @@ function App() {
         if (countdownRef.current) clearInterval(countdownRef.current);
     };
 
-    // 🔹 Track user activity
     useEffect(() => {
         const resetEvents = ['mousemove', 'keydown', 'click'];
         const resetHandler = () => resetInactivityTimer();
@@ -113,36 +116,28 @@ function App() {
         return () => resetEvents.forEach(evt => window.removeEventListener(evt, resetHandler));
     }, []);
 
-    // 🔹 Run checks on load + storage change
     useEffect(() => {
-        checkToken();
-        window.addEventListener("storage", checkToken);
-        return () => window.removeEventListener("storage", checkToken);
+        checkSession(); // 🔹 new session check
     }, []);
 
-    // ------------------ New: internal page selection (keeps URL at "/") ------------------
-    // We'll maintain an internal selectedPage state and pass a pages map to MainLayout.
-    // Sidebar/Topbar will call setSelectedPage to change visible content without altering the address bar.
     const [selectedPage, setSelectedPage] = useState('dashboard');
 
     const pages = {
-        dashboard: <DashboardPage />,
-        products: <ProductsPage />,
-        sales: <SalesPage />,
-        customers: <CustomersPage />,
-        payments: <PaymentsPage />,
-        billing: <BillingPage />,
-        reports: <ReportsPage />,
-        profile: <UserProfilePage />,
-        analytics: <AnalyticsPage />,
+        dashboard: <DashboardPage setSelectedPage={setSelectedPage} />,
+        products: <ProductsPage setSelectedPage={setSelectedPage} />,
+        sales: <SalesPage setSelectedPage={setSelectedPage} />,
+        customers: <CustomersPage setSelectedPage={setSelectedPage} />,
+        payments: <PaymentsPage setSelectedPage={setSelectedPage} />,
+        billing: <BillingPage setSelectedPage={setSelectedPage} />,
+        reports: <ReportsPage setSelectedPage={setSelectedPage} />,
+        profile: <UserProfilePage setSelectedPage={setSelectedPage} />,
+        analytics: <AnalyticsPage setSelectedPage={setSelectedPage} />,
     };
 
     return (
         <QueryClientProvider client={queryClient}>
             <Router>
-
                 <Routes>
-                    {/* Login route */}
                     <Route
                         path="/login"
                         element={
@@ -151,8 +146,6 @@ function App() {
                                 : <Navigate to="/" replace />
                         }
                     />
-
-                    {/* Protected app at root - URL will remain "/" while internal selectedPage controls content */}
                     <Route
                         path="/*"
                         element={
@@ -173,6 +166,5 @@ function App() {
         </QueryClientProvider>
     );
 }
-
 
 export default App;

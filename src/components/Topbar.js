@@ -17,20 +17,43 @@ const Topbar = ({ onLogout, theme, toggleTheme, toggleSidebar, isCollapsed, setS
     }
 
     useEffect(() => {
-        const token = localStorage.getItem('jwt_token');
+
 
         (async () => {
             try {
-                if (token) {
-                    const decoded = jwtDecode(token);
-                    const username = decoded.sub;
-                    setUserName(username);
+
+                try{
+                    const userRes = await fetch(`${apiUrl}/api/shop/user/profile`, {
+                        method: "GET",
+                        credentials: 'include',
+                    });
+                    if (userRes.ok) {
+                        const userData = await userRes.json();
+                        console.log("username from profile", userData);
+                        setUserName(userData.username); // Assuming your backend sends the username
+                        console.log("username from profile", userName);
+                    } else {
+                        console.error('Failed to fetch user data:', userRes.statusText);
+                    }
+                }
+
+                catch (err) {
+                    console.error('Failed to load profile pic', err);
+                }
+                var username=userName;
+
+
+
+
+
+                    // Fetch profile picture
+
 
                     const res = await fetch(`${apiUrl}/api/shop/user/${username}/profile-pic`, {
                         method: "GET",
+                        credentials: 'include',
                         headers: {
-                            "Content-Type": "application/json",
-                            'Authorization': `Bearer ${token}`
+                            "Content-Type": "application/json"
                         }
                     });
 
@@ -39,10 +62,11 @@ const Topbar = ({ onLogout, theme, toggleTheme, toggleSidebar, isCollapsed, setS
                         const blob = new Blob([arrayBuffer]);
                         const imageUrl = URL.createObjectURL(blob);
                         setProfilePic(imageUrl);
+
                     } else {
                         console.error('Failed to fetch profile picture:', res.statusText);
                     }
-                }
+
             } catch (err) {
                 console.error('Failed to load profile pic', err);
             }

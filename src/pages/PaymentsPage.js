@@ -28,13 +28,13 @@ const PaymentsPage = () => {
     console.log(config.API_URL);
     apiUrl = config.API_URL;
   }
-  const token = localStorage.getItem("jwt_token");
+
   useEffect(() => {
     fetch(apiUrl + "/api/shop/get/paymentLists", {
       method: "GET",
+      credentials: 'include',
       headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
       },
     })
       .then((response) => {
