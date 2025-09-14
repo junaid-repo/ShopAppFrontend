@@ -25,10 +25,15 @@ const BillingPage = () => {
     const [productSearchTerm, setProductSearchTerm] = useState("");
     const [sellingPrices, setSellingPrices] = useState({}); // <-- Selling Price state
 
-    // --- filter products ---
-    const filteredProducts = products.filter(p =>
-        p.name.toLowerCase().includes(productSearchTerm.toLowerCase())
-    );
+    // pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalProducts, setTotalProducts] = useState(0);
+    const pageSize = 10; // rows per page
+
+    // NOTE: products coming from context represent the current page after fetch
+    const displayedProducts = products;
+
     const [searchTerm, setSearchTerm] = useState('');
 
     const config = useConfig();
@@ -40,6 +45,8 @@ const BillingPage = () => {
 
     // --- API CALL TO FETCH CUSTOMERS & PRODUCTS ---
     useEffect(() => {
+        if (!apiUrl) return;
+
         fetch(`${apiUrl}/api/shop/get/customersList`, {
             method: "GET",
             credentials: 'include',
@@ -51,30 +58,75 @@ const BillingPage = () => {
             .then(setCustomersList)
             .catch(err => console.error("Error fetching customers:", err));
 
-        if (products.length === 0) {
-            fetchProductsFromAPI();
-        }
+        // fetch first page of products
+        fetchProductsFromAPI(1, productSearchTerm);
         // eslint-disable-next-line
-    }, []);
+    }, [apiUrl]);
 
-    const fetchProductsFromAPI = () => {
-        fetch(`${apiUrl}/api/shop/get/productsList`, {
+    // refetch when page changes
+    useEffect(() => {
+        if (!apiUrl) return;
+        fetchProductsFromAPI(currentPage, productSearchTerm);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentPage]);
+
+    // when search term changes, reset to page 1 and fetch
+    useEffect(() => {
+        if (!apiUrl) return;
+        setCurrentPage(1);
+        fetchProductsFromAPI(1, productSearchTerm);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [productSearchTerm]);
+
+    const fetchProductsFromAPI = (page = 1, q = '') => {
+        if (!apiUrl) return;
+
+        // build query params for pagination + optional search
+        const params = new URLSearchParams();
+        params.append('page', page);
+        params.append('limit', pageSize);
+        if (q) {
+            params.append('q', q);
+            // also send searchTerm for backend endpoints expecting that name
+            params.append('search', q);
+        }
+
+        fetch(`${apiUrl}/api/shop/get/productsList?${params.toString()}`, {
             method: "GET",
             credentials: 'include',
             headers: {
-
-
+                "Content-Type": "application/json"
             }
         })
             .then(res => res.json())
             .then(data => {
-                const inStockProducts = data.filter(p => p.stock > 0);
+                // API might return either an array (legacy) or an object { products: [], total: N }
+                console.log("THe fetched product data is:", data);
+                let items = [];
+                let total = 0;
+
+                if (Array.isArray(data)) {
+                    // legacy: assume full list or already-paged array
+                    items = data;
+                    total = data.length;
+                } else if (data && data.products) {
+                    items = data.products;
+                    total = data.total || data.totalCount || data.totalProducts || items.length;
+                } else {
+                    items = Array.isArray(data) ? data : [];
+                    total = items.length;
+                }
+
+                const inStockProducts = items.filter(p => p.stock > 0);
                 loadProducts(inStockProducts);
 
                 // initialize selling prices for fetched products (default = actual price)
                 const initialPrices = {};
                 inStockProducts.forEach(p => { initialPrices[p.id] = p.price; });
                 setSellingPrices(prev => ({ ...initialPrices, ...prev }));
+
+                setTotalProducts(total);
+                setTotalPages(Math.max(1, Math.ceil(total / pageSize)));
             })
             .catch(err => console.error("Error fetching products:", err));
     };
@@ -94,6 +146,48 @@ const BillingPage = () => {
     const handleAddProduct = (p) => {
         const sellingPrice = sellingPrices[p.id] !== undefined ? sellingPrices[p.id] : p.price;
         addProduct({ ...p, sellingPrice });
+    };
+
+    // Small pagination component used for the Available Products section
+    const Pagination = () => {
+        if (totalPages <= 1) return null;
+
+        const getPaginationItems = () => {
+            const items = [];
+            if (totalPages <= 7) {
+                for (let i = 1; i <= totalPages; i++) items.push(i);
+                return items;
+            }
+            items.push(1);
+            if (currentPage > 4) items.push('...');
+            if (currentPage > 2) items.push(currentPage - 1);
+            if (currentPage !== 1 && currentPage !== totalPages) items.push(currentPage);
+            if (currentPage < totalPages - 1) items.push(currentPage + 1);
+            if (currentPage < totalPages - 3) items.push('...');
+            items.push(totalPages);
+            return Array.from(new Set(items));
+        };
+
+        return (
+            <div className="product-pagination" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
+                <div style={{ color: 'var(--text-color)' }}>
+                    Showing {Math.min((currentPage - 1) * pageSize + 1, totalProducts || 0)} - {Math.min(currentPage * pageSize, totalProducts || 0)} of {totalProducts}
+                </div>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <button className="btn" onClick={() => { if (currentPage > 1) setCurrentPage(prev => prev - 1); }} disabled={currentPage <= 1}>Prev</button>
+
+                    {getPaginationItems().map((page, idx) => (
+                        page === '...' ? (
+                            <span key={`dots-${idx}`}>...</span>
+                        ) : (
+                            <button key={page} className={`btn ${page === currentPage ? 'active' : ''}`} onClick={() => setCurrentPage(page)}>{page}</button>
+                        )
+                    ))}
+
+                    <button className="btn" onClick={() => { if (currentPage < totalPages) setCurrentPage(prev => prev + 1); }} disabled={currentPage >= totalPages}>Next</button>
+                </div>
+            </div>
+        );
     };
 
     // --- MODIFIED: API CALL TO CREATE AND SELECT A NEW CUSTOMER (WITH DEBUGGING) ---
@@ -190,7 +284,7 @@ const BillingPage = () => {
 
     const handleNewBilling = () => {
         clearBill();
-        fetchProductsFromAPI();
+        fetchProductsFromAPI(1, productSearchTerm);
     };
 
     // --- CALCULATIONS ---
@@ -199,7 +293,7 @@ const BillingPage = () => {
     const actualSubtotal = cart.reduce((total, item) => total + item.price * item.quantity, 0);
     const sellingSubtotal = cart.reduce((total, item) => total + ((item.sellingPrice !== undefined ? item.sellingPrice : item.price) * item.quantity), 0);
     //const tax = sellingSubtotal * 0.18;
-    const tax = cart.reduce((total, item) => total + ((item.sellingPrice !== undefined ? item.sellingPrice*item.tax*0.01 : item.price*item.tax*0.01 ) * item.quantity), 0);;
+    const tax = cart.reduce((total, item) => total + ((item.sellingPrice !== undefined ? item.sellingPrice * item.tax * 0.01 : item.price * item.tax * 0.01) * item.quantity), 0);;
     const total = sellingSubtotal - tax;
     const discountPercentage = actualSubtotal > 0 ? (((actualSubtotal - sellingSubtotal) / actualSubtotal) * 100).toFixed(2) : 0;
 
@@ -235,60 +329,62 @@ const BillingPage = () => {
                     <div className="product-table-wrapper">
                         <table className="beautiful-table">
                             <thead>
-                            <tr>
-                                <th>Product</th>
-                                <th>Price (₹)</th>
-                                <th>Selling Price (₹)</th>
-                                <th>Stock</th>
-                                <th>Action</th>
-                            </tr>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Price (₹)</th>
+                                    <th>Selling Price (₹)</th>
+                                    <th>Stock</th>
+                                    <th>Action</th>
+                                </tr>
                             </thead>
                             <tbody>
-                            {filteredProducts.map(p => (
-                                <tr key={p.id} className={p.stock <= 0 ? "out-of-stock" : ""}>
-                                    <td>{p.name}</td>
-                                    <td>{p.price}</td>
-                                    <td>
-                                        <input
-                                            type="number"
-                                            min="0"
-                                            value={sellingPrices[p.id] !== undefined ? sellingPrices[p.id] : p.price}
-                                            onChange={(e) =>
-                                                setSellingPrices({ ...sellingPrices, [p.id]: Number(e.target.value) })
-                                            }
-                                            // small inline styling only for selling price box (requested)
-                                            style={{
-                                                width: "80px",
-                                                padding: "3px 6px",
-                                                borderRadius: "25px",
-                                                border: "1.5px solid var(--border-color)",
-                                                borderColor: "skyblue",
-                                                textAlign: "center",
-                                                fontSize: "0.9rem"
-                                            }}
-                                        />
-                                    </td>
-                                    <td>{p.stock}</td>
-                                    <td>
-                                        <button
-                                            className="btn small-btn"
-                                            onClick={() => handleAddProduct(p)}
-                                            disabled={p.stock <= 0}
-                                            title={p.stock <= 0 ? "Out of Stock" : "Add to Cart"}
-                                        >
-                                            <FaPlus />
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                            {filteredProducts.length === 0 && (
-                                <tr>
-                                    <td colSpan="5" style={{ textAlign: 'center' }}>No matching products.</td>
-                                </tr>
-                            )}
+                                {displayedProducts.map(p => (
+                                    <tr key={p.id} className={p.stock <= 0 ? "out-of-stock" : ""}>
+                                        <td>{p.name}</td>
+                                        <td>{p.price}</td>
+                                        <td>
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                value={sellingPrices[p.id] !== undefined ? sellingPrices[p.id] : p.price}
+                                                onChange={(e) => setSellingPrices({ ...sellingPrices, [p.id]: Number(e.target.value) })}
+                                                // small inline styling only for selling price box (requested)
+                                                style={{
+                                                    width: "80px",
+                                                    padding: "3px 6px",
+                                                    borderRadius: "25px",
+                                                    border: "1.5px solid var(--border-color)",
+                                                    borderColor: "skyblue",
+                                                    textAlign: "center",
+                                                    fontSize: "0.9rem"
+                                                }}
+                                            />
+                                        </td>
+                                        <td>{p.stock}</td>
+                                        <td>
+                                            <button
+                                                className="btn small-btn"
+                                                onClick={() => handleAddProduct(p)}
+                                                disabled={p.stock <= 0}
+                                                title={p.stock <= 0 ? "Out of Stock" : "Add to Cart"}
+                                            >
+                                                <FaPlus />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                                {displayedProducts.length === 0 && (
+                                    <tr>
+                                        <td colSpan="5" style={{ textAlign: 'center' }}>No matching products.</td>
+                                    </tr>
+                                )}
                             </tbody>
                         </table>
                     </div>
+
+                    {/* Pagination controls (extracted to component) */}
+                    <Pagination />
+
                 </div>
 
                 <div className="invoice-details glass-card">
@@ -387,21 +483,21 @@ const BillingPage = () => {
                                             color: 'var(--text-color)'
                                         }}
                                     >
-        <span
-            style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '24px',
-                height: '24px',
-                borderRadius: '50%',
-                backgroundColor: method.color,
-                color: 'white',
-                fontSize: '0.9rem'
-            }}
-        >
-          {method.icon}
-        </span>
+                                        <span
+                                            style={{
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                width: '24px',
+                                                height: '24px',
+                                                borderRadius: '50%',
+                                                backgroundColor: method.color,
+                                                color: 'white',
+                                                fontSize: '0.9rem'
+                                            }}
+                                        >
+                                            {method.icon}
+                                        </span>
                                         <input
                                             type="radio"
                                             value={method.type}
@@ -521,20 +617,5 @@ const BillingPage = () => {
     );
 };
 
-const overlayStyle = {
-    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-    background: 'rgba(39,0,189,0.5)',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    zIndex: 1000
-};
-
-const popupStyle = {
-    background: '#fff',
-    padding: '20px',
-    borderRadius: '8px',
-    textAlign: 'center',
-    boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)',
-    width: '300px'
-};
 
 export default BillingPage;

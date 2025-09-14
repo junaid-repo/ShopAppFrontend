@@ -19,57 +19,49 @@ const Topbar = ({ onLogout, theme, toggleTheme, toggleSidebar, isCollapsed, setS
     useEffect(() => {
 
 
-        (async () => {
-            try {
+        (async () => {try {
+            const userRes = await fetch(`${apiUrl}/api/shop/user/profile`, {
+                method: "GET",
+                credentials: 'include',
+            });
 
-                try{
-                    const userRes = await fetch(`${apiUrl}/api/shop/user/profile`, {
-                        method: "GET",
-                        credentials: 'include',
-                    });
-                    if (userRes.ok) {
-                        const userData = await userRes.json();
-                        console.log("username from profile", userData);
-                        setUserName(userData.username); // Assuming your backend sends the username
-                        console.log("username from profile", userName);
-                    } else {
-                        console.error('Failed to fetch user data:', userRes.statusText);
-                    }
-                }
-
-                catch (err) {
-                    console.error('Failed to load profile pic', err);
-                }
-                var username=userName;
-
-
-
-
-
-                    // Fetch profile picture
-
-
-                    const res = await fetch(`${apiUrl}/api/shop/user/${username}/profile-pic`, {
-                        method: "GET",
-                        credentials: 'include',
-                        headers: {
-                            "Content-Type": "application/json"
-                        }
-                    });
-
-                    if (res.ok) {
-                        const arrayBuffer = await res.arrayBuffer();
-                        const blob = new Blob([arrayBuffer]);
-                        const imageUrl = URL.createObjectURL(blob);
-                        setProfilePic(imageUrl);
-
-                    } else {
-                        console.error('Failed to fetch profile picture:', res.statusText);
-                    }
-
-            } catch (err) {
-                console.error('Failed to load profile pic', err);
+            if (!userRes.ok) {
+                console.error('Failed to fetch user data:', userRes.statusText);
+                return;
             }
+
+            const userData = await userRes.json();
+            const username = userData.username;
+
+            if (!username) {
+                console.warn('Username is empty, skipping profile pic fetch');
+                return;
+            }
+
+            setUserName(username); // You can still store it in state
+            console.log("Fetched username:", username);
+
+            // Fetch profile picture
+            const res = await fetch(`${apiUrl}/api/shop/user/${username}/profile-pic`, {
+                method: "GET",
+                credentials: 'include',
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            });
+
+            if (res.ok) {
+                const arrayBuffer = await res.arrayBuffer();
+                const blob = new Blob([arrayBuffer]);
+                const imageUrl = URL.createObjectURL(blob);
+                setProfilePic(imageUrl);
+            } else {
+                console.error('Failed to fetch profile picture:', res.statusText);
+            }
+
+        } catch (err) {
+            console.error('Failed to load profile pic:', err);
+        }
         })();
     }, [apiUrl]); // Added apiUrl as a dependency
 

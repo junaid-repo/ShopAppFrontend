@@ -100,7 +100,7 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar, selectedPage, setSelected
                         <span style={{ display: 'block', height: '2px', background: toggleColor, borderRadius: '2px', opacity: 0.75 }} />
                     </div>
                 </button>
-                <h1 className="logo">{isCollapsed ? '' : 'ShopFlow'}</h1>
+                <h1 className="logo">{isCollapsed ? '' : 'Clear Bill'}</h1>
             </div>
             <nav className="sidebar-nav">
 

@@ -56,9 +56,12 @@ const DashboardPage = ({ setSelectedPage }) => {
     // 📌 Fetch Sales
     useEffect(() => {
         //alert(token);
-        fetch(`${apiUrl}/api/shop/get/sales`, {
+        fetch(`${apiUrl}/api/shop/get/count/sales`, {
             method: "GET",
             credentials: 'include',
+            params: {
+                count: 3 // ✅ sent to backend
+            },
             headers: {
                 "Content-Type": "application/json"
                 // 🔑 Attach JWT

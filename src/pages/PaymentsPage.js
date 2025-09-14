@@ -20,7 +20,7 @@ const PaymentsPage = () => {
     return "All";
   });
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(5); // show 5 records per page
+  const [itemsPerPage] = useState(10); // show 5 records per page
 
   const config = useConfig();
   var apiUrl = "";
@@ -29,8 +29,70 @@ const PaymentsPage = () => {
     apiUrl = config.API_URL;
   }
 
+    const _savedFilters = (() => {
+        try {
+            const s = localStorage.getItem("payments_filters");
+            if (!s) return null;
+            return JSON.parse(s);
+        } catch (e) {
+            return null;
+        }
+    })();
+
+    const [fromDate, setFromDate] = useState(() => {
+        return (_savedFilters && _savedFilters.fromDate) || formatDateInput(defaultFrom);
+    });
+    const [toDate, setToDate] = useState(() => {
+        return (_savedFilters && _savedFilters.toDate) || formatDateInput(defaultTo);
+    });
+
+    // 🔹 whenever dates change, enforce max 30 days
+    useEffect(() => {
+        const from = new Date(fromDate);
+        const to = new Date(toDate);
+
+        if (to < from) {
+            // auto-correct if user picks invalid range
+            setToDate(fromDate);
+            return;
+        }
+
+        const diffDays = Math.floor((to - from) / (1000 * 60 * 60 * 24));
+        if (diffDays > 30) {
+            alert("Date range cannot exceed 30 days. Adjusting the end date.");
+            const newTo = new Date(from);
+            newTo.setDate(newTo.getDate() + 30);
+            setToDate(formatDateInput(newTo));
+        }
+    }, [fromDate, toDate]);
+
+    // save filters whenever they change so they persist across page switches
+    useEffect(() => {
+        try {
+            const obj = { fromDate, toDate, paymentMode, searchTerm };
+            localStorage.setItem("payments_filters", JSON.stringify(obj));
+        } catch (e) {
+            // ignore storage errors
+        }
+    }, [fromDate, toDate, paymentMode, searchTerm]);
+
+    // compute unique payment modes from all payments (used to populate dropdown)
+    const uniqueModes = useMemo(() => {
+        const set = new Set();
+        payments.forEach((p) => {
+            if (p.method) set.add(p.method);
+        });
+        return Array.from(set);
+    }, [payments]);
+
+
+
   useEffect(() => {
-    fetch(apiUrl + "/api/shop/get/paymentLists", {
+
+      const query = `?fromDate=${fromDate}&toDate=${toDate}`;
+      //alert(query);
+
+      fetch(`${apiUrl}/api/shop/get/paymentLists${query}`, {
       method: "GET",
       credentials: 'include',
       headers: {
@@ -51,7 +113,7 @@ const PaymentsPage = () => {
         console.error("Error fetching paymentLists:", error);
         alert("Something went wrong while fetching paymentLists.");
       });
-  }, []);
+  }, [apiUrl, fromDate, toDate]);
 
   // --- New: date range state (default to current month) ---
   const formatDateInput = (d) => {
@@ -66,41 +128,9 @@ const PaymentsPage = () => {
   const defaultTo = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
   // try to load saved filters from localStorage and use them as initial values
-  const _savedFilters = (() => {
-    try {
-      const s = localStorage.getItem("payments_filters");
-      if (!s) return null;
-      return JSON.parse(s);
-    } catch (e) {
-      return null;
-    }
-  })();
 
-  const [fromDate, setFromDate] = useState(() => {
-    return (_savedFilters && _savedFilters.fromDate) || formatDateInput(defaultFrom);
-  });
-  const [toDate, setToDate] = useState(() => {
-    return (_savedFilters && _savedFilters.toDate) || formatDateInput(defaultTo);
-  });
 
-  // save filters whenever they change so they persist across page switches
-  useEffect(() => {
-    try {
-      const obj = { fromDate, toDate, paymentMode, searchTerm };
-      localStorage.setItem("payments_filters", JSON.stringify(obj));
-    } catch (e) {
-      // ignore storage errors
-    }
-  }, [fromDate, toDate, paymentMode, searchTerm]);
 
-  // compute unique payment modes from all payments (used to populate dropdown)
-  const uniqueModes = useMemo(() => {
-    const set = new Set();
-    payments.forEach((p) => {
-      if (p.method) set.add(p.method);
-    });
-    return Array.from(set);
-  }, [payments]);
 
   // helper to normalize a date string from payment and the input date values
   const toDateObjStart = (dateStrOrObj) => {

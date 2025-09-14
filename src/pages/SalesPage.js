@@ -18,9 +18,10 @@ const SalesPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize] = useState(10);
-
+    const [totalPages, setTotalPages] = useState(10);
     const [selectedOrder, setSelectedOrder] = useState(null); // 🟢 For modal details
     const [showModal, setShowModal] = useState(false);
+
     const config = useConfig();
     var apiUrl = "";
     if (config) {
@@ -66,40 +67,43 @@ const SalesPage = () => {
 
 
     useEffect(() => {
-        fetch(apiUrl + "/api/shop/get/sales", {
-            method: "GET",
-            credentials: 'include',
+        const fetchSales = async () => {
+            try {
+                const response = await axios.get(`${apiUrl}/api/shop/get/sales`, {
+                    params: {
+                        page: currentPage - 1,
+                        size: pageSize,
+                        search: searchTerm || '' // ✅ sent to backend
+                    },
+                    withCredentials: true,
+                });
 
-        })
-            .then((response) => {
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                return response.json();
-            })
-            .then((data) => {
-                setSales(data);
-            })
-            .catch((error) => {
+                setSales(response.data.content);
+                setTotalPages(response.data.totalPages); // ✅ Fix typo here too (was `totalePages`)
+            } catch (error) {
                 console.error("Error fetching sales:", error);
                 alert("Something went wrong while fetching sales.");
-            });
-    }, []);
+            }
+        };
 
-    const filteredSales = sales.filter(s =>
-        s.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.id.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+        fetchSales();
+    }, [apiUrl, currentPage, pageSize, searchTerm]); // ✅ Add searchTerm here
+
+
+
 
     const indexOfLast = currentPage * pageSize;
     const indexOfFirst = indexOfLast - pageSize;
-    const currentSales = filteredSales.slice(indexOfFirst, indexOfLast);
-    const totalPages = Math.ceil(filteredSales.length / pageSize);
+  // const currentSales = filteredSales.slice(indexOfFirst, indexOfLast);
+    const currentSales = sales;
+
 
     const handleDownloadInvoice = async (saleId) => {try {
         const response = await axios.get(
             `${apiUrl}/api/shop/get/invoice/${saleId}`,
             {
                 responseType: "blob",
-                credentials: 'include',
+                withCredentials: true,
 
             }
         );
@@ -225,7 +229,7 @@ const SalesPage = () => {
                 {totalPages > 1 && (
                     <div className="pagination">
                         <button onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1}>
-                            Prev
+                            &laquo;  Prev
                         </button>
                         {[...Array(totalPages)].map((_, idx) => (
                             <button
@@ -237,7 +241,7 @@ const SalesPage = () => {
                             </button>
                         ))}
                         <button onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages}>
-                            Next
+                            Next &raquo;
                         </button>
                     </div>
                 )}

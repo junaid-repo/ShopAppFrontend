@@ -82,69 +82,10 @@ function timeAgo(iso) {
   return `${y}y ago`;
 }
 
+
+
 // --- Mock API area (attempt real fetch, fallback to seed) ---
-async function mockFetchRecentReports({ limit = 10 } = {}) {
 
-  try {
-    const response = await fetch('http://localhost:6062/api/shop/report/recent?limit=10', {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json"
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`Server error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    console.log("Fetched recent reports:", data);
-    // If backend returns an array:
-    if (Array.isArray(data)) {
-      return { success: true, reports: data.slice(0, limit) };
-    }
-    // If backend returns { success: true, reports: [...] }
-    if (data && data.reports) {
-      return { success: true, reports: data.reports.slice(0, limit) };
-    }
-
-    // Fallback to empty
-    return { success: false, reports: [] };
-  } catch (error) {
-    console.error("Failed to fetch recent reports:", error);
-    // Fallback seed data
-    const seed = [
-      {
-        id: 'rpt_001',
-        name: 'Sales Report',
-        fromDate: '2025-01-01',
-        toDate: '2025-03-31',
-        createdAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(), // 15m ago
-        fileName: 'sales_2025Q1.pdf',
-        status: 'READY',
-      },
-      {
-        id: 'rpt_002',
-        name: 'Product Report',
-        fromDate: '2025-06-01',
-        toDate: '2025-06-30',
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), // 5h ago
-        fileName: 'product_jun_2025.csv',
-        status: 'READY',
-      },
-      {
-        id: 'rpt_003',
-        name: 'Payment Reports',
-        fromDate: '2025-07-01',
-        toDate: '2025-07-31',
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(), // 2d ago
-        fileName: 'payments_jul_2025.xlsx',
-        status: 'READY',
-      },
-    ];
-    return { success: true, reports: seed.slice(0, limit) };
-  }
-}
 
 function mockGenerateReport(payload) {
   const ts = Date.now();
@@ -353,6 +294,73 @@ const ReportsPage = () => {
     setReportType(type);
     setShowTypeMenu(false);
   };
+
+    async function mockFetchRecentReports({ limit = 10 } = {}) {
+
+        try {
+
+
+
+            const response = await fetch(apiUrl+"/api/shop/report/recent?limit=10", {
+                method: "GET",
+                credentials: 'include',
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`Server error: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log("Fetched recent reports:", data);
+            // If backend returns an array:
+            if (Array.isArray(data)) {
+                return { success: true, reports: data.slice(0, limit) };
+            }
+            // If backend returns { success: true, reports: [...] }
+            if (data && data.reports) {
+                return { success: true, reports: data.reports.slice(0, limit) };
+            }
+
+            // Fallback to empty
+            return { success: false, reports: [] };
+        } catch (error) {
+            console.error("Failed to fetch recent reports:", error);
+            // Fallback seed data
+            const seed = [
+                {
+                    id: 'rpt_001',
+                    name: 'Sales Report',
+                    fromDate: '2025-01-01',
+                    toDate: '2025-03-31',
+                    createdAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(), // 15m ago
+                    fileName: 'sales_2025Q1.pdf',
+                    status: 'READY',
+                },
+                {
+                    id: 'rpt_002',
+                    name: 'Product Report',
+                    fromDate: '2025-06-01',
+                    toDate: '2025-06-30',
+                    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), // 5h ago
+                    fileName: 'product_jun_2025.csv',
+                    status: 'READY',
+                },
+                {
+                    id: 'rpt_003',
+                    name: 'Payment Reports',
+                    fromDate: '2025-07-01',
+                    toDate: '2025-07-31',
+                    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(), // 2d ago
+                    fileName: 'payments_jul_2025.xlsx',
+                    status: 'READY',
+                },
+            ];
+            return { success: true, reports: seed.slice(0, limit) };
+        }
+    }
 
   return (
     <div className="page-container">

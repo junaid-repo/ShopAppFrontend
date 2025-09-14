@@ -343,7 +343,7 @@ const LoginPage = ({ onLogin }) => {
     return (
         <div className="login-container">
             <div className="login-box glass-card">
-                <h1 className="login-logo">ShopFlow</h1>
+                <h1 className="login-logo">Clear Bill</h1>
                 <h2>Admin Login</h2>
                 <form onSubmit={handleSubmit}>
                     <div className="input-group">
