@@ -33,11 +33,22 @@ function App() {
     });
 
     useEffect(() => {
+        // update body class
         document.body.classList.remove('dark-theme');
         if (theme === 'dark') {
             document.body.classList.add('dark-theme');
         }
         localStorage.setItem('theme', theme);
+
+        // 🔹 update theme-color meta tag
+        const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+        if (metaThemeColor) {
+            if (theme === 'dark') {
+                metaThemeColor.setAttribute('content', '#1a1a1ad9'); // hardcoded dark color
+            } else {
+                metaThemeColor.setAttribute('content', '#f0f8ffd9'); // hardcoded light color
+            }
+        }
     }, [theme]);
 
     const toggleTheme = () => {
@@ -54,7 +65,7 @@ function App() {
 
             if (response.ok) {
                 const data = await response.json();
-                console.log('User:', data.username); // Optional: store username in state
+                console.log('User:', data.username);
                 setIsAuthenticated(true);
                 resetInactivityTimer();
             } else {
@@ -117,7 +128,7 @@ function App() {
     }, []);
 
     useEffect(() => {
-        checkSession(); // 🔹 new session check
+        checkSession();
     }, []);
 
     const [selectedPage, setSelectedPage] = useState('dashboard');

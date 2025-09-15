@@ -225,27 +225,28 @@ const SalesPage = () => {
                     </tbody>
                 </table>
 
-                {/* Pagination */}
-                {totalPages > 1 && (
-                    <div className="pagination">
-                        <button onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1}>
-                            &laquo;  Prev
-                        </button>
-                        {[...Array(totalPages)].map((_, idx) => (
-                            <button
-                                key={idx}
-                                className={currentPage === idx + 1 ? 'active' : ''}
-                                onClick={() => setCurrentPage(idx + 1)}
-                            >
-                                {idx + 1}
-                            </button>
-                        ))}
-                        <button onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages}>
-                            Next &raquo;
-                        </button>
-                    </div>
-                )}
+
             </div>
+            {/* Pagination */}
+            {totalPages > 1 && (
+                <div className="pagination">
+                    <button onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1}>
+                        &laquo;  Prev
+                    </button>
+                    {[...Array(totalPages)].map((_, idx) => (
+                        <button
+                            key={idx}
+                            className={currentPage === idx + 1 ? 'active' : ''}
+                            onClick={() => setCurrentPage(idx + 1)}
+                        >
+                            {idx + 1}
+                        </button>
+                    ))}
+                    <button onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages}>
+                        Next &raquo;
+                    </button>
+                </div>
+            )}
 
             {/* 🟢 Order Details Modal */}
             {showModal && selectedOrder && (<div

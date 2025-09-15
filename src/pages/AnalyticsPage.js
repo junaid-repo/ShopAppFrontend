@@ -87,12 +87,13 @@ const AnalyticsPage = () => {
       if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 
       const result = await response.json();
+      console.log(result);
       setData(result);
     } catch (error) {
       console.error("Error fetching analytics data:", error);
     }
   };
-
+    const isDark = document.body.classList.contains('dark-theme');
   const chartData = (label, values) => ({
     labels: data.labels || [],
     datasets: [

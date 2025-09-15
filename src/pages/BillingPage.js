@@ -30,7 +30,7 @@ const BillingPage = () => {
     const [totalPages, setTotalPages] = useState(1);
     const [totalProducts, setTotalProducts] = useState(0);
     const pageSize = 10; // rows per page
-
+    const [loading, setLoading] = useState(false);
     // NOTE: products coming from context represent the current page after fetch
     const displayedProducts = products;
 
@@ -91,7 +91,7 @@ const BillingPage = () => {
             params.append('search', q);
         }
 
-        fetch(`${apiUrl}/api/shop/get/productsList?${params.toString()}`, {
+        fetch(`${apiUrl}/api/shop/get/withCache/productsList?${params.toString()}`, {
             method: "GET",
             credentials: 'include',
             headers: {
@@ -109,9 +109,9 @@ const BillingPage = () => {
                     // legacy: assume full list or already-paged array
                     items = data;
                     total = data.length;
-                } else if (data && data.products) {
-                    items = data.products;
-                    total = data.total || data.totalCount || data.totalProducts || items.length;
+                } else if (data && data.data) {
+                    items = data.data;
+                    total = items.length;
                 } else {
                     items = Array.isArray(data) ? data : [];
                     total = items.length;
@@ -126,7 +126,7 @@ const BillingPage = () => {
                 setSellingPrices(prev => ({ ...initialPrices, ...prev }));
 
                 setTotalProducts(total);
-                setTotalPages(Math.max(1, Math.ceil(total / pageSize)));
+                setTotalPages(data.totalPages);
             })
             .catch(err => console.error("Error fetching products:", err));
     };
@@ -150,6 +150,7 @@ const BillingPage = () => {
 
     // Small pagination component used for the Available Products section
     const Pagination = () => {
+        console.log("totalPage", totalPages);
         if (totalPages <= 1) return null;
 
         const getPaginationItems = () => {
@@ -259,6 +260,7 @@ const BillingPage = () => {
             alert('Please select a customer and add products.');
             return;
         }
+        setLoading(true);
         const payload = { selectedCustomer, cart: cartWithDiscounts, sellingSubtotal, discountPercentage, tax, paymentMethod, remarks };
 
         // 🔴 API may need changes here to accept `sellingPrice` for each cart item
@@ -273,6 +275,8 @@ const BillingPage = () => {
             .then(data => {
                 setOrderRef(data.invoiceNumber || 'N/A');
                 setPaidAmount(sellingSubtotal);
+
+                setLoading(false);
                 setShowPopup(true);
                 handleNewBilling();
             })
@@ -513,7 +517,75 @@ const BillingPage = () => {
 
 
                     </div>
-                    <button className="btn process-payment-btn" onClick={HandleProcessPayment}>Process Payment</button>
+                    <button className="btn process-payment-btn" onClick={HandleProcessPayment} disabled={loading}
+                            style={{ position: "relative", padding: "0.75rem 2rem" }}>Process Payment</button>
+                    {/* 🔹 Loading (in-progress) Popup */}
+
+
+                </div>
+                <div> {loading && (
+                    <div
+                        style={{
+                            position: 'fixed',
+                            top: 0, left: 0, right: 0, bottom: 0,
+                            background: 'rgba(0,0,0,0.5)',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            zIndex: 2000,
+                            animation: 'fadeIn 0.3s ease'
+                        }}
+                    >
+                        <div
+                            style={{
+                                background: 'var(--glass-bg)',
+                                padding: '2rem',
+                                borderRadius: '25px',
+                                width: '90%',
+                                maxWidth: '500px',
+                                boxShadow: '0 8px 30px var(--shadow-color)',
+                                color: 'var(--text-color)',
+                                border: '1px solid var(--border-color)',
+                                textAlign: 'center',
+                                animation: 'slideIn 0.3s ease',
+                            }}
+                        >
+                            <h2 style={{ color: 'var(--primary-color)', marginBottom: '1.5rem', fontSize: '1.8rem' }}>
+                                Processing Payment...
+                            </h2>
+
+                            {/* Spinner */}
+                            <div
+                                style={{
+                                    width: "50px",
+                                    height: "50px",
+                                    border: "6px solid var(--border-color)",
+                                    borderTop: "6px solid var(--primary-color)",
+                                    borderRadius: "50%",
+                                    animation: "spin 1s linear infinite",
+                                    margin: "0 auto"
+                                }}
+                                className="spinner"
+                            ></div>
+
+                            {/* Spinner Animation */}
+                            <style>
+                                {`
+                                    @keyframes spin {
+                                        0% { transform: rotate(0deg); }
+                                        100% { transform: rotate(360deg); }
+                                    }
+                                
+                                    .spinner {
+                                        animation: spin 1s linear infinite;
+                                    }
+                                    `}
+                            </style>
+
+                            <p style={{ marginTop: '1rem', fontSize: '1rem' }}>Please wait while we complete your payment.</p>
+                        </div>
+                    </div>
+                    )}
                     {showPopup && (
                         <div
                             style={{
@@ -571,8 +643,6 @@ const BillingPage = () => {
                             </div>
                         </div>
                     )}
-
-
                 </div>
             </div>
             <Modal title="Select Customer" show={isModalOpen} onClose={() => setIsModalOpen(false)}>
