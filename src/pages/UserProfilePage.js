@@ -669,7 +669,7 @@ const UserProfilePage = () => {
   };
 
   return (
-    <div style={styles.glassCard}>
+    <div className="glass-card">
       <h2 style={styles.h2}>User Profile</h2>
 
 
@@ -697,7 +697,7 @@ const UserProfilePage = () => {
             </div>
 
             <div style={styles.formGroup}>
-              <label style={styles.label}>Name</label>
+              <label>Name</label>
               <input
                 type="text"
                 value={formData.name || ''}
@@ -709,7 +709,7 @@ const UserProfilePage = () => {
             </div>
 
             <div style={styles.formGroup}>
-              <label style={styles.label}>Email</label>
+              <label>Email</label>
               <input
                 type="email"
                 value={formData.email || ''}
@@ -724,7 +724,7 @@ const UserProfilePage = () => {
           {/* Right Column */}
           <div style={styles.column}>
             <div style={styles.formGroup}>
-              <label style={styles.label}>Phone</label>
+              <label>Phone</label>
               <input
                 type="text"
                 value={formData.phone || ''}
@@ -736,7 +736,7 @@ const UserProfilePage = () => {
             </div>
 
             <div style={styles.formGroup}>
-              <label style={styles.label}>Address</label>
+              <label>Address</label>
               <input
                 type="text"
                 value={formData.address || ''}
@@ -748,7 +748,7 @@ const UserProfilePage = () => {
             </div>
 
             <div style={styles.formGroup}>
-              <label style={styles.label}>Shop Owner</label>
+              <label>Shop Owner</label>
               <input
                 type="text"
                 value={formData.shopOwner || ''}
@@ -760,7 +760,7 @@ const UserProfilePage = () => {
             </div>
 
             <div style={styles.formGroup}>
-              <label style={styles.label}>Shop Location</label>
+              <label>Shop Location</label>
               <input
                 type="text"
                 value={formData.shopLocation || ''}
@@ -772,7 +772,7 @@ const UserProfilePage = () => {
             </div>
 
             <div style={styles.formGroup}>
-              <label style={styles.label}>GST Number</label>
+              <label>GST Number</label>
               <input
                 type="text"
                 value={formData.gstNumber || ''}
@@ -824,7 +824,7 @@ const UserProfilePage = () => {
 
             {passwordStep === 1 ? (
               <div style={styles.formGroup}>
-                <label style={styles.label}>Current Password</label>
+                <label>Current Password</label>
                 <input
                   type="password"
                   value={passwordData.currentPassword}
@@ -835,7 +835,7 @@ const UserProfilePage = () => {
             ) : (
               <>
                 <div style={styles.formGroup}>
-                  <label style={styles.label}>New Password</label>
+                  <label>New Password</label>
                   <input
                     type="password"
                     value={passwordData.newPassword}
@@ -844,7 +844,7 @@ const UserProfilePage = () => {
                   />
                 </div>
                 <div style={styles.formGroup}>
-                  <label style={styles.label}>Confirm New Password</label>
+                  <label>Confirm New Password</label>
                   <input
                     type="password"
                     value={passwordData.confirmPassword}

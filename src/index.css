@@ -905,6 +905,8 @@ body.dark-theme {
     font-weight: 600;
 }
 
+
+
 .subtotal-selling {
     color: #16a085;  /* teal green */
     font-weight: 800;
@@ -912,8 +914,25 @@ body.dark-theme {
     font-size: 20px;
 }
 
+.dark-theme .subtotal-selling {
+    color: #1cffd1;  /* teal green */
+    font-weight: 800;
+    padding-top: 5px;
+    font-size: 20px;
+}
+
 .discount {
     color: #e67e22;  /* orange */
+    font-weight: 600;
+}
+
+.dark-theme .discount {
+    color: #ffc793;  /* orange */
+    font-weight: 600;
+}
+
+.dark-theme .tax {
+    color: #ff432b;  /* red */
     font-weight: 600;
 }
 

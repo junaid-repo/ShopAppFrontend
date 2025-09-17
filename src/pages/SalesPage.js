@@ -295,17 +295,29 @@ const SalesPage = () => {
 
                         {/* Box 2: Order Items */}
                         <div className="order-box">
-
-                            <ul className="order-items-list">
-                                <h3><MdShoppingCart size={24} /> Order Items</h3>
+                            <h3><MdShoppingCart size={24} /> Order Items</h3>
+                            <table className="order-items-table">
+                                <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Qty</th>
+                                    <th>Price (each)</th>
+                                    <th>Total</th>
+                                </tr>
+                                </thead>
+                                <tbody>
                                 {selectedOrder.items.map((item, idx) => (
-                                    <li key={idx} className="order-item">
-                                        <span>{item.productName} (x{item.quantity})</span>
-                                        <span>₹{item.unitPrice.toLocaleString()}</span>
-                                    </li>
+                                    <tr key={idx}>
+                                        <td>{item.productName}</td>
+                                        <td>{item.quantity.toLocaleString()}</td>
+                                        <td>₹{(item.unitPrice / item.quantity).toLocaleString()}</td>
+                                        <td>₹{item.unitPrice.toLocaleString()}</td>
+                                    </tr>
                                 ))}
-                            </ul>
+                                </tbody>
+                            </table>
                         </div>
+
 
                         {/* Box 3: Totals & GST */}
                         <div className="order-box">
