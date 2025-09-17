@@ -123,6 +123,7 @@ const styles = {
     border: '1px solid rgba(224, 247, 255, 0.8)',
     boxShadow: '0 4px 30px rgba(0, 0, 0, 0.15)',
     padding: '2rem',
+    marginTop: '10rem',
   },
 
   // Layout
@@ -668,10 +669,10 @@ const UserProfilePage = () => {
   };
 
   return (
-    <div style={styles.dashboard}>
+    <div style={styles.glassCard}>
       <h2 style={styles.h2}>User Profile</h2>
 
-      <div style={styles.glassCard}>
+
         <div style={styles.twoColumn}>
           {/* Left Column */}
           <div style={styles.column}>
@@ -812,7 +813,6 @@ const UserProfilePage = () => {
             Update Password
           </HoverButton>
         </div>
-      </div>
 
       {/* Password Modal */}
       {showPasswordModal && (

@@ -66,6 +66,15 @@ body {
     padding: 2rem;
     transition: margin-left 0.25s ease;
     background-color: transparent;
+    display: flex;               /* make column so footer sticks to bottom */
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Ensure the main content area expands and pushes the footer to the bottom */
+.main-content > main {
+    flex: 1 1 auto;
+    display: block;
 }
 
 /* When the sidebar is collapsed, reduce the left margin so content aligns */
@@ -197,6 +206,36 @@ body.dark-theme .btn-cancel {
 
 .data-table tr:hover {
     background-color: var(--table-hover-bg);
+}
+
+/* ---- Dark mode overrides ---- */
+.dark-theme .data-table {
+    color: #fff; /* Table body text */
+}
+
+.dark-theme .data-table th {
+    background: rgba(50, 50, 50, 0.9);
+    color: #fff; /* Table header text */
+    border-bottom: 1px solid #555;
+}
+
+.dark-theme .data-table td {
+    border-bottom: 1px solid #444;
+}
+
+/* Status colors in dark mode */
+.dark-theme .status-paid {
+    color: #90ee90; /* lighter green */
+}
+
+.dark-theme .status-pending {
+    color: #ffb84d; /* softer orange for contrast */
+}
+
+/* Download button stays visible in dark mode */
+.dark-theme .download-btn {
+    background-color: #6cdb11;
+    color: #fff;
 }
 
 /* Status Badges */

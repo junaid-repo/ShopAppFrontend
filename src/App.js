@@ -11,6 +11,9 @@ import BillingPage from './pages/BillingPage';
 import ReportsPage from './pages/ReportsPage';
 import UserProfilePage from './pages/UserProfilePage';
 import AnalyticsPage from './pages/AnalyticsPage';
+import TermsPage from './pages/TermsPage';
+import PrivacyPage from './pages/PrivacyPage';
+import HelpPage from './pages/HelpPage';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useConfig } from "./pages/ConfigProvider";
 const queryClient = new QueryClient();
@@ -44,7 +47,7 @@ function App() {
         const metaThemeColor = document.querySelector('meta[name="theme-color"]');
         if (metaThemeColor) {
             if (theme === 'dark') {
-                metaThemeColor.setAttribute('content', '#1a1a1ad9'); // hardcoded dark color
+                metaThemeColor.setAttribute('content', '#04041b'); // hardcoded dark color
             } else {
                 metaThemeColor.setAttribute('content', '#f0f8ffd9'); // hardcoded light color
             }
@@ -143,6 +146,9 @@ function App() {
         reports: <ReportsPage setSelectedPage={setSelectedPage} />,
         profile: <UserProfilePage setSelectedPage={setSelectedPage} />,
         analytics: <AnalyticsPage setSelectedPage={setSelectedPage} />,
+        terms: <TermsPage setSelectedPage={setSelectedPage} />,
+        privacy: <PrivacyPage setSelectedPage={setSelectedPage} />,
+        help: <HelpPage setSelectedPage={setSelectedPage} />,
     };
 
     return (

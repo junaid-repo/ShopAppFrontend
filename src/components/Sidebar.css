@@ -143,7 +143,7 @@
     /* make active tab use theme primary color and high-contrast text */
     background: var(--primary-color);
     color: #ffffff;
-    box-shadow: 0 4px 15px rgba(0, 170, 255, 0.28);
+    box-shadow: 0 4px 15px rgba(0, 170, 255, 0);
     transform: translateX(10px) scale(1.05);
 }
 

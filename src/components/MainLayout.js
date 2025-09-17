@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
+import Footer from "./Footer";
 
 const MainLayout = ({ children, onLogout, toggleTheme, theme, selectedPage, setSelectedPage, pages  }) => {
 const navigate = useNavigate();
@@ -44,6 +45,7 @@ const navigate = useNavigate();
             <div className="main-content">
                 <Topbar onLogout={handleLogout}  toggleTheme={toggleTheme} theme={theme} isCollapsed={isCollapsed} setSelectedPage={setSelectedPage} />
                 <main>{(pages && selectedPage && pages[selectedPage]) ? pages[selectedPage] : children}</main>
+                <Footer setSelectedPage={setSelectedPage} />
             </div>
         </div>
     );

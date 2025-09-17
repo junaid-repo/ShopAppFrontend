@@ -1,6 +1,6 @@
 // src/pages/LoginPage.js
 import React, { useState, useEffect  } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import './LoginPage.css';
 import { useConfig } from "./ConfigProvider";
 
@@ -42,6 +42,8 @@ const LoginPage = ({ onLogin }) => {
         password: "",
         confirmPassword: ""
     });
+    const [termsAccepted, setTermsAccepted] = useState(false);
+    const [showTermsModal, setShowTermsModal] = useState(false);
     const [registerMessage, setRegisterMessage] = useState("");
     const [registeringUser, setRegisteringUser] = useState(null); // stores email/username after register
 
@@ -423,38 +425,161 @@ const LoginPage = ({ onLogin }) => {
                             <h2>Register</h2>
                             <button className="close-btn" onClick={closeRegisterModal}>×</button>
                         </div>
-                        <div className="form-group"><input type="text" placeholder="Full Name"
-                                                           value={registerData.fullName}
-                                                           onChange={(e) => setRegisterData({ ...registerData, fullName: e.target.value })}
-                        /></div>
-                        <div className="form-group"><input type="email" placeholder="Email"
-                                                           value={registerData.email}
-                                                           onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
-                        /></div>
-                        <div className="form-group"><input type="text" placeholder="Phone"
-                                                           value={registerData.phone}
-                                                           onChange={(e) => setRegisterData({ ...registerData, phone: e.target.value })}
-                        /></div>
-                        <div className="form-group"><input type="password" placeholder="Password"
-                                                           value={registerData.password}
-                                                           onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
-                        /></div>
-                        <div className="form-group"><input type="password" placeholder="Confirm Password"
-                                                           value={registerData.confirmPassword}
-                                                           onChange={(e) => setRegisterData({ ...registerData, confirmPassword: e.target.value })}
-                        /></div>
+
+                        <div className="form-group">
+                            <input
+                                type="text"
+                                placeholder="Full Name"
+                                value={registerData.fullName}
+                                onChange={(e) =>
+                                    setRegisterData({ ...registerData, fullName: e.target.value })
+                                }
+                            />
+                        </div>
+                        <div className="form-group">
+                            <input
+                                type="email"
+                                placeholder="Email"
+                                value={registerData.email}
+                                onChange={(e) =>
+                                    setRegisterData({ ...registerData, email: e.target.value })
+                                }
+                            />
+                        </div>
+                        <div className="form-group">
+                            <input
+                                type="text"
+                                placeholder="Phone"
+                                value={registerData.phone}
+                                onChange={(e) =>
+                                    setRegisterData({ ...registerData, phone: e.target.value })
+                                }
+                            />
+                        </div>
+                        <div className="form-group">
+                            <input
+                                type="password"
+                                placeholder="Password"
+                                value={registerData.password}
+                                onChange={(e) =>
+                                    setRegisterData({ ...registerData, password: e.target.value })
+                                }
+                            />
+                        </div>
+                        <div className="form-group">
+                            <input
+                                type="password"
+                                placeholder="Confirm Password"
+                                value={registerData.confirmPassword}
+                                onChange={(e) =>
+                                    setRegisterData({ ...registerData, confirmPassword: e.target.value })
+                                }
+                            />
+                        </div>
+
+                        {/* ✅ Terms & Conditions Checkbox */}
+                        <div
+                            className="form-group"
+                            style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "10px" }}
+                        >
+                            <input
+                                type="checkbox"
+                                id="terms"
+                                checked={termsAccepted}
+                                onChange={(e) => setTermsAccepted(e.target.checked)}
+                                style={{ transform: "scale(1.2)", cursor: "pointer" }}
+                            />
+                            <label htmlFor="terms" style={{ cursor: "pointer" }}>
+                                I agree to the{" "}
+                                <span
+                                    onClick={() => setShowTermsModal(true)}
+                                    style={{ color: "#007bff", textDecoration: "underline", cursor: "pointer" }}
+                                >
+                        Terms & Conditions
+                    </span>
+                            </label>
+                        </div>
 
                         {registerMessage && (
-                            <p className="error-message" style={{ color: registerMessage.startsWith("✅") ? "green" : "red" }}>
+                            <p
+                                className="error-message"
+                                style={{ color: registerMessage.startsWith("✅") ? "green" : "red" }}
+                            >
                                 {registerMessage}
                             </p>
                         )}
+
                         <div className="form-actions">
-                            <button className="btn" onClick={handleRegister}>Register</button>
+                            <button
+                                className="btn"
+                                onClick={handleRegister}
+                                disabled={!termsAccepted}
+                                style={{
+                                    opacity: termsAccepted ? 1 : 0.6,
+                                    cursor: termsAccepted ? "pointer" : "not-allowed"
+                                }}
+                            >
+                                Register
+                            </button>
                         </div>
                     </div>
                 </div>
             )}
+
+            {/* ✅ Terms Modal Popup */}
+            {showTermsModal && (
+                <div className="modal-overlay">
+                    <div className="modal-content" style={{ maxHeight: "50vh", overflowY: "auto", maxWidth: "36vh" }}>
+                        <div className="modal-header">
+                            <h2>Terms & Conditions</h2>
+                            <button className="close-btn" onClick={() => setShowTermsModal(false)}>×</button>
+                        </div>
+                        <div
+                            style={{
+                                padding: "15px",
+                                textAlign: "left",
+                                maxHeight: "28vh",
+                               // ✅ restrict height
+                                overflowY: "auto",       // ✅ scrollable
+                                lineHeight: "1.6",
+                            }}
+                        >
+                            <p>
+                                Welcome to <b>Clear Bill</b>. By registering and using our services, you agree
+                                to the following terms:
+                            </p>
+                            <ul style={{ paddingLeft: "20px" }}>
+                                <li>Users must provide accurate registration details.</li>
+                                <li>Accounts are personal and non-transferable.</li>
+                                <li>Invoices generated are the responsibility of the registered business.</li>
+                                <li>Clear Bill is not liable for billing errors or tax miscalculations.</li>
+                                <li>We reserve the right to suspend accounts in case of misuse.</li>
+                                <li>Users must comply with local tax and financial regulations.</li>
+                                <li>By continuing, you agree to receive service-related notifications.</li>
+                                <li>Service availability may vary based on location and jurisdiction.</li>
+                                <li>We may update these Terms from time to time with prior notice.</li>
+                                <li>Any misuse, fraud, or illegal activity may result in account termination.</li>
+                                <li>Users are responsible for maintaining confidentiality of their login credentials.</li>
+                                <li>Clear Bill reserves rights to improve, modify, or discontinue services at any time.</li>
+                                <li>Support is provided via official channels only (email, phone, WhatsApp).</li>
+                                <li>Refunds, if applicable, will be processed as per company policies.</li>
+                                <li>Data collected will be handled according to our Privacy Policy.</li>
+                                <li>Disputes, if any, will be subject to applicable jurisdiction laws.</li>
+                                <li>By using Clear Bill, you consent to electronic communication of notices.</li>
+                                <li>Third-party integrations are governed by their own terms and policies.</li>
+                                <li>Violation of these terms may result in suspension or permanent ban.</li>
+                                <li>Users are encouraged to review these Terms periodically for updates.</li>
+                            </ul>
+                            <p>
+                                For full details, please review our Terms & Conditions on the official website or
+                                contact support for clarifications.
+                            </p>
+                        </div>
+
+                    </div>
+                </div>
+            )}
+
             {modal === "registerOtp" && (
                 <div className="modal-overlay">
                     <div className="modal-content">

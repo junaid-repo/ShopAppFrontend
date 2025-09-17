@@ -1,14 +1,14 @@
 .customer-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr); /* Change from 3 to 4 */
-    gap: 20px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 40px;
 }
 
 .customer-card {
     background: rgba(255, 255, 255, 0.2);
-    border-radius: 8px;
-    padding: 1rem;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    border-radius: 30px;
+    padding: 2rem;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.1);
     transition: transform 0.2s ease-in-out;
 }
 
@@ -18,22 +18,18 @@
 }
 
 .customer-card h3 {
-    font-size: 1.4rem; /* Increase name font size */
+    font-size: 1.4rem;
     margin-bottom: 0.5rem;
 }
 
+/* ---- LIGHT THEME (default) ---- */
 .customer-info {
     display: flex;
     align-items: center;
     font-size: 0.95rem;
     color: #444;
     gap: 0.5rem;
-
     padding-bottom: 0.5rem;
-}
-
-.customer-info.spaced {
-    margin-top: 0.5rem; /* extra space between email and phone */
 }
 
 .icon {
@@ -41,21 +37,37 @@
     color: #333;
 }
 
-@media (max-width: 900px) {
-    .customer-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
+.customer-info.spaced {
+    margin-top: 0.5rem;
 }
 
-@media (max-width: 600px) {
-    .customer-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-.customer-info .fa-money-bill-wave,  /* Adjust icon if needed */
+.customer-info .fa-money-bill-wave,
 .customer-info.money {
-    font-size: 1.05rem; /* Slightly larger */
-    color: green;        /* Money color */
+    font-size: 1.05rem;
+    color: green;
     font-weight: 600;
+}
+
+/* ---- DARK THEME OVERRIDES ---- */
+
+.dark-theme .customer-card {
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 30px;
+    border: 1px solid rgb(0, 0, 0);
+    padding: 2rem;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease-in-out;
+}
+
+
+.dark-theme .customer-info {
+    color: #fff;  /* email + phone + spent amount text */
+}
+
+.dark-theme .customer-info.money {
+    color: #2bc22b; /* lighter green for visibility */
+}
+
+.dark-theme .icon {
+    color: #ddd;
 }
