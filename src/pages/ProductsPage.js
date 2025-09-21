@@ -102,16 +102,7 @@ const ProductsPage = () => {
 
         const sortKey = sortConfig.key || 'createdAt';
         const sortDir = sortConfig.direction || 'desc';
-        const cacheKey = `page=${currentPage}&limit=${ITEMS_PER_PAGE}&search=${debouncedSearchTerm}&sort=${sortKey}&dir=${sortDir}`;
 
-        // 1. Check cache first
-        if (productsCache.current[cacheKey]) {
-            const cached = productsCache.current[cacheKey];
-            setProducts(cached.data);
-            setTotalPages(cached.totalPages);
-            setTotalProducts(cached.totalCount);
-            return;
-        }
 
         // 2. Fetch from API if not in cache
         setIsLoading(true);
@@ -135,7 +126,8 @@ const ProductsPage = () => {
             setProducts(result.data || []);
             setTotalPages(result.totalPages || 0);
             setTotalProducts(result.totalCount || 0);
-            productsCache.current[cacheKey] = result;
+
+
 
         } catch (error) {
             console.error("Error fetching products:", error);
@@ -154,14 +146,9 @@ const ProductsPage = () => {
     // Effect to reset page and clear cache when search or sort changes
     useEffect(() => {
         setCurrentPage(1);
-        productsCache.current = {};
     }, [debouncedSearchTerm, sortConfig]);
 
-    // Helper to invalidate cache and refetch current page data
-    const invalidateCacheAndRefetch = useCallback(() => {
-        productsCache.current = {};
-        fetchProducts();
-    }, [fetchProducts]);
+
 
     // --- EVENT HANDLERS ---
 
@@ -199,7 +186,6 @@ const ProductsPage = () => {
             });
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
-            invalidateCacheAndRefetch();
             setIsModalOpen(false);
             resetForm();
         } catch (error) {
@@ -220,7 +206,6 @@ const ProductsPage = () => {
             });
             if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
 
-            invalidateCacheAndRefetch();
             setIsUpdateModalOpen(false);
             resetForm();
         } catch (err) {
@@ -238,7 +223,6 @@ const ProductsPage = () => {
                 });
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
-                invalidateCacheAndRefetch();
             } catch (error) {
                 console.error("Error deleting product:", error);
                 alert("Something went wrong while deleting the product.");
@@ -264,7 +248,6 @@ const ProductsPage = () => {
                 throw new Error(errorText || `Upload failed (${res.status})`);
             }
 
-            invalidateCacheAndRefetch();
             setIsCsvModalOpen(false);
             setCsvFile(null);
         } catch (err) {
@@ -461,51 +444,55 @@ const ProductsPage = () => {
 
     return (
         <div className="page-container">
-            <h2>Products</h2>
+            <h2 style={{paddingBottom:"30px"}}>Products</h2>
 
             <div className="page-header">
-                <input
-                    type="text"
-                    placeholder="Search products..."
-                    className="search-bar"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                />
-            </div>
 
-            <div className="actions-toolbar">
-                <div className="actions-group-left">
-                    <button type="button" className="btn" onClick={() => setIsModalOpen(true)}>Add Product</button>
-                    <button type="button" className="btn" onClick={() => setIsCsvModalOpen(true)}>Upload CSV</button>
-                    <button type="button" className="btn" onClick={handleExportCSV}>Export CSV</button>
+                <div className="actions-toolbar">
+                    <input
+                        type="text"
+                        placeholder="Search products..."
+                        className="search-bar"
+                        value={searchTerm}
+                        style={{marginBottom: "0px"}}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                    <div className="actions-group-left" style={{marginLeft: "1px"}}>
+                        <button type="button" className="btn" onClick={() => setIsModalOpen(true)}>Add Product</button>
+                        <button type="button" className="btn" onClick={() => setIsCsvModalOpen(true)}>Upload CSV</button>
+                        <button type="button" className="btn" onClick={handleExportCSV}>Export CSV</button>
+                    </div>
+
+                    <div ref={columnsRef} className="columns-dropdown-container">
+                        <button type="button" style ={{background: "white", color: "var(--primary-color)", border: "2px solid var(--primary-color)"}} onClick={() => setIsColumnsOpen(v => !v)} aria-expanded={isColumnsOpen} className="btn btn-outline">
+                            {columnsButtonLabel} ▾
+                        </button>
+                        {isColumnsOpen && (
+                            <div className="columns-dropdown-menu">
+                                <div className="columns-list">
+                                    {Object.keys(visibleColumns).map(col => (
+                                        <label key={col} className="column-item">
+                                            <input
+                                                type="checkbox"
+                                                checked={visibleColumns[col]}
+                                                onChange={() => toggleColumn(col)}
+                                            />
+                                            <span>{col.replace(/([A-Z])/g, ' $1')}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                                <div className="columns-dropdown-footer">
+                                    <button type="button" onClick={() => setVisibleColumns(defaultVisibleColumns)}>Show All</button>
+                                    <button type="button" onClick={() => setIsColumnsOpen(false)}>Done</button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
-                <div ref={columnsRef} className="columns-dropdown-container">
-                    <button type="button" onClick={() => setIsColumnsOpen(v => !v)} aria-expanded={isColumnsOpen} className="btn btn-outline">
-                        {columnsButtonLabel} ▾
-                    </button>
-                    {isColumnsOpen && (
-                        <div className="columns-dropdown-menu">
-                            <div className="columns-list">
-                                {Object.keys(visibleColumns).map(col => (
-                                    <label key={col} className="column-item">
-                                        <input
-                                            type="checkbox"
-                                            checked={visibleColumns[col]}
-                                            onChange={() => toggleColumn(col)}
-                                        />
-                                        <span>{col.replace(/([A-Z])/g, ' $1')}</span>
-                                    </label>
-                                ))}
-                            </div>
-                            <div className="columns-dropdown-footer">
-                                <button type="button" onClick={() => setVisibleColumns(defaultVisibleColumns)}>Show All</button>
-                                <button type="button" onClick={() => setIsColumnsOpen(false)}>Done</button>
-                            </div>
-                        </div>
-                    )}
-                </div>
             </div>
+
+
 
             <div className="glass-card">
                 <table className="data-table">

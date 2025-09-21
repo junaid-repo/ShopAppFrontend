@@ -150,7 +150,7 @@ const SalesPage = () => {
     return (
         <div className="page-container">
             <h2>Sales</h2>
-            <div className="page-header">
+            <div className="page-header" style={{marginTop: "20px"}}>
                 <input
                     type="text"
                     placeholder="Search by Invoice ID or Customer..."
@@ -162,7 +162,7 @@ const SalesPage = () => {
                 />
             </div>
 
-            <div className="glass-card">
+            <div className="glass-card" style={{marginTop: "40px"}}>
                 <table className="data-table">
                     <thead>
                     <tr>
@@ -300,8 +300,8 @@ const SalesPage = () => {
                                 <thead>
                                 <tr>
                                     <th>Product</th>
+                                    <th>Cost (each)</th>
                                     <th>Qty</th>
-                                    <th>Price (each)</th>
                                     <th>Total</th>
                                 </tr>
                                 </thead>
@@ -309,8 +309,8 @@ const SalesPage = () => {
                                 {selectedOrder.items.map((item, idx) => (
                                     <tr key={idx}>
                                         <td>{item.productName}</td>
-                                        <td>{item.quantity.toLocaleString()}</td>
                                         <td>₹{(item.unitPrice / item.quantity).toLocaleString()}</td>
+                                        <td>{item.quantity.toLocaleString()}</td>
                                         <td>₹{item.unitPrice.toLocaleString()}</td>
                                     </tr>
                                 ))}

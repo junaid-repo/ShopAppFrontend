@@ -4,15 +4,18 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import './fonts.css';
-import { BillingProvider } from './context/BillingContext';
-import { ConfigProvider } from "./pages/ConfigProvider";
+import {BillingProvider} from './context/BillingContext';
+import {ConfigProvider} from "./pages/ConfigProvider";
+import {GoogleOAuthProvider} from '@react-oauth/google';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-<ConfigProvider>
-    <BillingProvider>
-      <App />
-    </BillingProvider>
+    <ConfigProvider>
+        <GoogleOAuthProvider clientId="642231628593-eso4jie2p3cu670djrtqauq0qh741nk3.apps.googleusercontent.com" useOneTap={false}>
+            <BillingProvider>
+                <App/>
+            </BillingProvider>
+        </GoogleOAuthProvider>
     </ConfigProvider>
 );
 

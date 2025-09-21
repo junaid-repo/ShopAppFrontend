@@ -81,24 +81,29 @@ const Topbar = ({ onLogout, theme, toggleTheme, toggleSidebar, isCollapsed, setS
         }
 
         onLogout();
+
+        const res =  fetch(`${apiUrl}/api/user/logout`, {
+            method: "POST",
+            credentials: 'include',
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+        if(res.status){
         navigate("/login", { replace: true });
+        }
     };
 
     return (
         <header className="topbar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1.5rem' }}>
             {/* Left: search (sidebar toggle is in Sidebar header) */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '42px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
 
-                <input
-                    type="text"
-                    placeholder="Search..."
-                    className="search-bar"
-                    style={{ width: '1020px' }}
-                />
+
             </div>
 
             {/* Controls: Theme Toggle, User Profile + Logout */}
-            <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "15px", marginTop :"1px" }}>
 
                 {/* Theme Toggle Button */}
                 <button

@@ -150,46 +150,96 @@ const BillingPage = () => {
 
     // Small pagination component used for the Available Products section
     const Pagination = () => {
-        console.log("totalPage", totalPages);
         if (totalPages <= 1) return null;
 
         const getPaginationItems = () => {
-            const items = [];
-            if (totalPages <= 7) {
-                for (let i = 1; i <= totalPages; i++) items.push(i);
-                return items;
+            const pages = [];
+            const maxVisible = 4;
+
+            // Always include first and last page
+            pages.push(1);
+
+            let start = Math.max(2, currentPage - Math.floor(maxVisible / 2));
+            let end = Math.min(totalPages - 1, start + maxVisible - 1);
+
+            // shift window if close to the end
+            if (end >= totalPages) {
+                end = totalPages - 1;
+                start = Math.max(2, end - maxVisible + 1);
             }
-            items.push(1);
-            if (currentPage > 4) items.push('...');
-            if (currentPage > 2) items.push(currentPage - 1);
-            if (currentPage !== 1 && currentPage !== totalPages) items.push(currentPage);
-            if (currentPage < totalPages - 1) items.push(currentPage + 1);
-            if (currentPage < totalPages - 3) items.push('...');
-            items.push(totalPages);
-            return Array.from(new Set(items));
+
+            if (start > 2) {
+                pages.push("...");
+            }
+
+            for (let i = start; i <= end; i++) {
+                pages.push(i);
+            }
+
+            if (end < totalPages - 1) {
+                pages.push("...");
+            }
+
+            if (totalPages > 1) {
+                pages.push(totalPages);
+            }
+
+            return pages;
         };
 
         return (
-            <div className="product-pagination" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
-                <div style={{ color: 'var(--text-color)' }}>
-                    Showing {Math.min((currentPage - 1) * pageSize + 1, totalProducts || 0)} - {Math.min(currentPage * pageSize, totalProducts || 0)} of {totalProducts}
+            <div
+                className="product-pagination"
+                style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginTop: "12px",
+                }}
+            >
+                <div style={{ color: "var(--text-color)" }}>
+                    Showing {Math.min((currentPage - 1) * pageSize + 1, totalProducts || 0)} -{" "}
+                    {Math.min(currentPage * pageSize, totalProducts || 0)} of {totalProducts}
                 </div>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <button className="btn" onClick={() => { if (currentPage > 1) setCurrentPage(prev => prev - 1); }} disabled={currentPage <= 1}>Prev</button>
+                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                    <button
+                        className="btn"
+                        onClick={() => {
+                            if (currentPage > 1) setCurrentPage((prev) => prev - 1);
+                        }}
+                        disabled={currentPage <= 1}
+                    >
+                        Prev
+                    </button>
 
-                    {getPaginationItems().map((page, idx) => (
-                        page === '...' ? (
+                    {getPaginationItems().map((page, idx) =>
+                        page === "..." ? (
                             <span key={`dots-${idx}`}>...</span>
                         ) : (
-                            <button key={page} className={`btn ${page === currentPage ? 'active' : ''}`} onClick={() => setCurrentPage(page)}>{page}</button>
+                            <button
+                                key={page}
+                                className={`btn ${page === currentPage ? "active" : ""}`}
+                                onClick={() => setCurrentPage(page)}
+                            >
+                                {page}
+                            </button>
                         )
-                    ))}
+                    )}
 
-                    <button className="btn" onClick={() => { if (currentPage < totalPages) setCurrentPage(prev => prev + 1); }} disabled={currentPage >= totalPages}>Next</button>
+                    <button
+                        className="btn"
+                        onClick={() => {
+                            if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
+                        }}
+                        disabled={currentPage >= totalPages}
+                    >
+                        Next
+                    </button>
                 </div>
             </div>
         );
     };
+
 
     // --- MODIFIED: API CALL TO CREATE AND SELECT A NEW CUSTOMER (WITH DEBUGGING) ---
     const handleAddCustomer = async (e) => {

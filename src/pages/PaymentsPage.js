@@ -23,11 +23,13 @@ const PaymentsPage = () => {
   const [itemsPerPage] = useState(10); // show 5 records per page
 
     const now = new Date();
-    const defaultFrom = new Date(now.getFullYear(), now.getMonth(), 1);
-    const defaultTo = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
+// Default to last 7 days (including today)
+    const defaultTo = now; // today
+    const defaultFrom = new Date();
+    defaultFrom.setDate(now.getDate() - 6); // 6 days before today (inclusive makes 7 days total)
 
-    // --- New: date range state (default to current month) ---
+// --- New: date range state (default to last 7 days) ---
     const formatDateInput = (d) => {
         const yyyy = d.getFullYear();
         const mm = String(d.getMonth() + 1).padStart(2, "0");
@@ -35,7 +37,8 @@ const PaymentsPage = () => {
         return `${yyyy}-${mm}-${dd}`;
     };
 
-  const config = useConfig();
+
+    const config = useConfig();
   var apiUrl = "";
   if (config) {
     console.log(config.API_URL);

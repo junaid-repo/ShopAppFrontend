@@ -1208,3 +1208,36 @@ body.dark-theme {
 .action-icon.edit:hover { background-color: #b2ebf2; }
 .action-icon.delete { background-color: #ffebee; color: #d32f2f; }
 .action-icon.delete:hover { background-color: #ffcdd2; }
+.ribbonw {
+    width: 150px;
+    height: 60px;
+    background: #007bff;
+    position: absolute;
+    top: 15px;
+    left: 0px;
+    border-radius: 25%;
+    text-align: center;
+    line-height: 30px;
+    letter-spacing: 1px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: bold;
+    transform: rotate(-1deg);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+}
+
+.ribbonw span {
+    display: block;
+    padding: 0 10px;
+    border-radius: 25%;
+}
+.google-login-container {
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: center; /* This centers the button horizontally */
+}
+
+/* This targets the button element rendered by the GoogleLogin component */
+.google-login-container > div {
+    border-radius: 50px !important; /* Adjust the 20px value as you like! */
+}

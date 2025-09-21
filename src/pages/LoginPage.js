@@ -3,6 +3,8 @@ import React, { useState, useEffect  } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import './LoginPage.css';
 import { useConfig } from "./ConfigProvider";
+import { GoogleLogin } from '@react-oauth/google';    // ✅ added
+import jwt_decode from "jwt-decode";
 
 const LoginPage = ({ onLogin }) => {
     // Login
@@ -12,6 +14,10 @@ const LoginPage = ({ onLogin }) => {
     const [isSuccess, setIsSuccess] = useState(false);
     // Unified modal controller: null | 'forgot' | 'otp' | 'result'
     const [modal, setModal] = useState(null);
+
+    // --- New States for Policy Modal ---
+    const [showPolicyModal, setShowPolicyModal] = useState(false);
+    const [policyContent, setPolicyContent] = useState({ title: '', content: '' });
 
     // Forgot password flow
     const [forgotInput, setForgotInput] = useState('');
@@ -26,6 +32,8 @@ const LoginPage = ({ onLogin }) => {
 
     // Final result
     const [resultMessage, setResultMessage] = useState('');
+
+
 
     const navigate = useNavigate();
     const config = useConfig();
@@ -46,6 +54,48 @@ const LoginPage = ({ onLogin }) => {
     const [showTermsModal, setShowTermsModal] = useState(false);
     const [registerMessage, setRegisterMessage] = useState("");
     const [registeringUser, setRegisteringUser] = useState(null); // stores email/username after register
+
+    // new state for Google error feedback
+    const [googleError, setGoogleError] = useState('');
+
+    // --- Generic Policy Content ---
+    const termsText = (
+        <>
+            <p className="font-bold mb-2">Last Updated: 19 September 2025</p>
+            <p className="mb-4">Welcome to Clear Bill! These terms and conditions outline the rules and regulations for the use of our services.</p>
+            <h3 className="text-lg font-bold mb-2">1. Acceptance of Terms</h3>
+            <p className="mb-4">By accessing and using our service, you accept and agree to be bound by the terms and provision of this agreement. In addition, when using these particular services, you shall be subject to any posted guidelines or rules applicable to such services.</p>
+            <h3 className="text-lg font-bold mb-2">2. User Accounts</h3>
+            <p className="mb-4">You are responsible for safeguarding your account details, and you are responsible for all activities that occur under your account. You must notify us immediately upon becoming aware of any breach of security or unauthorized use of your account.</p>
+            <h3 className="text-lg font-bold mb-2">3. Limitation of Liability</h3>
+            <p>Our service is provided "as is." We do not warrant that the service will be uninterrupted, secure, or error-free. In no event shall Clear Bill be liable for any indirect, incidental, special, consequential or punitive damages.</p>
+        </>
+    );
+
+    const privacyText = (
+        <>
+            <p className="font-bold mb-2">Last Updated: 19 September 2025</p>
+            <p className="mb-4">Your privacy is important to us. It is Clear Bill's policy to respect your privacy regarding any information we may collect from you across our website.</p>
+            <h3 className="text-lg font-bold mb-2">1. Information We Collect</h3>
+            <p className="mb-4">We only ask for personal information when we truly need it to provide a service to you. We collect it by fair and lawful means, with your knowledge and consent. We also let you know why we’re collecting it and how it will be used.</p>
+            <h3 className="text-lg font-bold mb-2">2. Use of Information</h3>
+            <p className="mb-4">We use the information we collect to operate, maintain, and provide the features and functionality of the service, as well as to communicate directly with you, such as to send you email messages and push notifications.</p>
+            <h3 className="text-lg font-bold mb-2">3. Data Security</h3>
+            <p>We use commercially acceptable means to protect your Personal Information, but remember that no method of transmission over the internet, or method of electronic storage, is 100% secure and reliable.</p>
+        </>
+    );
+
+    // --- Handlers for Policy Modal ---
+    const openPolicyModal = (type) => {
+        if (type === 'terms') {
+            setPolicyContent({ title: 'Terms of Service', content: termsText });
+        } else {
+            setPolicyContent({ title: 'Privacy Policy', content: privacyText });
+        }
+        setShowPolicyModal(true);
+    };
+
+    const closePolicyModal = () => setShowPolicyModal(false);
 
 // --- HELPERS TO OPEN/CLOSE ---
     const openRegisterModal = () => {
@@ -109,6 +159,45 @@ const LoginPage = ({ onLogin }) => {
         }
     };
 
+    // ---------- GOOGLE LOGIN HANDLER -------------
+    const handleGoogleSuccess = async (credentialResponse) => {
+        // credentialResponse.credential contains the ID token from Google
+        const idToken = credentialResponse?.credential;
+        console.log("The returned token from google ", idToken);
+        if (!idToken) {
+            setGoogleError("Google did not return a credential/token");
+            return;
+        }
+        try {
+            // Optional: decode to show user info or debugging
+            // const decoded = jwt_decode(idToken);
+            // console.log("Google user decoded:", decoded);
+
+            // Send to your backend to verify and/or create a user
+            const resp = await fetch(authApiUrl + "/auth/new/google/user", {
+                method: "POST",
+                credentials: 'include',
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ idToken })
+            });
+            const data = await resp.json();
+            if (resp.ok && data.success) {
+                // backend verifies Google token, creates or finds user, returns your app's auth token or sets session
+                onLogin(true);
+                navigate('/');
+            } else {
+                // error from backend
+                setGoogleError(data.message || "Google Login failed");
+            }
+        } catch (err) {
+            setGoogleError("Google Login error: " + err.message);
+        }
+    };
+
+    const handleGoogleError = () => {
+        setGoogleError("Google Login was cancelled or failed");
+    };
+
 // --- HANDLE REGISTER API CALL ---
     const handleRegister = async () => {
         const { fullName, email, phone, password, confirmPassword } = registerData;
@@ -120,7 +209,7 @@ const LoginPage = ({ onLogin }) => {
             setRegisterMessage("❌ Passwords do not match");
             return;
         }
-      //  alert(registerData)
+        //  alert(registerData)
 
         try {
             const res = await fetch(authApiUrl + "/auth/register/newuser", {
@@ -191,7 +280,7 @@ const LoginPage = ({ onLogin }) => {
             if (!response.ok) throw new Error('Login failed');
             const token = await response.text();
             if (token) {
-               // localStorage.setItem('jwt_token', token);
+                // localStorage.setItem('jwt_token', token);
                 onLogin(true);
                 navigate('/');
             }
@@ -346,17 +435,20 @@ const LoginPage = ({ onLogin }) => {
         <div className="login-container">
             <div className="login-box glass-card">
                 <h1 className="login-logo">Clear Bill</h1>
-                <h2>Admin Login</h2>
+                <h2 className="text-2xl font-semibold text-gray-700 mb-6 text-center">Login</h2>
                 <form onSubmit={handleSubmit}>
-                    <div className="input-group">
+                    <div className="input-group" >
                         <input
                             type="text"
                             placeholder="Username"
+
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
                             required
                         />
                     </div>
+
+                    {/* --- MODIFIED: Password Input with Forgot Password Link --- */}
                     <div className="input-group">
                         <input
                             type="password"
@@ -365,23 +457,102 @@ const LoginPage = ({ onLogin }) => {
                             onChange={(e) => setPassword(e.target.value)}
                             required
                         />
+                        <a
+                            href="#"
+                            onClick={openForgotModal}
+                            className="forgot-password-link"
+                            style={{
+                                position: 'absolute',
+                                right: '60px',
+                                top: '50%',
+                                transform: 'translateY(20%)',
+                                fontSize: '0.8rem',
+                                color: '#007bff',
+                                textDecoration: 'none',
+                                background: 'transparent',
+                                border: 'none',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            Forgot password?
+                        </a>
                     </div>
+
                     {error && <p className="error-message">{error}</p>}
+
+                    {/* --- NEW: Terms and Policy Text --- */}
+                    <div style={{ padding: '0 0px', margin: '1rem 0 0.5rem 0', marginTop: '60px', marginBottom: '20px', textAlign: 'center' }}>
+                        <p style={{ fontSize: '0.75rem', color: '#929db6' }}>
+                            By logging in, you agree to the{' '}
+                            <span
+                                onClick={() => openPolicyModal('terms')}
+                                style={{ color: '#007bff', cursor: 'pointer', textDecoration: 'underline' }}
+                            >
+                                Terms of Service
+                            </span>
+                            {' '}and{' '}
+                            <span
+                                onClick={() => openPolicyModal('privacy')}
+                                style={{ color: '#007bff', cursor: 'pointer', textDecoration: 'underline' }}
+                            >
+                                Privacy Policy
+                            </span>.
+                        </p>
+                    </div>
+
                     <button type="submit" className="btn login-btn">Login</button>
                 </form>
 
-                {/* Forgot Password Button */}
-                <div style={{ marginTop: "1rem" }}>
-                    <button className="btn same-size-btn" onClick={openForgotModal}>
-                        Forgot Password?
-                    </button>
-                </div>
-                <div style={{ marginTop: "0.5rem" }}>
-                    <button className="btn same-size-btn" onClick={openRegisterModal}>
+                {/* --- MODIFIED: Side-by-side Buttons --- */}
+                <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-around',
+                    alignItems: 'center',
+
+                    marginTop: '2.9rem',
+                    gap: '0rem'
+                }}>
+                    <button
+                        className="btn same-size-btn"
+                        onClick={openRegisterModal}
+                        style={{ flex: 1, minWidth: '120px' }}
+                    >
                         Register
                     </button>
+
+                    <GoogleLogin
+                        onSuccess={handleGoogleSuccess}
+                        onError={handleGoogleError}
+                        shape="circle"
+                        auto_select={false}
+                    />
                 </div>
+
+                {googleError && (
+                    <p className="error-message" style={{ marginTop: "0.5rem", textAlign: 'center' }}>
+                        {googleError}
+                    </p>
+                )}
+
+                {/* --- REMOVED: Old Forgot Password and Register buttons moved from here --- */}
             </div>
+
+            {/* --- NEW: Policy Modal --- */}
+            {showPolicyModal && (
+                <div className="modal-overlay">
+                    <div className="modal-content" style={{ maxWidth: '600px', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
+                        <div className="modal-header">
+                            <h2>{policyContent.title}</h2>
+                            <button className="close-btn" onClick={closePolicyModal}>×</button>
+                        </div>
+                        <div style={{ padding: '20px', textAlign: 'left', overflowY: 'auto', flexGrow: 1, lineHeight: '1.6' }}>
+                            {policyContent.content}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* --- All other modals remain unchanged below --- */}
 
             {/* Forgot Password Modal */}
             {modal === 'forgot' && (
@@ -539,7 +710,7 @@ const LoginPage = ({ onLogin }) => {
                                 padding: "15px",
                                 textAlign: "left",
                                 maxHeight: "28vh",
-                               // ✅ restrict height
+                                // ✅ restrict height
                                 overflowY: "auto",       // ✅ scrollable
                                 lineHeight: "1.6",
                             }}

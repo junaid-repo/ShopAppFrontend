@@ -211,18 +211,19 @@ const CustomersPage = () => {
 
     return (
         <div className="page-container">
-            <h2>Customers</h2>
+            <h2 style={{marginBottom:"70px"}}>Customers</h2>
             <div className="page-header">
                 <input
                     type="text"
                     placeholder="Search customers..."
                     className="search-bar"
+                    style={{marginBottom:"20px"}}
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
-                <button className="btn" onClick={() => setIsModalOpen(true)}>Add Customer</button>
+                <button className="btn"  style={{marginLeft:"350px"}} onClick={() => setIsModalOpen(true)}>Add Customer</button>
             </div>
 
-            <div className="glass-card">
+
                 <div className="customer-grid">
                     {filteredCustomers.map(customer => (
                         <div key={customer.id} className="customer-card">
@@ -238,6 +239,8 @@ const CustomersPage = () => {
                             </p>
 
                             {/* Bin button */}
+
+
                             <button
                                 className="delete-btn"
                                 onClick={() => handleDeleteCustomer(customer.id)}
@@ -248,7 +251,7 @@ const CustomersPage = () => {
                     ))}
                 </div>
 
-            </div>
+
             <Pagination />
             <Modal title="Add New Customer" show={isModalOpen} onClose={() => setIsModalOpen(false)}>
                 <form onSubmit={handleAddCustomer}>

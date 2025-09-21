@@ -4,13 +4,15 @@
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    background: linear-gradient(135deg, #e0f7ff, #80d8ff);
+    background: linear-gradient(135deg, rgba(77, 63, 63, 0.71), #2282e2);
 }
 
 .login-box {
     width: 400px;
-    padding: 3rem;
+
     text-align: center;
+    padding-right: 60px;
+    padding-left: 60px;
 }
 
 .login-logo {

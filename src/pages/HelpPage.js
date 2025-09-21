@@ -21,6 +21,8 @@ const HelpPage = ({ setSelectedPage }) => {
         marginTop: '6px',
     };
 
+
+
     return (
         <div className="dashboard">
             <h2>Help & Support</h2>
@@ -31,7 +33,7 @@ const HelpPage = ({ setSelectedPage }) => {
                 <div style={{ marginLeft: '15px', marginTop: '20px' }}>
 
                     <div style={faqStyle}>
-                        <p style={questionStyle}>Q1: How do I register for Clear Bill?</p>
+                        <h5 style={questionStyle}>Q1: How do I register for Clear Bill?</h5>
                         <p style={answerStyle}>You can register at <a href="https://web.clearbill.store">clearbill.store</a> using your email.</p>
                     </div>
 
