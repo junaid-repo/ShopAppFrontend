@@ -223,7 +223,7 @@ const CustomersPage = () => {
                 <button className="btn"  style={{marginLeft:"350px"}} onClick={() => setIsModalOpen(true)}>Add Customer</button>
             </div>
 
-
+            <div className="glass-card">
                 <div className="customer-grid">
                     {filteredCustomers.map(customer => (
                         <div key={customer.id} className="customer-card">
@@ -250,7 +250,7 @@ const CustomersPage = () => {
                         </div>
                     ))}
                 </div>
-
+            </div>
 
             <Pagination />
             <Modal title="Add New Customer" show={isModalOpen} onClose={() => setIsModalOpen(false)}>
