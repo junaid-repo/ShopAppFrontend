@@ -292,9 +292,10 @@ const SalesPage = () => {
                         </div>
 
                         {/* Box 1: Customer Details */}
-                        <div className="order-box">
-                            <h3><MdPerson size={24} /> Customer Details</h3>
-                            <div className="detail-item">
+                        <h3><MdPerson size={24} /> Customer Details</h3>
+                        <div className="order-box" style={{ marginLeft: '40px', marginTop: '20px' }}>
+
+                            <div className="detail-item" >
                                 <MdPerson size={20} color="var(--primary-color)" />
                                 <span><strong>Customer:</strong> {selectedOrder.customerName}</span>
                             </div>
@@ -313,8 +314,8 @@ const SalesPage = () => {
                                     <MdCancel size={20} color="red" />
                                 )}
                                 <span>
-            <strong>Status:</strong> {selectedOrder.paid ? "Paid" : "Pending"}
-          </span>
+                              <strong>Status:</strong> {selectedOrder.paid ? "Paid" : "Pending"}
+                                </span>
                             </div>
                         </div>
 
@@ -325,6 +326,7 @@ const SalesPage = () => {
                                 <thead>
                                 <tr>
                                     <th>Product</th>
+                                    <th>Description</th>
                                     <th>Cost (each)</th>
                                     <th>Qty</th>
                                     <th>Total</th>
@@ -334,6 +336,7 @@ const SalesPage = () => {
                                 {selectedOrder.items.map((item, idx) => (
                                     <tr key={idx}>
                                         <td>{item.productName}</td>
+                                        <td>{item.details}</td>
                                         <td>₹{(item.unitPrice / item.quantity).toLocaleString()}</td>
                                         <td>{item.quantity.toLocaleString()}</td>
                                         <td>₹{item.unitPrice.toLocaleString()}</td>

@@ -27,7 +27,7 @@ export const BillingProvider = ({ children }) => {
               ? { ...item, quantity: item.quantity + 1 }
               : item
           )
-        : [...prev, { ...product, quantity: 1 }];
+        : [...prev, { ...product, quantity: 1, details: product.details || '' }];
     });
   };
 
@@ -44,6 +44,11 @@ export const BillingProvider = ({ children }) => {
     setCart(prev => prev.filter(item => item.id !== productId));
   };
 
+  // new: update cart item fields (quantity, details, sellingPrice, etc.)
+  const updateCartItem = (productId, changes) => {
+    setCart(prev => prev.map(item => item.id === productId ? { ...item, ...changes } : item));
+  };
+
   const clearBill = () => {
     setSelectedCustomer(null);
     setCart([]);
@@ -57,7 +62,8 @@ export const BillingProvider = ({ children }) => {
         selectedCustomer, setSelectedCustomer,
         cart, addProduct, removeProduct,
         paymentMethod, setPaymentMethod,
-        clearBill, products, loadProducts
+        clearBill, products, loadProducts,
+        updateCartItem
       }}
     >
       {children}

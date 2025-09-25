@@ -10,7 +10,8 @@ const BillingPage = () => {
         selectedCustomer, setSelectedCustomer,
         cart, addProduct, removeProduct,
         paymentMethod, setPaymentMethod,
-        clearBill, products, loadProducts
+        clearBill, products, loadProducts,
+        updateCartItem
     } = useBilling();
     const [remarks, setRemarks] = useState("");
     const [customersList, setCustomersList] = useState([]);
@@ -313,6 +314,8 @@ const BillingPage = () => {
         setLoading(true);
         const payload = { selectedCustomer, cart: cartWithDiscounts, sellingSubtotal, discountPercentage, tax, paymentMethod, remarks };
 
+        console.log("payload for billing ", payload);
+
         // 🔴 API may need changes here to accept `sellingPrice` for each cart item
         fetch(`${apiUrl}/api/shop/do/billing`, {
             method: "POST",
@@ -360,7 +363,7 @@ const BillingPage = () => {
     return (
         <div className="billing-page">
             <h2>Billing</h2>
-            <div className="billing-layout">
+            <div className="billing-layout" style={{marginTop: "1px"}}>
                 <div className="product-list glass-card">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <h3>Available Products</h3>
@@ -374,10 +377,11 @@ const BillingPage = () => {
                     {/* 🔍 Search bar */}
                     <input
                         type="text"
+                        //className="search-bar"
                         placeholder="Search products..."
                         value={productSearchTerm}
                         onChange={(e) => setProductSearchTerm(e.target.value)}
-                        style={{ width: '100%', padding: '8px', margin: '10px 0' }}
+                        style={{ width: '100%', padding: '8px', margin: '10px 0'}}
                     />
 
                     <div className="product-table-wrapper">
@@ -452,26 +456,64 @@ const BillingPage = () => {
                         </button>
                     </div>
                     {selectedCustomer && (
-                        <p style={{ marginTop: 0 }}>Customer: <strong>{selectedCustomer.name}</strong></p>
+                        <p style={{ marginTop: '20px', fontSize: '1.1em',  textDecoration: 'underline'}}>
+                            Customer: <strong>{selectedCustomer.name}</strong>{' '}
+                            <strong style={{ fontSize: '0.8em', color: '#888', marginLeft: '10px' }}>{selectedCustomer.phone}</strong>
+                        </p>
                     )}
                     <div className="cart-items">
-                        {cart.length === 0 ? <p>No items in cart.</p> : cart.map(item => (
-                            <div className="cart-item" key={item.id}>
-                                <span>{item.name} (x{item.quantity})</span>
-                                <span>
-                  {/* show actual price (small + light) and selling price beside it */}
-                                    <span style={{ fontSize: '0.85rem', color: '#777', marginRight: '8px' }}>
-                    ₹{(item.price * item.quantity).toLocaleString()}
-                  </span>
-                  <span>
-                    ₹{(((item.sellingPrice !== undefined ? item.sellingPrice : item.price) * item.quantity)).toLocaleString()}
-                  </span>
-                </span>
-                                <button className="remove-btn" onClick={() => removeProduct(item.id)}>
-                                    <FaTrash />
-                                </button>
+                        {cart.length === 0 ? (
+                            <p>No items in cart.</p>
+                        ) : (
+                            <div className="cart-table-wrapper">
+                                <table className="beautiful-table cart-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Item</th>
+                                            <th style={{width: '60px'}}>Qty</th>
+                                            <th>Price (₹)</th>
+                                            <th>Selling (₹)</th>
+                                            <th>Details</th>
+                                            <th style={{width: '60px'}}>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {cart.map(item => (
+                                            <tr key={item.id} className={item.stock <= 0 ? 'out-of-stock' : ''}>
+                                                <td style={{verticalAlign: 'top'}}>{item.name}</td>
+                                                <td>
+                                                    <input
+                                                        type="number"
+                                                        min="1"
+                                                        value={item.quantity}
+                                                        onChange={(e) => {
+                                                            const q = Math.max(1, Number(e.target.value) || 1);
+                                                            updateCartItem(item.id, { quantity: q });
+                                                        }}
+                                                        style={{ width: '60px', padding: '6px', borderRadius: '8px', border: '1px solid var(--bp-border)' }}
+                                                    />
+                                                </td>
+                                                <td style={{verticalAlign: 'top'}}>₹{(item.price * item.quantity).toLocaleString()}</td>
+                                                <td style={{verticalAlign: 'top'}}>₹{(((item.sellingPrice !== undefined ? item.sellingPrice : item.price) * item.quantity)).toLocaleString()}</td>
+                                                <td>
+                                                    <textarea
+                                                        value={item.details || ''}
+                                                        onChange={(e) => updateCartItem(item.id, { details: e.target.value })}
+                                                        placeholder="Enter item details..."
+                                                        style={{ width: '100%', minHeight: '48px', padding: '6px', borderRadius: '8px', border: '1px solid var(--bp-border)', resize: 'vertical', background: 'var(--bp-glass)', color: 'var(--bp-text)' }}
+                                                    />
+                                                </td>
+                                                <td style={{verticalAlign: 'top'}}>
+                                                    <button className="remove-btn" onClick={() => removeProduct(item.id)}>
+                                                        <FaTrash />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             </div>
-                        ))}
+                        )}
                     </div>
                     <div className="invoice-summary">
                         <h4>Total without gst: <span>₹{total.toLocaleString()}</span></h4>
@@ -512,9 +554,9 @@ const BillingPage = () => {
                                 }}
                             />
                         </div>
-                        <div className="payment-methods" style={{ marginTop: '1rem' }}>
-                            <h5 style={{ marginBottom: '0.5rem', color: 'var(--primary-color)' }}>Payment Method:</h5>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        <div className="payment-methods" style={{ marginTop: '1rem', display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                            <h5 style={{ marginBottom: '0.5rem', color: 'var(--primary-color)', minWidth: '120px' }}>Payment Method:</h5>
+                            <div style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                                 {[
                                     { type: 'CASH', color: '#00aaff', icon: '💵' },
                                     { type: 'CARD', color: '#0077cc', icon: '💳' },
@@ -523,18 +565,22 @@ const BillingPage = () => {
                                     <label
                                         key={method.type}
                                         style={{
-                                            display: 'flex',
+                                            display: 'inline-flex',
                                             alignItems: 'center',
-                                            gap: '10px',
-                                            width: '100%',
-                                            padding: '0.5rem 1rem',
-                                            borderRadius: '25px',
+                                            justifyContent: 'center', // Good to add this to center content in a fixed width
+                                            gap: '8px',
+                                            // --- MODIFIED HERE ---
+                                            width: '150px', // Sets a fixed width for all pills
+                                            // -------------------
+                                            padding: '0.45rem 0.75rem',
+                                            borderRadius: '20px',
                                             border: `1px solid ${paymentMethod === method.type ? 'var(--primary-color)' : 'var(--border-color)'}`,
-                                            background: paymentMethod === method.type ? 'var(--primary-color-light)' : 'var(--glass-bg)',
+                                            background: paymentMethod === method.type ? 'var(--primary-color-light)' : 'transparent',
                                             cursor: 'pointer',
-                                            transition: 'all 0.2s ease',
-                                            fontWeight: '500',
-                                            color: 'var(--text-color)'
+                                            transition: 'all 0.15s ease',
+                                            fontWeight: '600',
+                                            color: 'var(--text-color)',
+                                            fontSize: '0.95rem'
                                         }}
                                     >
                                         <span
@@ -542,12 +588,12 @@ const BillingPage = () => {
                                                 display: 'inline-flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
-                                                width: '24px',
-                                                height: '24px',
+                                                width: '20px',
+                                                height: '20px',
                                                 borderRadius: '50%',
                                                 backgroundColor: method.color,
                                                 color: 'white',
-                                                fontSize: '0.9rem'
+                                                fontSize: '0.85rem'
                                             }}
                                         >
                                             {method.icon}
@@ -559,7 +605,7 @@ const BillingPage = () => {
                                             onChange={e => setPaymentMethod(e.target.value)}
                                             style={{ accentColor: 'var(--primary-color)' }}
                                         />
-                                        {method.type}
+                                        <span style={{ marginLeft: '4px' }}>{method.type}</span>
                                     </label>
                                 ))}
                             </div>
