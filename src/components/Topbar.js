@@ -252,7 +252,7 @@ const Topbar = ({ onLogout, theme, toggleTheme, toggleSidebar, isCollapsed, setS
                                 minWidth: '320px',
                                 background: 'var(--modal-bg)',
                                 border: '1px solid var(--border-color)',
-                                borderRadius: '10%',
+                                borderRadius: '5%',
                                 boxShadow: '0 12px 24px rgba(0,0,0,0.2), 0 8px 16px rgba(0,0,0,0.15)', // stronger dropdown depth
                                 zIndex: 100,
                                 padding: '0.5rem 0',
@@ -287,9 +287,9 @@ const Topbar = ({ onLogout, theme, toggleTheme, toggleSidebar, isCollapsed, setS
                                          onMouseEnter={e => e.currentTarget.style.transform = 'translateX(2px)'}
                                          onMouseLeave={e => e.currentTarget.style.transform = 'translateX(0)'}
                                     >
-                                        <div style={{ fontSize: '1rem' }}>{n.title}</div>
-                                        <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>{n.message}</div>
-                                        <div style={{ fontSize: '0.8rem', color: '#888', marginTop: 2 }}>{getRelativeTime(n.createdAt)}</div>
+                                        <div style={{ fontSize: '1rem', fontWeight: "bold" }}>{n.title}</div>
+                                        <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>{n.subject}</div>
+                                        <div style={{ fontSize: '0.8rem', color: '#888', marginTop: 2, paddingLeft: "170px"}}>{getRelativeTime(n.createdAt)}</div>
                                     </div>
                                 ))
                             )}

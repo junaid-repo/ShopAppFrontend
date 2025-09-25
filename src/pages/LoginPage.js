@@ -487,7 +487,10 @@ const LoginPage = ({ onLogin }) => {
                         <p className="tagline">Streamline Your Business Operations</p>
                         <ul className="feature-list">
                             {features.map((feature, index) => (
-                                <li key={index} className="feature-item">
+                                <li
+                                    key={index}
+                                    className={`feature-item ${index % 2 === 0 ? "left" : "right"}`}
+                                >
                                     <div className="feature-icon">{feature.icon}</div>
                                     <div className="feature-text">
                                         <h3>{feature.title}</h3>
@@ -496,6 +499,7 @@ const LoginPage = ({ onLogin }) => {
                                 </li>
                             ))}
                         </ul>
+
                     </div>
 
                     {/* Login Form Section */}

@@ -18,6 +18,7 @@ const Notification = ({ setSelectedPage }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [selectedNotification, setSelectedNotification] = useState(null);
+    const [pendingReadIds, setPendingReadIds] = useState([]);
     const config = useConfig();
     const apiUrl = config ? config.API_URL : '';
     const navigate = useNavigate();
@@ -73,6 +74,7 @@ const Notification = ({ setSelectedPage }) => {
             const res = await fetch(url, { method: 'GET', credentials: 'include' });
             if (!res.ok) throw new Error('Failed to fetch notifications');
             const data = await res.json();
+            console.log(data)
             setNotifications(data.notifications || []);
             setTotalPages(data.totalPages || 1);
         } catch (err) {
@@ -82,62 +84,84 @@ const Notification = ({ setSelectedPage }) => {
         }
     };
 
+    // Update: On click, call API immediately with single id
     const handleNotificationClick = (notif) => {
         if (!notif.seen) {
-            updateNotificationStatus(notif.id, 'seen');
+            setPendingReadIds([notif.id]);
+            batchMarkAsRead([notif.id]);
         }
         setSelectedNotification(notif);
     };
 
-    const updateNotificationStatus = async (notificationId, status) => {
+    // New: Batch update notifications as read
+    const batchMarkAsRead = async (ids) => {
+        if (!ids || ids.length === 0) return;
+        console.log("the ids length ", ids);
         try {
             await fetch(`${apiUrl}/api/shop/notifications/update-status`, {
                 method: 'POST',
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ notificationId, status }),
+                body: JSON.stringify({ notificationIds: ids, status: 'seen' }),
             });
-            setNotifications(prev =>
-                prev.map(n => n.id === notificationId ? { ...n, seen: status === 'seen' } : n)
-            );
+            setNotifications(prev => prev.map(n => ids.includes(n.id) ? { ...n, seen: true } : n));
         } catch (err) {
-            console.error("Failed to update notification status:", err);
+            console.error('Failed to batch mark notifications as read:', err);
         }
     };
 
     const handleDelete = async (notificationId) => {
-        if (!window.confirm("Are you sure you want to delete this notification?")) return;
         try {
             const res = await fetch(`${apiUrl}/api/shop/notifications/delete/${notificationId}`, {
-                method: 'DELETE',
+                method: 'POST',
                 credentials: 'include',
             });
             if (!res.ok) throw new Error('Failed to delete notification');
+            // Remove from local state first
             setNotifications(prev => prev.filter(n => n.id !== notificationId));
             setSelectedNotification(null);
+            // After local update, refetch notifications for the current page
+            // Use setTimeout to ensure state updates before fetching
+            setTimeout(() => {
+                // If after deletion, the page is empty and not the first page, go back one page
+                if (notifications.length === 1 && currentPage > 1) {
+                    setCurrentPage(prev => prev - 1);
+                } else {
+                    fetchAllNotifications();
+                }
+            }, 0);
         } catch (err) {
             console.error("Error deleting notification:", err);
         }
     };
 
-    const handleFlag = async (notificationId) => {
+    const handleFlag = async (notificationId, newFlagStatus) => {
         try {
             const res = await fetch(`${apiUrl}/api/shop/notifications/flag/${notificationId}`, {
                 method: 'POST',
                 credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ flagged: newFlagStatus }),
             });
-            if (!res.ok) throw new Error('Failed to flag notification');
+
+            if (!res.ok) throw new Error('Failed to update flag status');
             const updatedNotification = await res.json();
+            // Always update isFlagged based on backend response, for both flag and unflag
             setNotifications(prev =>
-                prev.map(n => n.id === notificationId ? { ...n, flagged: updatedNotification.flagged } : n)
+                prev.map(n =>
+                    n.id === notificationId ? { ...n, isFlagged: updatedNotification.flagged } : n
+                )
             );
             if (selectedNotification && selectedNotification.id === notificationId) {
-                setSelectedNotification(prev => ({ ...prev, flagged: updatedNotification.flagged }));
+                setSelectedNotification(prev => ({ ...prev, isFlagged: updatedNotification.flagged }));
             }
         } catch (err) {
-            console.error("Error flagging notification:", err);
+            console.error('Error flagging/unflagging notification:', err);
         }
     };
+
 
     const handleTakeAction = (notif) => {
         const route = domainToRoute[notif.domain];
@@ -186,6 +210,7 @@ const Notification = ({ setSelectedPage }) => {
                             <option value="all">All</option>
                             <option value="seen">Read</option>
                             <option value="unseen">Unread</option>
+                            <option value="flagged">Flagged</option>
                         </select>
                     </label>
                     <label>
@@ -236,6 +261,18 @@ const Notification = ({ setSelectedPage }) => {
                                             }}
                                         >
                                             <div style={{ fontWeight: 600 }}>{notif.title}</div>
+                                            <div>  {notif.isFlagged && (
+                                                <FaFlag
+                                                    size={14}
+                                                    color="#ffc107"
+                                                    style={{
+                                                        position: "absolute",
+                                                        top: "8px",
+                                                        right: "8px",
+                                                    }}
+                                                />
+                                            )}
+                                            </div>
                                             <div
                                                 style={{
                                                     fontSize: '0.8rem',
@@ -246,6 +283,7 @@ const Notification = ({ setSelectedPage }) => {
                                             >
                                                 {getRelativeTime(notif.createdAt)}
                                             </div>
+
                                         </div>
                                         <div
                                             style={{
@@ -262,7 +300,7 @@ const Notification = ({ setSelectedPage }) => {
 
                                 ))}
                             </div>
-                            <div style={{ marginTop: '1rem', display: 'flex', gap: '5px', alignItems: 'center', justifyContent: 'center' }}>
+                            <div className="pagination-controls" style={{ marginTop: '1rem', display: 'flex', gap: '5px', alignItems: 'center', justifyContent: 'center' }}>
                                 <button onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1} className="pagination-btn">&laquo; Prev</button>
                                 <span>Page {currentPage} / {totalPages}</span>
                                 <button onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages} className="pagination-btn">Next &raquo;</button>
@@ -293,8 +331,12 @@ const Notification = ({ setSelectedPage }) => {
                                     <button className="btn" style={{ backgroundColor: '#28a745' }} onClick={() => handleTakeAction(selectedNotification)}>
                                         <FaCheck size={14}/> Take Action
                                     </button>
-                                    <button className="btn" style={{ backgroundColor: '#ffc107' }} onClick={() => handleFlag(selectedNotification.id)}>
-                                        <FaFlag size={14}/> Flag
+                                    <button
+                                        className="btn"
+                                        style={{ backgroundColor: selectedNotification?.isFlagged ? '#6c757d' : '#ffc107' }}
+                                        onClick={() => handleFlag(selectedNotification.id, !selectedNotification.isFlagged)}
+                                    >
+                                        <FaFlag size={14}/> {selectedNotification?.isFlagged ? 'Unflag' : 'Flag'}
                                     </button>
                                     <button className="btn" style={{ backgroundColor: '#dc3545' }} onClick={() => handleDelete(selectedNotification.id)}>
                                         <FaTrash size={14}/> Delete
@@ -304,12 +346,12 @@ const Notification = ({ setSelectedPage }) => {
                             <div style={{}}>
                                 {/* CHANGE 4: Increased spacing */}
                                 <div style={{ marginBottom: '2rem', marginTop: '1.5rem' }}>
-                                    <strong style={{  marginBottom: '8px' }}>Subject: </strong>
-                                    <span>{selectedNotification.message}</span>
+                                    <strong style={{  marginBottom: '8px', fontWeight: "bold" }}>Subject: </strong>
+                                    <span style={{  marginBottom: '8px', fontWeight: "bold" }}>{selectedNotification.subject}</span>
                                 </div>
                                 <div>
 
-                                    <p style={{ margin: 0, lineHeight: 1.6 }}>{selectedNotification.details || 'No additional details provided.'}</p>
+                                    <p style={{ margin: 0, lineHeight: 1.6 }}>{selectedNotification.message || 'No additional details provided.'}</p>
                                 </div>
                             </div>
                             <div style={{ fontSize: '0.85rem', color: '#888', marginTop: 'auto', paddingTop: '1rem', textAlign: 'right' }}>
