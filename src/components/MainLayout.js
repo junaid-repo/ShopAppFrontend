@@ -1,12 +1,13 @@
 // src/components/MainLayout.js
 import React, { useState, useEffect } from "react";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 import Footer from "./Footer";
 
 const MainLayout = ({ children, onLogout, toggleTheme, theme, selectedPage, setSelectedPage, pages  }) => {
-const navigate = useNavigate();
+    const navigate = useNavigate();
+    const location = useLocation();
     // sidebar collapsed state (persist in localStorage)
     const [isCollapsed, setIsCollapsed] = useState(() => {
         try {
@@ -33,7 +34,7 @@ const navigate = useNavigate();
         window.addEventListener('storage', handler);
         return () => window.removeEventListener('storage', handler);
     }, []);
-   const handleLogout = () => {
+    const handleLogout = () => {
         if (onLogout) {
             onLogout(); // clear token
         }

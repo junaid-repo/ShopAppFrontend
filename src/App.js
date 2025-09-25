@@ -14,8 +14,10 @@ import AnalyticsPage from './pages/AnalyticsPage';
 import TermsPage from './pages/TermsPage';
 import PrivacyPage from './pages/PrivacyPage';
 import HelpPage from './pages/HelpPage';
+import Notification from './pages/Notification';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useConfig } from "./pages/ConfigProvider";
+import {useSearchKey} from "./context/SearchKeyContext";
 const queryClient = new QueryClient();
 
 function App() {
@@ -121,6 +123,7 @@ function App() {
         if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
         if (countdownRef.current) clearInterval(countdownRef.current);
     };
+    const { searchKey, setSearchKey } = useSearchKey();
 
     useEffect(() => {
         const resetEvents = ['mousemove', 'keydown', 'click'];
@@ -134,7 +137,15 @@ function App() {
         checkSession();
     }, []);
 
+
+
     const [selectedPage, setSelectedPage] = useState('dashboard');
+
+    useEffect(() => {
+        if (selectedPage !== 'customers') {
+            setSearchKey('');
+        }
+    }, [selectedPage, setSearchKey]);
 
     const pages = {
         dashboard: <DashboardPage setSelectedPage={setSelectedPage} />,
@@ -149,6 +160,7 @@ function App() {
         terms: <TermsPage setSelectedPage={setSelectedPage} />,
         privacy: <PrivacyPage setSelectedPage={setSelectedPage} />,
         help: <HelpPage setSelectedPage={setSelectedPage} />,
+        notifications: <Notification  setSelectedPage={setSelectedPage} />,
     };
 
     return (

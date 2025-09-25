@@ -7,13 +7,16 @@ import './fonts.css';
 import {BillingProvider} from './context/BillingContext';
 import {ConfigProvider} from "./pages/ConfigProvider";
 import {GoogleOAuthProvider} from '@react-oauth/google';
+import { SearchKeyProvider } from './context/SearchKeyContext';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
     <ConfigProvider>
         <GoogleOAuthProvider clientId="642231628593-eso4jie2p3cu670djrtqauq0qh741nk3.apps.googleusercontent.com" useOneTap={false}>
             <BillingProvider>
-                <App/>
+                <SearchKeyProvider>
+                    <App/>
+                </SearchKeyProvider>
             </BillingProvider>
         </GoogleOAuthProvider>
     </ConfigProvider>

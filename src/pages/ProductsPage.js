@@ -1,8 +1,10 @@
 // src/pages/ProductsPage.js
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useContext } from 'react';
 import Modal from '../components/Modal';
 import { useConfig } from "./ConfigProvider";
 import { MdEdit, MdDelete } from "react-icons/md";
+import { useLocation } from 'react-router-dom';
+import { useSearchKey } from '../context/SearchKeyContext';
 
 /**
  * Custom hook to debounce a value.
@@ -148,6 +150,23 @@ const ProductsPage = () => {
         setCurrentPage(1);
     }, [debouncedSearchTerm, sortConfig]);
 
+    // On mount, check for searchKey in query string
+    const location = useLocation();
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const key = params.get('searchKey');
+        if (key) {
+            setSearchTerm(key);
+        }
+    }, [location.search]);
+
+    // Sync search bar with global search key
+    const { searchKey, setSearchKey } = useSearchKey();
+    useEffect(() => {
+        if (searchKey && searchKey !== searchTerm) {
+            setSearchTerm(searchKey);
+        }
+    }, [searchKey]);
 
 
     // --- EVENT HANDLERS ---
@@ -391,7 +410,11 @@ const ProductsPage = () => {
     const toggleColumn = (col) => {
         setVisibleColumns(prev => ({ ...prev, [col]: !prev[col] }));
     };
-
+    useEffect(() => {
+        return () => {
+            setSearchKey('');
+        };
+    }, [setSearchKey]);
     // --- RENDER LOGIC & JSX ---
 
     const selectedColsCount = Object.values(visibleColumns).filter(Boolean).length;
@@ -598,5 +621,3 @@ const ProductsPage = () => {
 export default ProductsPage;
 
 // Recommended CSS for Pagination and other new elements:
-
-

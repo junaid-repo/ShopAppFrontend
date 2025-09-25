@@ -13,6 +13,8 @@ import {
     MdCheckCircle,
     MdCancel,
 } from 'react-icons/md';
+import { useLocation } from 'react-router-dom';
+import {useSearchKey} from "../context/SearchKeyContext";
 
 const SalesPage = () => {
     const [sales, setSales] = useState([]);
@@ -65,7 +67,29 @@ const SalesPage = () => {
         fontSize: '1.1rem',
         padding: '0.4rem 0',
     };
+    const location = useLocation();
+    const { searchKey, setSearchKey } = useSearchKey();
+    // On mount, check for searchKey in query string
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const key = params.get('searchKey');
+        if (key) {
+            setSearchTerm(key);
+        }
+    }, [location.search]);
 
+    useEffect(() => {
+        return () => {
+            setSearchKey('');
+        };
+    }, [setSearchKey]);
+
+    // Sync search bar with global search key
+    useEffect(() => {
+        if (searchKey && searchKey !== searchTerm) {
+            setSearchTerm(searchKey);
+        }
+    }, [searchKey]);
 
     useEffect(() => {
         const fetchSales = async () => {
@@ -155,6 +179,7 @@ const SalesPage = () => {
                     type="text"
                     placeholder="Search by Invoice ID or Customer..."
                     className="search-bar"
+                    value={searchTerm}
                     onChange={(e) => {
                         setSearchTerm(e.target.value);
                         setCurrentPage(1);

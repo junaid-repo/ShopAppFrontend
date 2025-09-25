@@ -10,15 +10,15 @@ const HelpPage = ({ setSelectedPage }) => {
 
     const questionStyle = {
         fontWeight: '600',
-        fontSize: '16px',
-        color: '#2c3e50',
+        fontSize: '16px'
+
     };
 
     const answerStyle = {
         marginLeft: '25px', // indent
         fontSize: '14px',
-        color: '#444',
-        marginTop: '6px',
+
+        marginTop: '6px'
     };
 
 

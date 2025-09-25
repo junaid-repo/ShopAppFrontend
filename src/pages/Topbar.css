@@ -49,3 +49,49 @@
     color: var(--text-color);
     white-space: nowrap;
 }
+.notification-container {
+    position: relative;
+    display: inline-block;
+}
+
+/* The button is now the styled element */
+.notification-button {
+    all: unset; /* Removes default button styles */
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px; /* Add some padding to make the icon easier to click */
+    border-radius: 50%;
+    transition: transform 0.2s;
+}
+
+.bell-icon {
+    /* Apply the shadow to the icon's shape */
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25));
+    transition: filter 0.2s; /* Animate the filter property */
+}
+
+/* Handle the hover effect for scaling */
+.notification-button:hover {
+    transform: scale(1.1);
+}
+
+.notification-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: #e80a0d;
+    color: #fff;
+    border-radius: 50%;
+    font-size: 0.75rem;
+    min-width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    /* Use transform to avoid affecting layout */
+    transform: translate(25%, -25%);
+}

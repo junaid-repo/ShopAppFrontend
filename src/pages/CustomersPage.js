@@ -1,9 +1,12 @@
-import React, {useState, useEffect, useRef, useCallback} from 'react';
+import React, {useState, useEffect, useRef, useCallback, useContext} from 'react';
 import Modal from '../components/Modal';
 import './CustomersPage.css';
 import { FaEnvelope, FaPhone, FaMoneyBillWave, FaTrash } from 'react-icons/fa';
 import { useConfig } from "./ConfigProvider";
 import { authFetch } from "../utils/authFetch";
+import { useLocation } from 'react-router-dom';
+import { useSearchKey } from '../context/SearchKeyContext';
+
 
 const useDebounce = (value, delay) => {
     const [debouncedValue, setDebouncedValue] = useState(value);
@@ -39,8 +42,14 @@ const CustomersPage = () => {
 
     // NEW: Debounced search term to reduce API calls
     const debouncedSearchTerm = useDebounce(searchTerm, 500);
+    const location = useLocation();
+    const { searchKey, setSearchKey } = useSearchKey();
 
-
+    useEffect(() => {
+        return () => {
+            setSearchKey('');
+        };
+    }, [setSearchKey]);
 
     if(config){
         console.log(config.API_URL);
@@ -90,6 +99,21 @@ const CustomersPage = () => {
         fetchCustomers();
     }, [fetchCustomers]);
 
+    // On mount, check for searchKey in query string
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const key = params.get('searchKey');
+        if (key) {
+            setSearchTerm(key);
+        }
+    }, [location.search]);
+
+    // Sync search bar with global search key
+    useEffect(() => {
+        if (searchKey && searchKey !== searchTerm) {
+            setSearchTerm(searchKey);
+        }
+    }, [searchKey]);
 
     /* const fetchCustomers = () => {
          authFetch(apiUrl + "/api/shop/get/customersList", {
@@ -216,6 +240,7 @@ const CustomersPage = () => {
                 <input
                     type="text"
                     placeholder="Search customers..."
+                    value={searchTerm}
                     className="search-bar"
                     style={{marginBottom:"20px"}}
                     onChange={(e) => setSearchTerm(e.target.value)}
