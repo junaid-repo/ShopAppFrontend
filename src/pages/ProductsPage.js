@@ -606,12 +606,25 @@ const ProductsPage = () => {
                         <input type="file" accept=".csv,text/csv" onChange={handleCsvChange} required />
                         {csvFile && (<small>Selected: {csvFile.name} ({Math.round(csvFile.size / 1024)} KB)</small>)}
                         {uploadError && (<div className="error">{uploadError}</div>)}
-                        <div className="help-text">Header required: name, category, price, costPrice, stock, tax.</div>
+                        <div className="help-text" style={{marginTop: "10px", fontWeight: "bold"}}>Header required: name, category, price, costPrice, stock, tax.</div>
                     </div>
-                    <div className="form-actions">
-                        <button type="button" className="btn btn-link" onClick={() => setIsCsvModalOpen(false)}>Cancel</button>
-                        <button type="submit" className="btn" disabled={!csvFile || isUploading}>{isUploading ? 'Uploading…' : 'Upload'}</button>
+                    <div className="form-actions" style={{ display: "flex", gap: "10px" }}>
+                        <button
+                            type="button"
+                            className="btn btn-link"
+                            onClick={() => setIsCsvModalOpen(false)}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            className="btn"
+                            disabled={!csvFile || isUploading}
+                        >
+                            {isUploading ? "Uploading…" : "Upload"}
+                        </button>
                     </div>
+
                 </form>
             </Modal>
         </div>

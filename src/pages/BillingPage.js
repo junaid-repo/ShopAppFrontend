@@ -13,6 +13,7 @@ const BillingPage = () => {
         clearBill, products, loadProducts,
         updateCartItem
     } = useBilling();
+    const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
     const [remarks, setRemarks] = useState("");
     const [customersList, setCustomersList] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -32,6 +33,7 @@ const BillingPage = () => {
     const [totalProducts, setTotalProducts] = useState(0);
     const pageSize = 10; // rows per page
     const [loading, setLoading] = useState(false);
+    const [availableMethods, setAvailableMethods]= useState([]);
     // NOTE: products coming from context represent the current page after fetch
     const displayedProducts = products;
 
@@ -63,6 +65,29 @@ const BillingPage = () => {
         fetchProductsFromAPI(1, productSearchTerm);
         // eslint-disable-next-line
     }, [apiUrl]);
+
+    useEffect(() => {
+        if (!apiUrl) return;
+        fetch(`${apiUrl}/api/shop/availablePaymentMethod`, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        })
+            .then(res => {
+                if (!res.ok) throw new Error("Failed to fetch payment methods");
+                return res.json();
+            })
+            .then(data => {
+                //Convert { CASH: true, CARD: false } → Map
+                 const methodsMap = new Map(Object.entries(data));
+                setAvailableMethods(data);
+            })
+            .catch(err => console.error("Error fetching payment methods:", err));
+    }, [apiUrl]);
+
+    console.log("the available payment methods are ",availableMethods);
 
     // refetch when page changes
     useEffect(() => {
@@ -339,6 +364,107 @@ const BillingPage = () => {
             });
     };
 
+    const HandleCardProcessPayment = async () => {
+        if (!selectedCustomer || cart.length === 0) {
+            alert("Please select a customer and add products.");
+            return;
+        }
+        setLoading(true);
+
+        const billingPayload = {
+            selectedCustomer,
+            cart: cartWithDiscounts,
+            sellingSubtotal,
+            discountPercentage,
+            tax,
+            paymentMethod,
+            remarks,
+        };
+
+        const orderResponse = await fetch(`${apiUrl}/api/razorpay/create-order`, {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                amount: sellingSubtotal * 100, // Amount in paise
+                currency: "INR",
+            }),
+        });
+
+        if (!orderResponse.ok) {
+            alert("Server error. Could not create order.");
+            setLoading(false);
+            return;
+        }
+
+        const orderData = await orderResponse.json();
+
+        const options = {
+            key: "rzp_test_RM94Bh3gUaJSjZ",
+            order_id: orderData.id,
+            name: "Clear Bill",
+            description: "Billing Transaction",
+
+            handler: async function (response) {
+                const finalPayload = {
+                    razorpay_order_id: response.razorpay_order_id,
+                    razorpay_payment_id: response.razorpay_payment_id,
+                    razorpay_signature: response.razorpay_signature,
+                    billingDetails: billingPayload,
+                };
+
+                const verificationResponse = await fetch(
+                    `${apiUrl}/api/razorpay/verify-payment`,
+                    {
+                        method: "POST",
+                        credentials: "include",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(finalPayload),
+                    }
+                );
+
+                if (!verificationResponse.ok) {
+                    alert("Payment verification failed. Please contact support.");
+                    setLoading(false);
+                    return;
+                }
+
+                const finalBillData = await verificationResponse.json();
+
+
+
+                setOrderRef(finalBillData.invoiceNumber || "N/A");
+                setPaidAmount(finalBillData.totalAmount || sellingSubtotal);
+                setLoading(false);
+                setIsPreviewModalOpen(false)
+                setShowPopup(true);
+
+                handleNewBilling();
+            },
+
+            prefill: {
+                name: selectedCustomer?.name || "Test User",
+                email: selectedCustomer?.email || "test.user@example.com",
+                contact: selectedCustomer?.phone || "9999999999",
+            },
+
+            theme: {
+                color: "#3399cc",
+            },
+        };
+
+        const rzp = new window.Razorpay(options);
+
+        rzp.on("payment.failed", function (response) {
+            alert(`Payment Failed: ${response.error.description}`);
+            setLoading(false); // ✅ stop loader on failure
+        });
+
+        rzp.open();
+        // ❌ Removed setLoading(false) here
+    };
+
+
     const handleNewBilling = () => {
         clearBill();
         fetchProductsFromAPI(1, productSearchTerm);
@@ -359,6 +485,14 @@ const BillingPage = () => {
         const phoneMatch = customer.phone && customer.phone.includes(searchTerm);
         return nameMatch || phoneMatch;
     });
+
+    const handlePreview = () => {
+        if (!selectedCustomer || cart.length === 0) {
+            alert('Please select a customer and add products.');
+            return;
+        }
+        setIsPreviewModalOpen(true);
+    };
 
     return (
         <div className="billing-page">
@@ -558,110 +692,235 @@ const BillingPage = () => {
                             <h5 style={{ marginBottom: '0.5rem', color: 'var(--primary-color)', minWidth: '120px' }}>Payment Method:</h5>
                             <div style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                                 {[
-                                    { type: 'CASH', color: '#00aaff', icon: '💵' },
-                                    { type: 'CARD', color: '#0077cc', icon: '💳' },
-                                    { type: 'UPI', color: '#3399ff', icon: '📱' }
-                                ].map(method => (
-                                    <label
-                                        key={method.type}
-                                        style={{
-                                            display: 'inline-flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center', // Good to add this to center content in a fixed width
-                                            gap: '8px',
-                                            // --- MODIFIED HERE ---
-                                            width: '150px', // Sets a fixed width for all pills
-                                            // -------------------
-                                            padding: '0.45rem 0.75rem',
-                                            borderRadius: '20px',
-                                            border: `1px solid ${paymentMethod === method.type ? 'var(--primary-color)' : 'var(--border-color)'}`,
-                                            background: paymentMethod === method.type ? 'var(--primary-color-light)' : 'transparent',
-                                            cursor: 'pointer',
-                                            transition: 'all 0.15s ease',
-                                            fontWeight: '600',
-                                            color: 'var(--text-color)',
-                                            fontSize: '0.95rem'
-                                        }}
-                                    >
-                                        <span
+                                    { type: 'CASH', color: '#00aaff', icon: '💵', key: 'cash' },
+                                    { type: 'CARD', color: '#0077cc', icon: '💳', key: 'card' },
+                                    { type: 'UPI', color: '#3399ff', icon: '📱', key: 'upi' }
+                                ].map(method => {
+                                    const enabled = availableMethods?.[method.key];
+
+                                    return (
+                                        <label
+                                            key={method.type}
+                                            title={!enabled ? 'Contact support to enable this payment method' : ''}
                                             style={{
                                                 display: 'inline-flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
-                                                width: '20px',
-                                                height: '20px',
-                                                borderRadius: '50%',
-                                                backgroundColor: method.color,
-                                                color: 'white',
-                                                fontSize: '0.85rem'
+                                                gap: '8px',
+                                                width: '150px',
+                                                padding: '0.45rem 0.75rem',
+                                                borderRadius: '20px',
+                                                border: `1px solid ${
+                                                    enabled
+                                                        ? paymentMethod === method.type
+                                                            ? 'var(--primary-color)'
+                                                            : 'var(--border-color)'
+                                                        : '#ccc'
+                                                }`,
+                                                background: enabled
+                                                    ? paymentMethod === method.type
+                                                        ? 'var(--primary-color-light)'
+                                                        : 'transparent'
+                                                    : '#f5f5f5',
+                                                cursor: enabled ? 'pointer' : 'not-allowed',
+                                                transition: 'all 0.15s ease',
+                                                fontWeight: '600',
+                                                color: enabled ? 'var(--text-color)' : '#888',
+                                                fontSize: '0.95rem',
+                                                opacity: enabled ? 1 : 0.6
                                             }}
                                         >
-                                            {method.icon}
-                                        </span>
-                                        <input
-                                            type="radio"
-                                            value={method.type}
-                                            checked={paymentMethod === method.type}
-                                            onChange={e => setPaymentMethod(e.target.value)}
-                                            style={{ accentColor: 'var(--primary-color)' }}
-                                        />
-                                        <span style={{ marginLeft: '4px' }}>{method.type}</span>
-                                    </label>
-                                ))}
+        <span
+            style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '20px',
+                height: '20px',
+                borderRadius: '50%',
+                backgroundColor: method.color,
+                color: 'white',
+                fontSize: '0.85rem'
+            }}
+        >
+          {method.icon}
+        </span>
+                                            <input
+                                                type="radio"
+                                                value={method.type}
+                                                checked={paymentMethod === method.type}
+                                                onChange={e => enabled && setPaymentMethod(e.target.value)}
+                                                disabled={!enabled}
+                                                style={{ accentColor: 'var(--primary-color)' }}
+                                            />
+                                            <span style={{ marginLeft: '4px' }}>{method.type}</span>
+                                        </label>
+                                    );
+                                })}
                             </div>
+
                         </div>
 
 
                     </div>
-                    <button className="btn process-payment-btn" onClick={HandleProcessPayment} disabled={loading}
-                            style={{ position: "relative", padding: "0.75rem 2rem" }}>Process Payment</button>
-                    {/* 🔹 Loading (in-progress) Popup */}
+
+                            <button
+                                className="btn process-payment-btn"
+                                onClick={() => {
+                                    if (paymentMethod === "CARD") {
+                                        HandleCardProcessPayment();
+                                    } else {
+                                        HandleProcessPayment();
+                                    }
+                                }}
+                                disabled={loading}
+                                style={{ position: "relative", padding: "0.75rem 2rem", width: "80%" }}
+                            >
+                                Process Payment
+                            </button>
+
+                            <button
+                                className="btn"
+                                onClick={handlePreview}
+                                style={{
+                                    backgroundColor: "var(--primary-color-light)",
+                                    color: "var(--text-color)",
+                                    marginTop: "18px",
+                                    marginLeft: "20px",
+                                    border: "1px solid var(--primary-color)",
+                                    borderRadius: "10px"
+                                }}
+                            >
+                                Preview
+                            </button>
+                        </div>
 
 
-                </div>
-                <div> {loading && (
-                    <div
-                        style={{
-                            position: 'fixed',
-                            top: 0, left: 0, right: 0, bottom: 0,
-                            background: 'rgba(0,0,0,0.5)',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            zIndex: 2000,
-                            animation: 'fadeIn 0.3s ease'
-                        }}
-                    >
+
+                <div>
+                    {/* Preview Modal */}
+                    <Modal title="Order Summary" show={isPreviewModalOpen} onClose={() => setIsPreviewModalOpen(false)}>
+                        <div className="order-summary" style={{ padding: '10px' }}>
+                            <div style={{ marginBottom: '20px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
+                                <h3 style={{ color: 'var(--primary-color)', marginBottom: '10px' }}>Customer Details</h3>
+                                <p><strong>Name:</strong> {selectedCustomer?.name}</p>
+                                <p><strong>Phone:</strong> {selectedCustomer?.phone}</p>
+                            </div>
+
+                            <div style={{ marginBottom: '20px' }}>
+                                <h3 style={{ color: 'var(--primary-color)', marginBottom: '10px' }}>Order Items</h3>
+                                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                    <thead>
+                                        <tr>
+                                            <th style={{ textAlign: 'left', padding: '8px', borderBottom: '1px solid var(--border-color)' }}>Item</th>
+                                            <th style={{ textAlign: 'center', padding: '8px', borderBottom: '1px solid var(--border-color)' }}>Qty</th>
+                                            <th style={{ textAlign: 'right', padding: '8px', borderBottom: '1px solid var(--border-color)' }}>Price</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {cart.map(item => (
+                                            <tr key={item.id}>
+                                                <td style={{ padding: '8px', borderBottom: '1px solid var(--border-color)' }}>{item.name}</td>
+                                                <td style={{ textAlign: 'center', padding: '8px', borderBottom: '1px solid var(--border-color)' }}>{item.quantity}</td>
+                                                <td style={{ textAlign: 'right', padding: '8px', borderBottom: '1px solid var(--border-color)' }}>
+                                                    ₹{((item.sellingPrice || item.price) * item.quantity).toLocaleString()}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div style={{ marginTop: '20px', borderTop: '1px solid var(--border-color)', paddingTop: '20px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                                    <span>Total without GST:</span>
+                                    <strong>₹{total.toLocaleString()}</strong>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                                    <span>GST:</span>
+                                    <strong>₹{tax.toLocaleString()}</strong>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                                    <span>Discount:</span>
+                                    <strong>{discountPercentage}%</strong>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '1.2em', color: 'var(--primary-color)' }}>
+                                    <strong>Final Total:</strong>
+                                    <strong>₹{sellingSubtotal.toLocaleString()}</strong>
+                                </div>
+                                <div style={{ marginTop: '15px' }}>
+                                    <strong>Payment Method:</strong> {paymentMethod}
+                                </div>
+                                {remarks && (
+                                    <div style={{ marginTop: '15px' }}>
+                                        <strong>Remarks:</strong>
+                                        <p style={{ marginTop: '5px', padding: '10px', background: 'var(--glass-bg)', borderRadius: '8px' }}>
+                                            {remarks}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                        <button
+                            className="btn process-payment-btn"
+                            onClick={() => {
+                                if (paymentMethod === "CARD") {
+                                    HandleCardProcessPayment();
+                                } else {
+                                    HandleProcessPayment();
+                                }
+                            }}
+                            disabled={loading}
+                            style={{ position: "relative", padding: "0.75rem 2rem" }}
+                        >
+                            Process Payment
+                        </button>
+
+                    </Modal>
+
+                    {loading && (
                         <div
                             style={{
-                                background: 'var(--glass-bg)',
-                                padding: '2rem',
-                                borderRadius: '25px',
-                                width: '90%',
-                                maxWidth: '500px',
-                                boxShadow: '0 8px 30px var(--shadow-color)',
-                                color: 'var(--text-color)',
-                                border: '1px solid var(--border-color)',
-                                textAlign: 'center',
-                                animation: 'slideIn 0.3s ease',
+                                position: 'fixed',
+                                top: 0, left: 0, right: 0, bottom: 0,
+                                background: 'rgba(0,0,0,0.5)',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                zIndex: 2000,
+                                animation: 'fadeIn 0.3s ease'
                             }}
                         >
-                            <h2 style={{ color: 'var(--primary-color)', marginBottom: '1.5rem', fontSize: '1.8rem' }}>
-                                Processing Payment...
-                            </h2>
-
-                            {/* Spinner */}
                             <div
                                 style={{
-                                    width: "50px",
-                                    height: "50px",
-                                    border: "6px solid var(--border-color)",
-                                    borderTop: "6px solid var(--primary-color)",
-                                    borderRadius: "50%",
-                                    animation: "spin 1s linear infinite",
-                                    margin: "0 auto"
+                                    background: 'var(--glass-bg)',
+                                    padding: '2rem',
+                                    borderRadius: '25px',
+                                    width: '90%',
+                                    maxWidth: '500px',
+                                    boxShadow: '0 8px 30px var(--shadow-color)',
+                                    color: 'var(--text-color)',
+                                    border: '1px solid var(--border-color)',
+                                    textAlign: 'center',
+                                    animation: 'slideIn 0.3s ease',
                                 }}
-                                className="spinner"
+                            >
+                                <h2 style={{ color: 'var(--primary-color)', marginBottom: '1.5rem', fontSize: '1.8rem' }}>
+                                    Processing Payment...
+                                </h2>
+
+                                {/* Spinner */}
+                                <div
+                                    style={{
+                                        width: "50px",
+                                        height: "50px",
+                                        border: "6px solid var(--border-color)",
+                                        borderTop: "6px solid var(--primary-color)",
+                                        borderRadius: "50%",
+                                        animation: "spin 1s linear infinite",
+                                        margin: "0 auto"
+                                    }}
+                                    className="spinner"
                             ></div>
 
                             {/* Spinner Animation */}

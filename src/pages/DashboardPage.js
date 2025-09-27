@@ -18,6 +18,7 @@ const DashboardPage = ({ setSelectedPage }) => {
     const [phone, setPhone] = useState("");
     const [category, setCategory] = useState("");
     const [price, setPrice] = useState("");
+    const [costPrice, setCostPrice] = useState("");
     const [stock, setStock] = useState("");
     const [tax, setTax] = useState("");
     const [isAddProdModalOpen, setIsAddProdModalOpen] = useState(false);
@@ -111,7 +112,7 @@ const DashboardPage = ({ setSelectedPage }) => {
     const handleAddProduct = async (e) => {
         e.preventDefault();
         try {
-            const payload = { name, category, price, stock, tax };
+            const payload = { name, category, price, costPrice, stock, tax };
             const response = await fetch(`${apiUrl}/api/shop/create/product`, {
                 method: "POST",
                 credentials: 'include',
@@ -232,9 +233,10 @@ const DashboardPage = ({ setSelectedPage }) => {
 
             {/* Add Customer Modal */}
             {isNewCusModalOpen && (
-                <Modal show={isNewCusModalOpen} onClose={() => setIsNewCusModalOpen(false)}>
-                    <h2>Add New Customer</h2>
+                <Modal title ="Add New Customer" show={isNewCusModalOpen} onClose={() => setIsNewCusModalOpen(false)}>
+
                     <form onSubmit={handleAddCustomer} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+
                         <div className="form-group">
                             <label>Full Name</label>
                             <input type="text" required value={name} onChange={(e) => setName(e.target.value)} />
@@ -276,6 +278,10 @@ const DashboardPage = ({ setSelectedPage }) => {
                     <div className="form-group">
                         <label>Price</label>
                         <input type="number" required value={price} onChange={(e) => setPrice(e.target.value)} />
+                    </div>
+                    <div className="form-group">
+                        <label>Cost Price</label>
+                        <input type="number" required value={costPrice} onChange={(e) => setCostPrice(e.target.value)} />
                     </div>
                     <div className="form-group">
                         <label>Stock Quantity</label>

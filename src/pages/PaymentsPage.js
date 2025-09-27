@@ -296,7 +296,7 @@ const PaymentsPage = () => {
         <table className="data-table">
           <thead>
             <tr>
-              <th>Payment ID</th>
+              <th>Payment Ref. Number</th>
               <th>Invoice ID</th>
               <th>Date</th>
               <th>Amount</th>

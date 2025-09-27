@@ -319,16 +319,28 @@ const LoginPage = ({ onLogin }) => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })
             });
-            if (!response.ok) throw new Error('Login failed');
-            const token = await response.text();
-            if (token) {
-                // localStorage.setItem('jwt_token', token);
+
+            if (!response.ok) {
+                throw new Error('Login failed');
+            }
+
+            const textResponse = await response.text();
+
+            if (textResponse === "Please login using google login") {
+                // treat this as an error even though status is 200
+                setError(textResponse);
+                return;
+            }
+
+            if (textResponse) {
+                // localStorage.setItem('jwt_token', textResponse);
                 onLogin(true);
                 navigate('/');
             }
         } catch (err) {
             setError(err.message || 'An error occurred during login');
         }
+
     };
 
     // Helpers to open/close specific modals (ensures messages reset properly)
@@ -564,6 +576,46 @@ const LoginPage = ({ onLogin }) => {
                     </div>
                 </div>
 
+                {modal === "registerOtp" && (
+                    <div className="modal-overlay">
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <h2>Verify OTP</h2>
+                                <button className="close-btn" onClick={() => setModal(null)}>×</button>
+                            </div>
+
+                            <div className="form-group">
+                                <label>Enter OTP</label>
+                                <input
+                                    type="text"
+                                    inputMode="numeric"
+                                    maxLength={6}
+                                    style={{ textAlign: "center", fontSize: "1.2rem", letterSpacing: "0.5rem" }}
+                                    value={otp}
+                                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                                />
+                                {retryCount !== null && (
+                                    <small style={{ display: "block", marginTop: "0.5rem", color: "gray" }}>
+                                        Retry attempts left: {retryCount}
+                                    </small>
+                                )}
+                            </div>
+
+                            <div className="form-actions" style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                                <button className="btn" onClick={handleRegisterOtp}>Submit</button>
+
+                                <button
+                                    className="btn"
+                                    disabled={resendTimer > 0}
+                                    onClick={handleResendOtp}
+                                >
+                                    {resendTimer > 0 ? `Resend OTP in ${resendTimer}s` : "Resend OTP"}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* All your modals remain here, unchanged in logic */}
                 {showPolicyModal && (
                     <div className="modal-overlay" onClick={closePolicyModal}>
@@ -630,7 +682,85 @@ const LoginPage = ({ onLogin }) => {
                     </div>
                 )}
 
+
+
                 {/* Other modals would follow the same pattern... */}
+
+                {/* OTP & Reset Modal */}
+                {modal === 'otp' && (
+                    <div className="modal-overlay">
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <h2>Reset Password</h2>
+                                <button className="close-btn" onClick={closeOtpModal}>×</button>
+                            </div>
+                            <div className="form-group">
+                                <label>Enter 6-digit OTP</label>
+                                <input
+                                    type="text"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
+                                    maxLength={6}
+                                    style={{
+                                        textAlign: "center",
+                                        fontSize: "1.2rem",
+                                        letterSpacing: "0.5rem"
+                                    }}
+                                    value={otp}
+                                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                                />
+                                <small style={{ opacity: 0.7 }}>
+                                    Attempts left: {Math.max(0, 3 - otpAttempts)}
+                                </small>
+                            </div>
+                            <div className="form-group">
+                                <label>New Password</label>
+                                <input
+                                    type="password"
+                                    value={newPassword}
+                                    onChange={(e) => setNewPassword(e.target.value)}
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Confirm Password</label>
+                                <input
+                                    type="password"
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                />
+                            </div>
+                            <div className="form-actions">
+                                <button className="btn" onClick={handlePasswordReset}>Submit</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Result Modal (exclusive) */}
+                {modal === 'result' && (
+                    <div className="modal-overlay">
+                        <div className="modal-content" style={{ textAlign: "center" }}>
+                            <h2 style={{ color: isSuccess ? "green" : "red" }}>
+                                {resultMessage}
+                            </h2>
+                            <div className="form-actions" style={{ marginTop: "20px", display: "flex", gap: "10px", justifyContent: "center" }}>
+                                {/* If too many wrong OTPs, offer a quick path to resend */}
+                                {resultMessage.includes("Too many wrong OTP") && (
+                                    <button
+                                        className="btn"
+                                        onClick={() => {
+                                            closeResultModal();
+                                            openForgotModal();
+                                        }}
+                                    >
+                                        Resend OTP
+                                    </button>
+                                )}
+                                <button className="btn" onClick={closeResultModal}>Close</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
             </div>
         </>

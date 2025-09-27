@@ -404,7 +404,7 @@ const ReportsPage = () => {
                 <label>Report type</label>
                 <button
                   type="button"
-                  className="btn"
+                  className="date-input"
                   ref={typeBtnRef}
                   onClick={openTypeMenu}
                   aria-haspopup="listbox"
@@ -413,6 +413,8 @@ const ReportsPage = () => {
                 >
                   {reportType || 'Select report type'}
                 </button>
+
+
 
                 {showTypeMenu && ReactDOM.createPortal(
                   <ul

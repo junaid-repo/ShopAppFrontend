@@ -160,24 +160,26 @@ const AnalyticsPage = () => {
           alignItems: 'center',
           gap: '10px',
           flexWrap: 'wrap',
-          padding: '10px',
-          marginBottom: '20px'
+          padding: '40px',
+          marginBottom: '10px'
         }}
       >
         <label>
           Start Date:
-          <input type="date" value={startDate}
+          <input type="date" className="date-input" value={startDate}
             onChange={(e) => setStartDate(e.target.value)} />
         </label>
         <label>
           End Date:
-          <input type="date" value={endDate}
+          <input type="date" className="date-input" value={endDate}
             onChange={(e) => setEndDate(e.target.value)} />
         </label>
         <select
-          className="time-range-selector glass-card"
+            className="date-input"
           value={selectedMetric}
           onChange={(e) => setSelectedMetric(e.target.value)}
+
+            style={{marginLeft:'400px', marginTop:"12px", width: '15%'}}
         >
           <option value="everything">Everything</option>
           {metrics.map(m => (
@@ -189,9 +191,10 @@ const AnalyticsPage = () => {
 
         {/* 🔹 Chart type selector */}
         <select
-          className="time-range-selector glass-card"
+            className="date-input"
           value={chartType}
           onChange={(e) => setChartType(e.target.value)}
+            style={{marginLeft:'20px', marginTop:"12px", width: '15%'}}
         >
           <option value="line">Line Chart</option>
           <option value="bar">Bar Chart</option>
