@@ -10,7 +10,6 @@ import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import PaymentIcon from '@mui/icons-material/Payment';
 import AssessmentIcon from '@mui/icons-material/Assessment';
-// ✅ added
 import jwt_decode from "jwt-decode";
 
 const LoginPage = ({ onLogin }) => {
@@ -36,20 +35,21 @@ const LoginPage = ({ onLogin }) => {
     const [otpAttempts, setOtpAttempts] = useState(0); // limit 3 wrong tries
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    // ✅ FIX 1: New state for OTP modal-specific errors
+    const [otpError, setOtpError] = useState('');
+
 
     // Final result
     const [resultMessage, setResultMessage] = useState('');
-
-
 
     const navigate = useNavigate();
     const config = useConfig();
     const apiUrl = config?.API_URL || "";
     const authApiUrl = config?.AUTH_API_URL || "";
-    const [resendTimer, setResendTimer] = useState(60);
+    const [resendTimer, setResendTimer] = useState(0);
     const [retryCount, setRetryCount] = useState(null);
 
-// --- NEW STATES FOR REGISTER FLOW ---
+    // --- NEW STATES FOR REGISTER FLOW ---
     const [registerData, setRegisterData] = useState({
         fullName: "",
         email: "",
@@ -150,11 +150,11 @@ const LoginPage = ({ onLogin }) => {
         setRegisterMessage("");
     };
 
-    // ⏱ Start timer + fetch retry count when registerOtp modal opens
+    // ✅ FIX 2: Modified useEffect to handle timers for BOTH OTP modals
     useEffect(() => {
         let interval;
-        if (modal === "registerOtp") {
-            setResendTimer(120); // reset to 60 seconds
+        if (modal === "registerOtp" || modal === 'otp') {
+            setResendTimer(60); // Start a 60-second timer for both
             interval = setInterval(() => {
                 setResendTimer((prev) => {
                     if (prev <= 1) {
@@ -164,8 +164,10 @@ const LoginPage = ({ onLogin }) => {
                     return prev - 1;
                 });
             }, 1000);
+        }
 
-            // Fetch retry count from API
+        // This logic is specific to the registration flow
+        if (modal === "registerOtp") {
             const fetchRetry = async () => {
                 try {
                     const res = await fetch(authApiUrl + `/auth/otp-retry-count?username=${registeringUser}`);
@@ -178,10 +180,12 @@ const LoginPage = ({ onLogin }) => {
             };
             fetchRetry();
         }
-        return () => clearInterval(interval);
-    }, [modal, registeringUser, authApiUrl]);
 
-// 🔄 Resend OTP handler
+        return () => clearInterval(interval);
+    }, [modal, registeringUser, authApiUrl]); // Reruns when the modal type changes
+
+
+// 🔄 Resend OTP handler for registration
     const handleResendOtp = async () => {
         try {
             const res = await fetch(authApiUrl + "/auth/resend-otp", {
@@ -203,19 +207,12 @@ const LoginPage = ({ onLogin }) => {
 
     // ---------- GOOGLE LOGIN HANDLER -------------
     const handleGoogleSuccess = async (credentialResponse) => {
-        // credentialResponse.credential contains the ID token from Google
         const idToken = credentialResponse?.credential;
-        console.log("The returned token from google ", idToken);
         if (!idToken) {
             setGoogleError("Google did not return a credential/token");
             return;
         }
         try {
-            // Optional: decode to show user info or debugging
-            // const decoded = jwt_decode(idToken);
-            // console.log("Google user decoded:", decoded);
-
-            // Send to your backend to verify and/or create a user
             const resp = await fetch(authApiUrl + "/auth/new/google/user", {
                 method: "POST",
                 credentials: 'include',
@@ -224,11 +221,9 @@ const LoginPage = ({ onLogin }) => {
             });
             const data = await resp.json();
             if (resp.ok && data.success) {
-                // backend verifies Google token, creates or finds user, returns your app's auth token or sets session
                 onLogin(true);
                 navigate('/');
             } else {
-                // error from backend
                 setGoogleError(data.message || "Google Login failed");
             }
         } catch (err) {
@@ -251,7 +246,6 @@ const LoginPage = ({ onLogin }) => {
             setRegisterMessage("❌ Passwords do not match");
             return;
         }
-        //  alert(registerData)
 
         try {
             const res = await fetch(authApiUrl + "/auth/register/newuser", {
@@ -263,10 +257,10 @@ const LoginPage = ({ onLogin }) => {
 
             if (data.success) {
                 setRegisterMessage("✅ Registration successful, please verify OTP");
-                setRegisteringUser(data.username || email); // store username/email for OTP
+                setRegisteringUser(data.username || email);
                 setModal(null);
                 setOtp("");
-                setModal("registerOtp"); // open OTP modal for register
+                setModal("registerOtp");
             } else {
                 setRegisterMessage("❌ " + (data.message || "Registration failed"));
             }
@@ -278,8 +272,6 @@ const LoginPage = ({ onLogin }) => {
 // --- HANDLE REGISTER OTP VERIFY ---
     const handleRegisterOtp = async () => {
         if (!otp || otp.length !== 6) {
-            setResultMessage("❌ Enter valid 6-digit OTP");
-            setIsSuccess(false);
             openResultModal("❌ Enter valid 6-digit OTP");
             return;
         }
@@ -292,17 +284,18 @@ const LoginPage = ({ onLogin }) => {
                 body: JSON.stringify(payload)
             });
             const data = await res.json();
-
+            console.log(data);
             if (data.success) {
                 setIsSuccess(true);
                 openResultModal("✅ " + (data.message || "Registration complete! Your username is "||data.username ||" Please login with this username and password to use the system."));
             } else {
+                alert("enterd Here");
                 setIsSuccess(false);
                 openResultModal("❌ " + (data.message || "Invalid OTP"));
-                // keep OTP modal open if failed
                 setModal("registerOtp");
             }
         } catch (err) {
+
             openResultModal("❌ Error: " + err.message);
         }
     };
@@ -327,23 +320,20 @@ const LoginPage = ({ onLogin }) => {
             const textResponse = await response.text();
 
             if (textResponse === "Please login using google login") {
-                // treat this as an error even though status is 200
                 setError(textResponse);
                 return;
             }
 
             if (textResponse) {
-                // localStorage.setItem('jwt_token', textResponse);
                 onLogin(true);
                 navigate('/');
             }
         } catch (err) {
             setError(err.message || 'An error occurred during login');
         }
-
     };
 
-    // Helpers to open/close specific modals (ensures messages reset properly)
+    // Helpers to open/close specific modals
     const openForgotModal = () => {
         setForgotMessage('');
         setModal('forgot');
@@ -359,6 +349,7 @@ const LoginPage = ({ onLogin }) => {
         setNewPassword('');
         setConfirmPassword('');
         setOtpAttempts(0);
+        setOtpError(''); // ✅ FIX 1: Reset OTP error on open
         setModal('otp');
     };
 
@@ -367,6 +358,7 @@ const LoginPage = ({ onLogin }) => {
         setNewPassword('');
         setConfirmPassword('');
         setOtpAttempts(0);
+        setOtpError(''); // ✅ FIX 1: Reset OTP error on close
         setModal(null);
     };
 
@@ -409,10 +401,9 @@ const LoginPage = ({ onLogin }) => {
             const data = await res.json();
 
             if (data.status) {
-                // Move to OTP modal
                 setForgotMessage("✅ OTP sent to your email address");
-                setModal(null);          // ensure no overlap
-                openOtpModal();          // now only OTP modal is open
+                setModal(null);
+                openOtpModal();
             } else {
                 setForgotMessage(`❌ ${data.message || "Invalid request"}`);
             }
@@ -421,15 +412,48 @@ const LoginPage = ({ onLogin }) => {
         }
     };
 
+    // ✅ FIX 2: New handler for resending OTP during password reset
+    const handleResendPasswordOtp = async () => {
+        setOtpError(''); // Clear previous errors
+        if (!forgotInput) {
+            setOtpError("User identifier is missing. Please start over.");
+            return;
+        }
+
+        const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(forgotInput);
+        const payload = {
+            emailId: isEmail ? forgotInput : "",
+            userId: !isEmail ? forgotInput : ""
+        };
+
+        try {
+            const res = await fetch(authApiUrl + "/auth/forgot-password", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+
+            if (data.status) {
+                setOtpError("✅ A new OTP has been sent.");
+                setResendTimer(60); // Restart timer
+            } else {
+                setOtpError(`❌ ${data.message || "Failed to resend OTP"}`);
+            }
+        } catch (err) {
+            setOtpError("❌ Error: " + err.message);
+        }
+    };
+
+
     // ---------- RESET PASSWORD ----------
     const handlePasswordReset = async () => {
-        // basic checks
         if (!otp || !newPassword || !confirmPassword) {
-            openResultModal("❌ All fields are required");
+            setOtpError("❌ All fields are required");
             return;
         }
         if (newPassword !== confirmPassword) {
-            openResultModal("❌ Passwords do not match");
+            setOtpError("❌ Passwords do not match");
             return;
         }
 
@@ -449,45 +473,31 @@ const LoginPage = ({ onLogin }) => {
             });
             const data = await res.json();
 
-            if (data.success) {
-                // ✅ SUCCESS: close ALL other modals, only show final green message
-                setResultMessage("✅ Password updated successfully");
+            if (data.status) {
+                // ✅ CORRECTED LOGIC
                 setIsSuccess(true);
-                setForgotMessage('');
-                setOtp('');
-                setNewPassword('');
-                setConfirmPassword('');
-                setOtpAttempts(0);
-
-                // Make sure nothing else is open
-                setModal(null);
-                // Now open just the result modal
-                openResultModal("✅ Password updated successfully");
+                // First, call the function that cleans up and closes the OTP modal
+                closeOtpModal();
+                // Then, open the result modal with the success message from the backend
+                openResultModal("✅ " + (data.message || "Password updated successfully!"));
             } else {
-                // Wrong OTP or other failure
-                setResultMessage("❌ " + (data.message || "Failed to update password"));
-                setIsSuccess(false);
-                const msg = "❌ " + (data.message || "Wrong OTP, try again");
                 const nextAttempts = otpAttempts + 1;
                 setOtpAttempts(nextAttempts);
+                setOtp(''); // Clear the OTP input for re-entry
 
                 if (nextAttempts >= 3) {
-                    // Close OTP modal and ask to resend
                     setModal(null);
                     openResultModal("❌ Too many wrong OTP attempts. Please resend OTP.");
                 } else {
-                    // Keep OTP modal open, show error in result modal
-                    openResultModal(msg);
+                    setOtpError("❌ " + (data.message || "Wrong OTP, try again."));
                 }
             }
         } catch (err) {
-            openResultModal("❌ Error: " + err.message);
+            setOtpError("❌ Error: " + err.message);
         }
     };
-
     return (
         <>
-
             <div className="login-page-wrapper">
                 <div className="shape shape1"></div>
                 <div className="shape shape2"></div>
@@ -511,7 +521,6 @@ const LoginPage = ({ onLogin }) => {
                                 </li>
                             ))}
                         </ul>
-
                     </div>
 
                     {/* Login Form Section */}
@@ -520,62 +529,29 @@ const LoginPage = ({ onLogin }) => {
                             <h2 className="text-2xl font-semibold text-gray-700 mb-6 text-center" style={{paddingBottom: "30px"}}>Welcome Back!</h2>
                             <form onSubmit={handleSubmit}>
                                 <div className="input-group">
-                                    <input
-                                        type="text"
-                                        placeholder="Username"
-                                        value={username}
-                                        onChange={(e) => setUsername(e.target.value)}
-                                        required
-                                    />
+                                    <input type="text" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} required />
                                 </div>
-
                                 <div className="input-group">
-                                    <input
-                                        type="password"
-                                        placeholder="Password"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        required
-                                    />
-                                    <a href="#" onClick={openForgotModal} className="forgot-password-link" style={{marginTop: "45px"}}>
-                                        Forgot Password?
-                                    </a>
+                                    <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                                    <a href="#" onClick={openForgotModal} className="forgot-password-link" style={{marginTop: "45px"}}>Forgot Password?</a>
                                 </div>
-
                                 {error && <p className="error-message">{error}</p>}
-
                                 <button type="submit" className="btn login-btn" style={{marginTop: "24px", marginBottom: "0px"}}>Login</button>
-
                                 <p className="terms-text" style={{marginBottom: "45px", marginTop: "10px"}}>
                                     By logging in, you agree to our <br />
                                     <span onClick={() => openPolicyModal('terms')}>Terms</span> & <span onClick={() => openPolicyModal('privacy')}>Privacy Policy</span>.
                                 </p>
                             </form>
-
                             <div className="login-actions">
-                                <button
-                                    className="btn register-btn"
-                                    onClick={openRegisterModal}
-
-                                >
-                                    Register
-                                </button>
-                                <GoogleLogin
-                                    onSuccess={handleGoogleSuccess}
-                                    onError={handleGoogleError}
-                                    shape="pill"
-                                />
+                                <button className="btn register-btn" onClick={openRegisterModal}>Register</button>
+                                <GoogleLogin onSuccess={handleGoogleSuccess} onError={handleGoogleError} shape="pill" />
                             </div>
-
-                            {googleError && (
-                                <p className="error-message" style={{ marginTop: "1rem" }}>
-                                    {googleError}
-                                </p>
-                            )}
+                            {googleError && <p className="error-message" style={{ marginTop: "1rem" }}>{googleError}</p>}
                         </div>
                     </div>
                 </div>
 
+                {/* Registration OTP Modal */}
                 {modal === "registerOtp" && (
                     <div className="modal-overlay">
                         <div className="modal-content">
@@ -583,7 +559,6 @@ const LoginPage = ({ onLogin }) => {
                                 <h2>Verify OTP</h2>
                                 <button className="close-btn" onClick={() => setModal(null)}>×</button>
                             </div>
-
                             <div className="form-group">
                                 <label>Enter OTP</label>
                                 <input
@@ -600,10 +575,13 @@ const LoginPage = ({ onLogin }) => {
                                     </small>
                                 )}
                             </div>
-
-                            <div className="form-actions" style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                                <button className="btn" onClick={handleRegisterOtp}>Submit</button>
-
+                            <div
+                                className="form-actions"
+                                style={{ display: "flex", flexDirection: "row", gap: "10px" }}
+                            >
+                                <button className="btn" onClick={handleRegisterOtp}>
+                                    Submit
+                                </button>
                                 <button
                                     className="btn"
                                     disabled={resendTimer > 0}
@@ -612,11 +590,12 @@ const LoginPage = ({ onLogin }) => {
                                     {resendTimer > 0 ? `Resend OTP in ${resendTimer}s` : "Resend OTP"}
                                 </button>
                             </div>
+
                         </div>
                     </div>
                 )}
 
-                {/* All your modals remain here, unchanged in logic */}
+                {/* Policy Modal */}
                 {showPolicyModal && (
                     <div className="modal-overlay" onClick={closePolicyModal}>
                         <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -632,6 +611,7 @@ const LoginPage = ({ onLogin }) => {
                 )}
 
 
+                {/* Forgot Password Modal */}
                 {modal === 'forgot' && (
                     <div className="modal-overlay" onClick={closeForgotModal}>
                         <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -660,6 +640,7 @@ const LoginPage = ({ onLogin }) => {
                     </div>
                 )}
 
+                {/* Registration Modal */}
                 {modal === "register" && (
                     <div className="modal-overlay" onClick={closeRegisterModal}>
                         <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -682,11 +663,7 @@ const LoginPage = ({ onLogin }) => {
                     </div>
                 )}
 
-
-
-                {/* Other modals would follow the same pattern... */}
-
-                {/* OTP & Reset Modal */}
+                {/* OTP & Reset Password Modal (UPDATED) */}
                 {modal === 'otp' && (
                     <div className="modal-overlay">
                         <div className="modal-content">
@@ -701,36 +678,31 @@ const LoginPage = ({ onLogin }) => {
                                     inputMode="numeric"
                                     pattern="[0-9]*"
                                     maxLength={6}
-                                    style={{
-                                        textAlign: "center",
-                                        fontSize: "1.2rem",
-                                        letterSpacing: "0.5rem"
-                                    }}
+                                    style={{ textAlign: "center", fontSize: "1.2rem", letterSpacing: "0.5rem" }}
                                     value={otp}
                                     onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
                                 />
-                                <small style={{ opacity: 0.7 }}>
-                                    Attempts left: {Math.max(0, 3 - otpAttempts)}
-                                </small>
+                                <small style={{ opacity: 0.7 }}>Attempts left: {Math.max(0, 3 - otpAttempts)}</small>
                             </div>
                             <div className="form-group">
                                 <label>New Password</label>
-                                <input
-                                    type="password"
-                                    value={newPassword}
-                                    onChange={(e) => setNewPassword(e.target.value)}
-                                />
+                                <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
                             </div>
                             <div className="form-group">
                                 <label>Confirm Password</label>
-                                <input
-                                    type="password"
-                                    value={confirmPassword}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                />
+                                <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
                             </div>
-                            <div className="form-actions">
+                            {/* ✅ FIX 1 & 2: Display local error and add Resend button */}
+                            {otpError && (
+                                <p className="error-message" style={{ color: otpError.startsWith("✅") ? "green" : "red", marginTop: "1rem" }}>
+                                    {otpError}
+                                </p>
+                            )}
+                            <div className="form-actions" style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "1rem" }}>
                                 <button className="btn" onClick={handlePasswordReset}>Submit</button>
+                                <button className="btn" disabled={resendTimer > 0} onClick={handleResendPasswordOtp}>
+                                    {resendTimer > 0 ? `Resend OTP in ${resendTimer}s` : "Resend OTP"}
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -740,11 +712,8 @@ const LoginPage = ({ onLogin }) => {
                 {modal === 'result' && (
                     <div className="modal-overlay">
                         <div className="modal-content" style={{ textAlign: "center" }}>
-                            <h2 style={{ color: isSuccess ? "green" : "red" }}>
-                                {resultMessage}
-                            </h2>
+                            <h2 style={{ color: isSuccess ? "green" : "red" }}>{resultMessage}</h2>
                             <div className="form-actions" style={{ marginTop: "20px", display: "flex", gap: "10px", justifyContent: "center" }}>
-                                {/* If too many wrong OTPs, offer a quick path to resend */}
                                 {resultMessage.includes("Too many wrong OTP") && (
                                     <button
                                         className="btn"
@@ -761,7 +730,6 @@ const LoginPage = ({ onLogin }) => {
                         </div>
                     </div>
                 )}
-
             </div>
         </>
     );
