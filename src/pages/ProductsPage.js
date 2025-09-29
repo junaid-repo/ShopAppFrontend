@@ -59,6 +59,8 @@ const ProductsPage = () => {
 
     // NEW: Backend-driven Sorting State
     const [sortConfig, setSortConfig] = useState({ key: 'createdAt', direction: 'desc' });
+    // Whether the user has interacted with column sorting. Default sorting (createdAt/desc) shows no arrow.
+    const [hasSortActive, setHasSortActive] = useState(false);
 
     // NEW: Debounced search term to reduce API calls
     const debouncedSearchTerm = useDebounce(searchTerm, 500);
@@ -405,6 +407,8 @@ const ProductsPage = () => {
             key,
             direction: (prev.key === key && prev.direction === 'asc') ? 'desc' : 'asc'
         }));
+        // mark that user has initiated sorting so arrows become visible
+        setHasSortActive(true);
     };
 
     const toggleColumn = (col) => {
@@ -521,19 +525,44 @@ const ProductsPage = () => {
                 <table className="data-table">
                     <thead>
                     <tr>
-                        {visibleColumns.name && <th>Name</th>}
-                        {visibleColumns.category && (
-                            <th style={{ cursor: "pointer" }} onClick={() => toggleSort("category")}>
-                                Category {sortConfig.key === 'category' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
+                        {visibleColumns.name && (
+                            <th style={{ cursor: 'pointer' }} onClick={() => toggleSort('name')}>
+                                Name {hasSortActive && sortConfig.key === 'name' ? (sortConfig.direction === 'asc' ? ' ▲' : ' ▼') : ''}
                             </th>
                         )}
-                        {visibleColumns.costPrice && <th>Cost Price</th>}
-                        {visibleColumns.price && <th>Price</th>}
-                        {visibleColumns.tax && <th>Tax (%)</th>}
-                        {visibleColumns.stock && <th>Stock</th>}
-                        {visibleColumns.status && <th>Status</th>}
-                        {visibleColumns.actions && <th>Actions</th>}
-                    </tr>
+                        {visibleColumns.category && (
+                            <th style={{ cursor: 'pointer' }} onClick={() => toggleSort('category')}>
+                                Category {hasSortActive && sortConfig.key === 'category' ? (sortConfig.direction === 'asc' ? ' ▲' : ' ▼') : ''}
+                            </th>
+                        )}
+                        {visibleColumns.price && (
+                            <th style={{ cursor: 'pointer' }} onClick={() => toggleSort('price')}>
+                                Cost Price {hasSortActive && sortConfig.key === 'price' ? (sortConfig.direction === 'asc' ? ' ▲' : ' ▼') : ''}
+                            </th>
+                        )}
+                        {visibleColumns.costPrice && (
+                            <th style={{ cursor: 'pointer' }} onClick={() => toggleSort('costPrice')}>
+                                Price {hasSortActive && sortConfig.key === 'costPrice' ? (sortConfig.direction === 'asc' ? ' ▲' : ' ▼') : ''}
+                            </th>
+                        )}
+
+                        {visibleColumns.tax && (
+                            <th style={{ cursor: 'pointer' }} onClick={() => toggleSort('tax')}>
+                                Tax (%) {hasSortActive && sortConfig.key === 'tax' ? (sortConfig.direction === 'asc' ? ' ▲' : ' ▼') : ''}
+                            </th>
+                        )}
+                        {visibleColumns.stock && (
+                            <th style={{ cursor: 'pointer' }} onClick={() => toggleSort('stock')}>
+                                Stock {hasSortActive && sortConfig.key === 'stock' ? (sortConfig.direction === 'asc' ? ' ▲' : ' ▼') : ''}
+                            </th>
+                        )}
+                         {visibleColumns.status &&  (
+                             <th style={{ cursor: 'pointer' }} onClick={() => toggleSort('status')}>
+                                 Status {hasSortActive && sortConfig.key === 'status' ? (sortConfig.direction === 'asc' ? ' ▲' : ' ▼') : ''}
+                             </th>
+                         )}
+                         {visibleColumns.actions && <th>Actions</th>}
+                     </tr>
                     </thead>
                     <tbody>
                     {isLoading ? (

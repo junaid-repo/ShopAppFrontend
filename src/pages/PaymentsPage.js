@@ -1,6 +1,7 @@
 // src/pages/PaymentsPage.js
 import React, { useState, useEffect, useMemo } from "react";
 import { useConfig } from "./ConfigProvider";
+import { formatDate } from "../utils/formatDate";
 
 const PaymentsPage = () => {
   const [payments, setPayments] = useState([]);
@@ -309,7 +310,7 @@ const PaymentsPage = () => {
                 <tr key={payment.id}>
                   <td>{payment.id}</td>
                   <td>{payment.saleId}</td>
-                  <td>{payment.date}</td>
+                  <td>{formatDate(payment.date)}</td>
                   <td>₹{payment.amount.toLocaleString()}</td>
                   <td>{payment.method}</td>
                 </tr>

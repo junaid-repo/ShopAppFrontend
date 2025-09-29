@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useConfig } from "./ConfigProvider";
 import {MdDownload} from "react-icons/md";
 import './SalesPage.css';
+import { formatDate } from "../utils/formatDate";
 import {
     MdPerson,
     MdEmail,
@@ -24,6 +25,9 @@ const SalesPage = () => {
     const [totalPages, setTotalPages] = useState(10);
     const [selectedOrder, setSelectedOrder] = useState(null); // 🟢 For modal details
     const [showModal, setShowModal] = useState(false);
+    // Sorting state: default createdAt desc (no arrow shown until user clicks a column)
+    const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
+    const [hasSortActive, setHasSortActive] = useState(false);
 
     const config = useConfig();
     var apiUrl = "";
@@ -98,7 +102,9 @@ const SalesPage = () => {
                     params: {
                         page: currentPage - 1,
                         size: pageSize,
-                        search: searchTerm || '' // ✅ sent to backend
+                        search: searchTerm || '', // ✅ sent to backend
+                        sort: sortConfig.key,
+                        dir: sortConfig.direction,
                     },
                     withCredentials: true,
                 });
@@ -112,7 +118,18 @@ const SalesPage = () => {
         };
 
         fetchSales();
-    }, [apiUrl, currentPage, pageSize, searchTerm]); // ✅ Add searchTerm here
+    }, [apiUrl, currentPage, pageSize, searchTerm, sortConfig]); // refetch when sort changes
+
+    // Toggle sorting when user clicks a column header
+    const toggleSort = (key) => {
+        setSortConfig(prev => ({
+            key,
+            direction: (prev.key === key && prev.direction === 'asc') ? 'desc' : 'asc'
+        }));
+        setHasSortActive(true);
+        setCurrentPage(1);
+    };
+
 
 
 
@@ -191,11 +208,29 @@ const SalesPage = () => {
                 <table className="data-table">
                     <thead>
                     <tr>
-                        <th>Invoice ID</th>
-                        <th>Customer</th>
-                        <th>Date</th>
-                        <th>Total</th>
+                        {/* No change needed here, 'id' is likely correct */}
+                        <th style={{ cursor: 'pointer' }} onClick={() => toggleSort('id')}>
+                            Invoice ID {hasSortActive && sortConfig.key === 'id' ? (sortConfig.direction === 'asc' ? ' ▲' : ' ▼') : ''}
+                        </th>
+
+                        {/* This key 'customer' should be verified against your backend model */}
+                        <th style={{ cursor: 'pointer' }} onClick={() => toggleSort('customer')}>
+                            Customer {hasSortActive && sortConfig.key === 'customer' ? (sortConfig.direction === 'asc' ? ' ▲' : ' ▼') : ''}
+                        </th>
+
+                        {/* CORRECTED: Changed 'createdAt' to 'date' */}
+                        <th style={{ cursor: 'pointer' }} onClick={() => toggleSort('date')}>
+                            Date {hasSortActive && sortConfig.key === 'date' ? (sortConfig.direction === 'asc' ? ' ▲' : ' ▼') : ''}
+                        </th>
+
+                        {/* CORRECTED: Changed 'total' to 'totalAmount' */}
+                        <th style={{ cursor: 'pointer' }} onClick={() => toggleSort('totalAmount')}>
+                            Total {hasSortActive && sortConfig.key === 'totalAmount' ? (sortConfig.direction === 'asc' ? ' ▲' : ' ▼') : ''}
+                        </th>
+
+                        {/* This key 'status' should be verified against your backend model */}
                         <th>Status</th>
+
                         <th>Comments</th>
                         <th>Invoice</th>
                     </tr>
@@ -209,7 +244,7 @@ const SalesPage = () => {
                         >
                             <td>{sale.id}</td>
                             <td>{sale.customer}</td>
-                            <td>{sale.date}</td>
+                            <td>{formatDate(sale.date)}</td>
                             <td>₹{sale.total.toLocaleString()}</td>
                             <td>
                   <span className={sale.status === 'Paid' ? 'status-paid' : 'status-pending'}>

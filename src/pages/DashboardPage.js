@@ -6,6 +6,7 @@ import Modal from '../components/Modal';
 import './DashboardPage.css';
 import { useNavigate } from 'react-router-dom';
 import { useConfig } from "./ConfigProvider";
+import { formatDate } from "../utils/formatDate";
 
 // Accept an optional setSelectedPage prop so shortcuts can switch pages internally
 const DashboardPage = ({ setSelectedPage }) => {
@@ -218,7 +219,7 @@ const DashboardPage = ({ setSelectedPage }) => {
                         <tr key={sale.id}>
                             <td>{sale.id}</td>
                             <td>{sale.customer}</td>
-                            <td>{sale.date}</td>
+                            <td>{formatDate(sale.date)}</td>
                             <td>₹{sale.total.toLocaleString()}</td>
                             <td>
                   <span className={sale.status === 'Paid' ? 'status-paid' : 'status-pending'}>
