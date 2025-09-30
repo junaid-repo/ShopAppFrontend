@@ -1,5 +1,4 @@
-// src/pages/LoginPage.js
-import React, { useState, useEffect  } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import './LoginPage.css';
 import { useConfig } from "./ConfigProvider";
@@ -32,12 +31,9 @@ const LoginPage = ({ onLogin }) => {
 
     // OTP + reset flow
     const [otp, setOtp] = useState('');
-    const [otpAttempts, setOtpAttempts] = useState(0); // limit 3 wrong tries
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
-    // ✅ FIX 1: New state for OTP modal-specific errors
     const [otpError, setOtpError] = useState('');
-
 
     // Final result
     const [resultMessage, setResultMessage] = useState('');
@@ -61,6 +57,8 @@ const LoginPage = ({ onLogin }) => {
     const [showTermsModal, setShowTermsModal] = useState(false);
     const [registerMessage, setRegisterMessage] = useState("");
     const [registeringUser, setRegisteringUser] = useState(null); // stores email/username after register
+    // ✅ ADDED: New state for registration OTP modal errors
+    const [registerOtpError, setRegisterOtpError] = useState('');
 
     // new state for Google error feedback
     const [googleError, setGoogleError] = useState('');
@@ -68,7 +66,6 @@ const LoginPage = ({ onLogin }) => {
     // --- Generic Policy Content ---
     const termsText = (
         <>
-
             <p className="mb-4">Welcome to Clear Bill! These terms and conditions outline the rules and regulations for the use of our services.</p>
             <h3 className="text-lg font-bold mb-2">1. Acceptance of Terms</h3>
             <p className="mb-4">By accessing and using our service, you accept and agree to be bound by the terms and provision of this agreement. In addition, when using these particular services, you shall be subject to any posted guidelines or rules applicable to such services.</p>
@@ -81,7 +78,6 @@ const LoginPage = ({ onLogin }) => {
 
     const privacyText = (
         <>
-
             <p className="mb-4">Your privacy is important to us. It is Clear Bill's policy to respect your privacy regarding any information we may collect from you across our website.</p>
             <h3 className="text-lg font-bold mb-2">1. Information We Collect</h3>
             <p className="mb-4">We only ask for personal information when we truly need it to provide a service to you. We collect it by fair and lawful means, with your knowledge and consent. We also let you know why we’re collecting it and how it will be used.</p>
@@ -139,7 +135,7 @@ const LoginPage = ({ onLogin }) => {
 
     const closePolicyModal = () => setShowPolicyModal(false);
 
-// --- HELPERS TO OPEN/CLOSE ---
+    // --- HELPERS TO OPEN/CLOSE ---
     const openRegisterModal = () => {
         setRegisterData({ fullName: "", email: "", phone: "", password: "", confirmPassword: "" });
         setRegisterMessage("");
@@ -150,42 +146,38 @@ const LoginPage = ({ onLogin }) => {
         setRegisterMessage("");
     };
 
-    // ✅ FIX 2: Modified useEffect to handle timers for BOTH OTP modals
+    // ✅ MODIFIED: useEffect now fetches retry counts for BOTH OTP flows
     useEffect(() => {
         let interval;
-        if (modal === "registerOtp" || modal === 'otp') {
-            setResendTimer(60); // Start a 60-second timer for both
-            interval = setInterval(() => {
-                setResendTimer((prev) => {
-                    if (prev <= 1) {
-                        clearInterval(interval);
-                        return 0;
-                    }
-                    return prev - 1;
-                });
-            }, 1000);
-        }
+        // Determine which username to use based on the active modal
+        const usernameForRetry = modal === 'registerOtp' ? registeringUser : modal === 'otp' ? forgotInput : null;
 
-        // This logic is specific to the registration flow
-        if (modal === "registerOtp") {
-            const fetchRetry = async () => {
-                try {
-                    const res = await fetch(authApiUrl + `/auth/otp-retry-count?username=${registeringUser}`);
-                    const data = await res.json();
-                    setRetryCount(data.retryLeft ?? null);
-                } catch (err) {
-                    console.error("Retry count fetch error:", err);
-                    setRetryCount(null);
-                }
-            };
-            fetchRetry();
+        if (modal === "registerOtp" || modal === 'otp') {
+            setResendTimer(60);
+            interval = setInterval(() => {
+                setResendTimer((prev) => (prev <= 1 ? 0 : prev - 1));
+            }, 1000);
+
+            // Fetch retry count for the active OTP modal
+            if (usernameForRetry) {
+                const fetchRetry = async () => {
+                    try {
+                        const res = await fetch(`${authApiUrl}/auth/otp-retry-count?username=${usernameForRetry}`);
+                        const data = await res.json();
+                        setRetryCount(data.retryLeft ?? null);
+                    } catch (err) {
+                        console.error("Retry count fetch error:", err);
+                        setRetryCount(null); // Reset on error
+                    }
+                };
+                fetchRetry();
+            }
         }
 
         return () => clearInterval(interval);
-    }, [modal, registeringUser, authApiUrl]); // Reruns when the modal type changes
+    }, [modal, registeringUser, forgotInput, authApiUrl]); // Reruns when the modal or relevant user ID changes
 
-
-// 🔄 Resend OTP handler for registration
+    // 🔄 Resend OTP handler for registration
     const handleResendOtp = async () => {
         try {
             const res = await fetch(authApiUrl + "/auth/resend-otp", {
@@ -196,12 +188,12 @@ const LoginPage = ({ onLogin }) => {
             const data = await res.json();
             if (data.success) {
                 setResendTimer(60); // restart timer
+                setRegisterOtpError("✅ A new OTP has been sent.");
             } else {
-                setResultMessage("❌ " + (data.message || "Failed to resend OTP"));
-                openResultModal("❌ " + (data.message || "Failed to resend OTP"));
+                setRegisterOtpError("❌ " + (data.message || "Failed to resend OTP"));
             }
         } catch (err) {
-            openResultModal("❌ Error: " + err.message);
+            setRegisterOtpError("❌ Error: " + err.message);
         }
     };
 
@@ -235,8 +227,9 @@ const LoginPage = ({ onLogin }) => {
         setGoogleError("Google Login was cancelled or failed");
     };
 
-// --- HANDLE REGISTER API CALL ---
+    // --- HANDLE REGISTER API CALL ---
     const handleRegister = async () => {
+        // ... (rest of the function is unchanged)
         const { fullName, email, phone, password, confirmPassword } = registerData;
         if (!fullName || !email || !phone || !password || !confirmPassword) {
             setRegisterMessage("❌ All fields are required");
@@ -260,6 +253,7 @@ const LoginPage = ({ onLogin }) => {
                 setRegisteringUser(data.username || email);
                 setModal(null);
                 setOtp("");
+                setRegisterOtpError(''); // Clear previous errors before opening
                 setModal("registerOtp");
             } else {
                 setRegisterMessage("❌ " + (data.message || "Registration failed"));
@@ -269,10 +263,10 @@ const LoginPage = ({ onLogin }) => {
         }
     };
 
-// --- HANDLE REGISTER OTP VERIFY ---
+    // --- ✅ HANDLE REGISTER OTP VERIFY (REFACTORED) ---
     const handleRegisterOtp = async () => {
         if (!otp || otp.length !== 6) {
-            openResultModal("❌ Enter valid 6-digit OTP");
+            setRegisterOtpError("❌ Enter a valid 6-digit OTP");
             return;
         }
 
@@ -284,24 +278,38 @@ const LoginPage = ({ onLogin }) => {
                 body: JSON.stringify(payload)
             });
             const data = await res.json();
-            console.log(data);
+
             if (data.success) {
                 setIsSuccess(true);
-                openResultModal("✅ " + (data.message || "Registration complete! Your username is "||data.username ||" Please login with this username and password to use the system."));
+                setModal(null); // Close current modal
+                openResultModal("✅ " + (data.message || "Registration complete! Please login."));
             } else {
-                alert("enterd Here");
-                setIsSuccess(false);
-                openResultModal("❌ " + (data.message || "Invalid OTP"));
-                setModal("registerOtp");
+                // Stay on the modal and show an error
+                setOtp(''); // Clear input for re-entry
+                setRegisterOtpError("❌ " + (data.message || "Invalid OTP, please try again."));
+
+                // Re-fetch the retry count to show the updated value
+                if (registeringUser) {
+                    const updatedRetryCountRes = await fetch(`${authApiUrl}/auth/otp-retry-count?username=${registeringUser}`);
+                    const updatedRetryData = await updatedRetryCountRes.json();
+                    const retriesLeft = updatedRetryData.retryLeft;
+                    setRetryCount(retriesLeft);
+
+                    // If no retries are left, close modal and show final message
+                    if (retriesLeft <= 0) {
+                        setModal(null);
+                        openResultModal("❌ Too many wrong OTP attempts. Please start registration again.");
+                    }
+                }
             }
         } catch (err) {
-
-            openResultModal("❌ Error: " + err.message);
+            setRegisterOtpError("❌ Error: " + err.message);
         }
     };
 
     // ---------- LOGIN ----------
     const handleSubmit = async (e) => {
+        // ... (function is unchanged)
         e.preventDefault();
         setError('');
 
@@ -348,8 +356,7 @@ const LoginPage = ({ onLogin }) => {
         setOtp('');
         setNewPassword('');
         setConfirmPassword('');
-        setOtpAttempts(0);
-        setOtpError(''); // ✅ FIX 1: Reset OTP error on open
+        setOtpError('');
         setModal('otp');
     };
 
@@ -357,8 +364,7 @@ const LoginPage = ({ onLogin }) => {
         setOtp('');
         setNewPassword('');
         setConfirmPassword('');
-        setOtpAttempts(0);
-        setOtpError(''); // ✅ FIX 1: Reset OTP error on close
+        setOtpError('');
         setModal(null);
     };
 
@@ -374,6 +380,7 @@ const LoginPage = ({ onLogin }) => {
 
     // ---------- FORGOT PASSWORD ----------
     const handleForgotPassword = async () => {
+        // ... (function is unchanged)
         if (!forgotInput) {
             setForgotMessage("❌ Please enter Email or UserId");
             return;
@@ -412,9 +419,9 @@ const LoginPage = ({ onLogin }) => {
         }
     };
 
-    // ✅ FIX 2: New handler for resending OTP during password reset
     const handleResendPasswordOtp = async () => {
-        setOtpError(''); // Clear previous errors
+        // ... (function is unchanged)
+        setOtpError('');
         if (!forgotInput) {
             setOtpError("User identifier is missing. Please start over.");
             return;
@@ -436,7 +443,7 @@ const LoginPage = ({ onLogin }) => {
 
             if (data.status) {
                 setOtpError("✅ A new OTP has been sent.");
-                setResendTimer(60); // Restart timer
+                setResendTimer(60);
             } else {
                 setOtpError(`❌ ${data.message || "Failed to resend OTP"}`);
             }
@@ -446,7 +453,7 @@ const LoginPage = ({ onLogin }) => {
     };
 
 
-    // ---------- RESET PASSWORD ----------
+    // ---------- RESET PASSWORD (UPDATED)----------
     const handlePasswordReset = async () => {
         if (!otp || !newPassword || !confirmPassword) {
             setOtpError("❌ All fields are required");
@@ -473,23 +480,25 @@ const LoginPage = ({ onLogin }) => {
             });
             const data = await res.json();
 
-            if (data.status) {
-                // ✅ CORRECTED LOGIC
+            if (data.success) { // Note: Your previous code had data.status, I'm assuming data.success based on your other function
                 setIsSuccess(true);
-                // First, call the function that cleans up and closes the OTP modal
                 closeOtpModal();
-                // Then, open the result modal with the success message from the backend
                 openResultModal("✅ " + (data.message || "Password updated successfully!"));
             } else {
-                const nextAttempts = otpAttempts + 1;
-                setOtpAttempts(nextAttempts);
-                setOtp(''); // Clear the OTP input for re-entry
+                setOtp('');
+                setOtpError("❌ " + (data.message || "Wrong OTP, try again."));
 
-                if (nextAttempts >= 3) {
-                    setModal(null);
-                    openResultModal("❌ Too many wrong OTP attempts. Please resend OTP.");
-                } else {
-                    setOtpError("❌ " + (data.message || "Wrong OTP, try again."));
+                // ✅ Re-fetch retry count for password reset flow
+                if (forgotInput) {
+                    const updatedRetryCountRes = await fetch(`${authApiUrl}/auth/otp-retry-count?username=${forgotInput}`);
+                    const updatedRetryData = await updatedRetryCountRes.json();
+                    const retriesLeft = updatedRetryData.retryLeft;
+                    setRetryCount(retriesLeft);
+
+                    if (retriesLeft <= 0) {
+                        setModal(null);
+                        openResultModal("❌ Too many wrong OTP attempts. Please resend OTP.");
+                    }
                 }
             }
         } catch (err) {
@@ -499,6 +508,7 @@ const LoginPage = ({ onLogin }) => {
     return (
         <>
             <div className="login-page-wrapper">
+                {/* ... (unchanged JSX for background and main container) */}
                 <div className="shape shape1"></div>
                 <div className="shape shape2"></div>
 
@@ -551,7 +561,7 @@ const LoginPage = ({ onLogin }) => {
                     </div>
                 </div>
 
-                {/* Registration OTP Modal */}
+                {/* ✅ Registration OTP Modal (UPDATED) */}
                 {modal === "registerOtp" && (
                     <div className="modal-overlay">
                         <div className="modal-content">
@@ -575,9 +585,14 @@ const LoginPage = ({ onLogin }) => {
                                     </small>
                                 )}
                             </div>
+                            {registerOtpError && (
+                                <p className="error-message" style={{ color: registerOtpError.startsWith("✅") ? "green" : "red" }}>
+                                    {registerOtpError}
+                                </p>
+                            )}
                             <div
                                 className="form-actions"
-                                style={{ display: "flex", flexDirection: "row", gap: "10px" }}
+                                style={{ display: "flex", flexDirection: "column", gap: "10px" }}
                             >
                                 <button className="btn" onClick={handleRegisterOtp}>
                                     Submit
@@ -597,6 +612,7 @@ const LoginPage = ({ onLogin }) => {
 
                 {/* Policy Modal */}
                 {showPolicyModal && (
+                    // ... (unchanged JSX)
                     <div className="modal-overlay" onClick={closePolicyModal}>
                         <div className="modal-content" onClick={e => e.stopPropagation()}>
                             <div className="modal-header">
@@ -613,6 +629,7 @@ const LoginPage = ({ onLogin }) => {
 
                 {/* Forgot Password Modal */}
                 {modal === 'forgot' && (
+                    // ... (unchanged JSX)
                     <div className="modal-overlay" onClick={closeForgotModal}>
                         <div className="modal-content" onClick={e => e.stopPropagation()}>
                             <div className="modal-header">
@@ -642,6 +659,7 @@ const LoginPage = ({ onLogin }) => {
 
                 {/* Registration Modal */}
                 {modal === "register" && (
+                    // ... (unchanged JSX)
                     <div className="modal-overlay" onClick={closeRegisterModal}>
                         <div className="modal-content" onClick={e => e.stopPropagation()}>
                             <div className="modal-header">
@@ -663,7 +681,7 @@ const LoginPage = ({ onLogin }) => {
                     </div>
                 )}
 
-                {/* OTP & Reset Password Modal (UPDATED) */}
+                {/* ✅ OTP & Reset Password Modal (UPDATED) */}
                 {modal === 'otp' && (
                     <div className="modal-overlay">
                         <div className="modal-content">
@@ -682,7 +700,12 @@ const LoginPage = ({ onLogin }) => {
                                     value={otp}
                                     onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
                                 />
-                                <small style={{ opacity: 0.7 }}>Attempts left: {Math.max(0, 3 - otpAttempts)}</small>
+                                {/* Now displays dynamic retry count from backend */}
+                                {retryCount !== null && (
+                                    <small style={{ opacity: 0.7 }}>
+                                        Attempts left: {retryCount}
+                                    </small>
+                                )}
                             </div>
                             <div className="form-group">
                                 <label>New Password</label>
@@ -692,7 +715,6 @@ const LoginPage = ({ onLogin }) => {
                                 <label>Confirm Password</label>
                                 <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
                             </div>
-                            {/* ✅ FIX 1 & 2: Display local error and add Resend button */}
                             {otpError && (
                                 <p className="error-message" style={{ color: otpError.startsWith("✅") ? "green" : "red", marginTop: "1rem" }}>
                                     {otpError}
@@ -710,6 +732,7 @@ const LoginPage = ({ onLogin }) => {
 
                 {/* Result Modal (exclusive) */}
                 {modal === 'result' && (
+                    // ... (unchanged JSX)
                     <div className="modal-overlay">
                         <div className="modal-content" style={{ textAlign: "center" }}>
                             <h2 style={{ color: isSuccess ? "green" : "red" }}>{resultMessage}</h2>

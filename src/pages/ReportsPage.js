@@ -6,8 +6,10 @@ import { useConfig } from "./ConfigProvider";
 // --- Report options ---
 const REPORT_TYPES = [
   'Sales Report',
+    'Products Report',
   'Payment Reports',
   'Customers Report',
+    'Product Sales Report'
 ];
 const userName = "junaid";
 
@@ -107,8 +109,21 @@ function mockGenerateReport(payload) {
 
 // --- Component ---
 const ReportsPage = () => {
-  const [fromDate, setFromDate] = useState('');
-  const [toDate, setToDate] = useState('');
+  // Set default dates: fromDate = today - 30 days, toDate = today
+  function getTodayISO() {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d.toISOString().slice(0, 10);
+  }
+  function getPastISO(days) {
+    const d = new Date();
+    d.setDate(d.getDate() - days);
+    d.setHours(0, 0, 0, 0);
+    return d.toISOString().slice(0, 10);
+  }
+
+  const [fromDate, setFromDate] = useState(getPastISO(30));
+  const [toDate, setToDate] = useState(getTodayISO());
   const [reportType, setReportType] = useState('');
   const [showTypeMenu, setShowTypeMenu] = useState(false);
 

@@ -117,7 +117,7 @@ const BillingPage = () => {
             params.append('search', q);
         }
 
-        fetch(`${apiUrl}/api/shop/get/withCache/productsList?${params.toString()}`, {
+        fetch(`${apiUrl}/api/shop/get/forBilling/withCache/productsList?${params.toString()}`, {
             method: "GET",
             credentials: 'include',
             headers: {
@@ -133,6 +133,7 @@ const BillingPage = () => {
 
                 if (Array.isArray(data)) {
                     // legacy: assume full list or already-paged array
+                    console.log("The products list ", data);
                     items = data;
                     total = data.length;
                 } else if (data && data.data) {
@@ -355,6 +356,7 @@ const BillingPage = () => {
                 setPaidAmount(sellingSubtotal);
 
                 setLoading(false);
+                setIsPreviewModalOpen(false)
                 setShowPopup(true);
                 handleNewBilling();
             })
@@ -494,11 +496,86 @@ const BillingPage = () => {
         setIsPreviewModalOpen(true);
     };
 
+    // --- Resizable Panels State ---
+    const DEFAULT_LEFT_WIDTH = 60; // percent
+    const DEFAULT_RIGHT_WIDTH = 40; // percent
+    const STORAGE_KEY = 'billingPagePanelWidths';
+    const [leftWidth, setLeftWidth] = useState(() => {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            try {
+                const { left } = JSON.parse(saved);
+                if (typeof left === 'number') return left;
+            } catch {}
+        }
+        return DEFAULT_LEFT_WIDTH;
+    });
+    const [rightWidth, setRightWidth] = useState(() => {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            try {
+                const { right } = JSON.parse(saved);
+                if (typeof right === 'number') return right;
+            } catch {}
+        }
+        return DEFAULT_RIGHT_WIDTH;
+    });
+    const containerRef = React.useRef(null);
+    const isDragging = React.useRef(false);
+
+    // --- Resizer Handlers ---
+    useEffect(() => {
+        function onMouseMove(e) {
+            if (!isDragging.current || !containerRef.current) return;
+            const container = containerRef.current;
+            const rect = container.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const percent = Math.max(15, Math.min(85, (x / rect.width) * 100));
+            setLeftWidth(percent);
+            setRightWidth(100 - percent);
+        }
+        function onMouseUp() {
+            if (isDragging.current) {
+                isDragging.current = false;
+                localStorage.setItem(STORAGE_KEY, JSON.stringify({ left: leftWidth, right: rightWidth }));
+            }
+        }
+        window.addEventListener('mousemove', onMouseMove);
+        window.addEventListener('mouseup', onMouseUp);
+        return () => {
+            window.removeEventListener('mousemove', onMouseMove);
+            window.removeEventListener('mouseup', onMouseUp);
+        };
+    }, [leftWidth, rightWidth]);
+
     return (
         <div className="billing-page">
             <h2>Billing</h2>
-            <div className="billing-layout" style={{marginTop: "1px"}}>
-                <div className="product-list glass-card">
+            <div
+                className="billing-layout"
+                ref={containerRef}
+                style={{
+                    marginTop: "1px",
+                    display: 'flex',
+                    flexDirection: 'row',
+                    width: '100%',
+                    height: 'calc(100vh - 100px)',
+                    minHeight: 500,
+                    position: 'relative',
+                }}
+            >
+                <div
+                    className="product-list glass-card"
+                    style={{
+                        width: `${leftWidth}%`,
+                        minWidth: 220,
+                        maxWidth: '85%',
+                        overflowX: 'auto',
+                        transition: isDragging.current ? 'none' : 'width 0.2s',
+                        resize: 'horizontal',
+                        boxSizing: 'border-box',
+                    }}
+                >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <h3>Available Products</h3>
                         {selectedCustomer && (
@@ -533,14 +610,13 @@ const BillingPage = () => {
                                 {displayedProducts.map(p => (
                                     <tr key={p.id} className={p.stock <= 0 ? "out-of-stock" : ""}>
                                         <td>{p.name}</td>
-                                        <td>{p.price}</td>
+                                        <td title={'Cost Price '+ p.costPrice}>{p.price}</td>
                                         <td>
                                             <input
                                                 type="number"
                                                 min="0"
                                                 value={sellingPrices[p.id] !== undefined ? sellingPrices[p.id] : p.price}
                                                 onChange={(e) => setSellingPrices({ ...sellingPrices, [p.id]: Number(e.target.value) })}
-                                                // small inline styling only for selling price box (requested)
                                                 style={{
                                                     width: "80px",
                                                     padding: "3px 6px",
@@ -548,7 +624,11 @@ const BillingPage = () => {
                                                     border: "1.5px solid var(--border-color)",
                                                     borderColor: "skyblue",
                                                     textAlign: "center",
-                                                    fontSize: "0.9rem"
+                                                    fontSize: "0.9rem",
+                                                    backgroundColor:
+                                                        sellingPrices[p.id] !== undefined && p.costPrice !== undefined && Number(sellingPrices[p.id]) < Number(p.costPrice)
+                                                            ? 'rgba(255,0,0,0.28)'
+                                                            : undefined,
                                                 }}
                                             />
                                         </td>
@@ -579,7 +659,50 @@ const BillingPage = () => {
 
                 </div>
 
-                <div className="invoice-details glass-card">
+                {/* Resizer Divider */}
+                <div
+                    onMouseDown={() => { isDragging.current = true; }}
+                    title="Drag to resize panels"
+                    style={{
+                        width: '24px', // A small, dedicated width for the handle
+                        cursor: 'col-resize',
+                        userSelect: 'none',
+                        display: 'flex',
+                        alignItems: 'center',    // This centers the icon vertically
+                        justifyContent: 'center', // This centers the icon horizontally
+                        marginLeft: '0px',       // Adds a little space
+                        marginRight: '0px',
+                    }}
+                >
+                    {/* A simple SVG icon to indicate horizontal dragging */}
+                    <svg
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        style={{ color: 'rgba(128, 128, 128, 0.5)' }} // A subtle gray color
+                    >
+                        <polyline points="13 17 18 12 13 7"></polyline>
+                        <polyline points="11 17 6 12 11 7"></polyline>
+                    </svg>
+                </div>
+
+                <div
+                    className="invoice-details glass-card"
+                    style={{
+                        width: `${rightWidth}%`,
+                        minWidth: 220,
+                        maxWidth: '85%',
+                        overflowX: 'auto',
+                        transition: isDragging.current ? 'none' : 'width 0.2s',
+                        resize: 'horizontal',
+                        boxSizing: 'border-box',
+                    }}
+                >
                     <h3 style={{ textAlign: 'center' }}>Current Bill</h3>
                     <div className="customer-actions" style={{ marginBottom: '0.75rem', display: 'flex', gap: '10px' }}>
                         <button className="btn" onClick={() => setIsModalOpen(true)}>
@@ -615,17 +738,10 @@ const BillingPage = () => {
                                         {cart.map(item => (
                                             <tr key={item.id} className={item.stock <= 0 ? 'out-of-stock' : ''}>
                                                 <td style={{verticalAlign: 'top'}}>{item.name}</td>
-                                                <td>
-                                                    <input
-                                                        type="number"
-                                                        min="1"
-                                                        value={item.quantity}
-                                                        onChange={(e) => {
-                                                            const q = Math.max(1, Number(e.target.value) || 1);
-                                                            updateCartItem(item.id, { quantity: q });
-                                                        }}
-                                                        style={{ width: '60px', padding: '6px', borderRadius: '8px', border: '1px solid var(--bp-border)' }}
-                                                    />
+                                                <td style={{ width: '60px',  padding: '6px', borderRadius: '8px', border: '1px solid var(--bp-border)' }}>
+
+                                                        {item.quantity}
+
                                                 </td>
                                                 <td style={{verticalAlign: 'top'}}>₹{(item.price * item.quantity).toLocaleString()}</td>
                                                 <td style={{verticalAlign: 'top'}}>₹{(((item.sellingPrice !== undefined ? item.sellingPrice : item.price) * item.quantity)).toLocaleString()}</td>
