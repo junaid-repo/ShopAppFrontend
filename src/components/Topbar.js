@@ -206,7 +206,7 @@ const Topbar = ({ onLogout, theme, toggleTheme, toggleSidebar, isCollapsed, setS
                     >
                         <FaBell
                             size={28}
-                            color={unseenCount > 0 ? '#f4d812' : 'var(--primary-color)'}
+                            color={unseenCount > 0 ? '#f4d812' : '#f4d812'}
                             style={{
                                 display: 'inline-block',
                                 filter: 'drop-shadow(0 2px 8px var(--shadow-color)) drop-shadow(0 1px 4px var(--shadow-color))', // subtle shadow

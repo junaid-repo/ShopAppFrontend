@@ -8,7 +8,7 @@
     --shadow-color: rgb(0 0 0 / 15%);
     --text-color: #103784;
     --sidebar-width: 280px;
-    --body-bg: rgba(240, 248, 255, 0.85);
+    --body-bg: rgba(240, 248, 255, 0.48);
     --modal-bg: #ffffff;
     --input-bg: #ffffff;
     --input-border: #ddd;
@@ -727,7 +727,7 @@ body.dark-theme {
 /* ---------- Cart list ---------- */
 .cart-items {
     margin-top: 1rem;
-    max-height: 220px;
+    max-height: 200px;
     overflow-y: auto;
     padding-right: 0.5rem;
 }

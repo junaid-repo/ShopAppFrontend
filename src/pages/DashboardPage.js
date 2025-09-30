@@ -7,6 +7,39 @@ import './DashboardPage.css';
 import { useNavigate } from 'react-router-dom';
 import { useConfig } from "./ConfigProvider";
 import { formatDate } from "../utils/formatDate";
+import { Line } from 'react-chartjs-2';
+
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Legend,
+} from 'chart.js';
+
+ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Legend
+);
+
+// Mock Data for the new weekly sales graph
+const mockWeeklySales = [
+    { day: 'Mon', totalSales: 12500, unitsSold: 45 },
+    { day: 'Tue', totalSales: 18000, unitsSold: 60 },
+    { day: 'Wed', totalSales: 15500, unitsSold: 52 },
+    { day: 'Thu', totalSales: 21000, unitsSold: 75 },
+    { day: 'Fri', totalSales: 25000, unitsSold: 88 },
+    { day: 'Sat', totalSales: 32000, unitsSold: 110 },
+    { day: 'Sun', totalSales: 28500, unitsSold: 95 },
+];
 
 // Accept an optional setSelectedPage prop so shortcuts can switch pages internally
 const DashboardPage = ({ setSelectedPage }) => {
@@ -24,6 +57,8 @@ const DashboardPage = ({ setSelectedPage }) => {
     const [tax, setTax] = useState("");
     const [isAddProdModalOpen, setIsAddProdModalOpen] = useState(false);
 
+        const [weeklySalesData, setWeeklySalesData] = useState([]); // State for graph data
+
     const config = useConfig();
     const navigate = useNavigate();
 
@@ -31,6 +66,104 @@ const DashboardPage = ({ setSelectedPage }) => {
     if (config) {
         apiUrl = config.API_URL;
     }
+
+    /**
+     * 📌 Fetches weekly sales data for the line graph.
+     * This function would make an API call to your backend analytics endpoint.
+     */
+    const fetchWeeklySales = async () => {
+        // API Endpoint: GET /api/shop/get/analytics/weekly-sales
+        // Payload Sent: None
+        // Expected Response (JSON):
+        // [
+        //   { "day": "Mon", "totalSales": 12000, "unitsSold": 15 },
+        //   { "day": "Tue", "totalSales": 18500, "unitsSold": 22 },
+        //   ...
+        // ]
+        try {
+            // ---- MOCK DATA USAGE ----
+          //  setWeeklySalesData(mockWeeklySales);
+            // ---- ACTUAL API CALL (when ready)----
+            const response = await fetch(`${apiUrl}/api/shop/get/analytics/weekly-sales`, {
+                method: "GET",
+                credentials: 'include',
+                headers: { "Content-Type": "application/json" },
+             });
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const data = await response.json();
+            console.log("Weekly Sales Data:", data);
+            setWeeklySalesData(data);
+        } catch (error) {
+            console.error("Error fetching weekly sales data:", error);
+            setWeeklySalesData(mockWeeklySales); // Fallback to mock data on error
+        }
+    };
+
+    // Fetch Graph Data on component mount
+    useEffect(() => {
+        fetchWeeklySales();
+    }, [apiUrl]);
+
+    // Chart.js Configuration
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+            mode: 'index',
+            intersect: false,
+        },
+        plugins: {
+            legend: {
+                position: 'top',
+                labels: { color: document.body.classList.contains('dark-theme') ? '#c9d1d9' : '#333' }
+            },
+        },
+        scales: {
+            y: {
+                type: 'linear',
+                display: true,
+                position: 'left',
+                title: { display: true, text: 'Revenue (₹)', color: '#8884d8' },
+                ticks: { color: '#9ca3af' },
+                grid: { color: 'rgba(156, 163, 175, 0.1)' }
+            },
+            y1: {
+                type: 'linear',
+                display: true,
+                position: 'right',
+                title: { display: true, text: 'Units Sold', color: '#82ca9d' },
+                ticks: { color: '#9ca3af' },
+                grid: { drawOnChartArea: false },
+            },
+            x: {
+                ticks: { color: '#9ca3af' },
+                grid: { color: 'rgba(156, 163, 175, 0.1)' }
+            }
+        },
+    };
+
+    const chartData = {
+        labels: weeklySalesData.map(d => d.day),
+        datasets: [
+            {
+                label: 'Total Sales',
+                data: weeklySalesData.map(d => d.totalSales),
+                borderColor: '#00a6ff',
+                backgroundColor: 'rgba(136, 132, 216, 0.2)',
+                yAxisID: 'y',
+                tension: 0.4 // Increased for smoother lines
+            },
+            {
+                label: 'Units Sold',
+                data: weeklySalesData.map(d => d.unitsSold),
+                borderColor: '#ff0000',
+                backgroundColor: 'rgba(130, 202, 157, 0.2)',
+                yAxisID: 'y1',
+                tension: 0.4 // Increased for smoother lines
+            },
+        ],
+    };
+
 
     // 📌 Get JWT from localStorage
 
@@ -202,36 +335,44 @@ const DashboardPage = ({ setSelectedPage }) => {
             </div>
 
             {/* Recent Sales */}
-            <div className="recent-sales glass-card">
-                <h3>Recent Sales</h3>
-                <table className="data-table">
-                    <thead>
-                    <tr>
-                        <th>Invoice ID</th>
-                        <th>Customer</th>
-                        <th>Date</th>
-                        <th>Total</th>
-                        <th>Status</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {recentSales.map((sale) => (
-                        <tr key={sale.id}>
-                            <td>{sale.id}</td>
-                            <td>{sale.customer}</td>
-                            <td>{formatDate(sale.date)}</td>
-                            <td>₹{sale.total.toLocaleString()}</td>
-                            <td>
-                  <span className={sale.status === 'Paid' ? 'status-paid' : 'status-pending'}>
-                    {sale.status}
-                  </span>
-                            </td>
-                        </tr>
-                    ))}
-                    </tbody>
-                </table>
-            </div>
+            {/* Sales and Analytics Section */}
+            <div className="sales-analytics-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
 
+                {/* Weekly Sales Graph */}
+                <div className="weekly-sales-graph glass-card">
+                    <h3>Weekly Sales Performance</h3>
+                    <div className="chart-container" style={{height: "250px"}}>
+                        <Line options={chartOptions} data={chartData} />
+                    </div>
+                </div>
+                {/* Recent Sales Table */}
+                <div className="recent-sales glass-card">
+                    <h3>Recent Sales</h3>
+                    <div className="table-container">
+                        <table className="data-table">
+                            <thead>
+                            <tr>
+                                <th>Invoice ID</th>
+                                <th>Customer</th>
+                                <th>Date</th>
+                                <th>Total</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {sales.map((sale) => (
+                                <tr key={sale.id}>
+                                    <td>{sale.id}</td>
+                                    <td>{sale.customer}</td>
+                                    <td>{formatDate(sale.date)}</td>
+                                    <td>₹{sale.total.toLocaleString()}</td>
+                                </tr>
+                            ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
             {/* Add Customer Modal */}
             {isNewCusModalOpen && (
                 <Modal title ="Add New Customer" show={isNewCusModalOpen} onClose={() => setIsNewCusModalOpen(false)}>

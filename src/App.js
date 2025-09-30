@@ -49,9 +49,9 @@ function App() {
         const metaThemeColor = document.querySelector('meta[name="theme-color"]');
         if (metaThemeColor) {
             if (theme === 'dark') {
-                metaThemeColor.setAttribute('content', '#04041b'); // hardcoded dark color
+                metaThemeColor.setAttribute('content', '#111135'); // hardcoded dark color
             } else {
-                metaThemeColor.setAttribute('content', '#f0f8ffd9'); // hardcoded light color
+                metaThemeColor.setAttribute('content', '#f8fcff00'); // hardcoded light color
             }
         }
     }, [theme]);

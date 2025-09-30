@@ -247,8 +247,9 @@ const PaymentsPage = () => {
         {/* Total card */}
         <div className="stats-card total-card">
           <div className="card-title">Total Payments</div>
-          <div className="total-amount"  style={{
-              fontSize: "40.1px"
+          <div  style={{
+              fontSize: "40.1px",
+              fontWeight: "bold"
           }}>₹{totalAmount.toLocaleString()}</div>
           <div className="total-sub">Showing: {fromDate} — {toDate}</div>
         </div>

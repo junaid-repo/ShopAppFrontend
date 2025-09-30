@@ -559,8 +559,8 @@ const BillingPage = () => {
                     display: 'flex',
                     flexDirection: 'row',
                     width: '100%',
-                    height: 'calc(100vh - 100px)',
-                    minHeight: 500,
+                    height: 'calc(80vh - 100px)',
+                    minHeight: 800,
                     position: 'relative',
                 }}
             >
@@ -595,7 +595,7 @@ const BillingPage = () => {
                         style={{ width: '100%', padding: '8px', margin: '10px 0'}}
                     />
 
-                    <div className="product-table-wrapper">
+                    <div className="product-table-wrapper" >
                         <table className="beautiful-table">
                             <thead>
                                 <tr>
