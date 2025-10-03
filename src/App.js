@@ -60,6 +60,15 @@ function App() {
         setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
     };
 
+    // Save original (if you still need it for some cases)
+    const originalToLocaleString = Number.prototype.toLocaleString;
+
+// Override
+    Number.prototype.toLocaleString = function (locales, options) {
+        // Always force "en-IN" if no locale is given
+        return new Intl.NumberFormat("en-IN", options).format(this.valueOf());
+    };
+
     // 🔹 New: Check session from backend instead of decoding local token
     const checkSession = async () => {
         try {

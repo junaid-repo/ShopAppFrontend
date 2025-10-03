@@ -8,6 +8,7 @@ import {BillingProvider} from './context/BillingContext';
 import {ConfigProvider} from "./pages/ConfigProvider";
 import {GoogleOAuthProvider} from '@react-oauth/google';
 import { SearchKeyProvider } from './context/SearchKeyContext';
+import { NumberFormatProvider } from "./context/NumberFormatContext";
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -15,7 +16,9 @@ root.render(
         <GoogleOAuthProvider clientId="642231628593-eso4jie2p3cu670djrtqauq0qh741nk3.apps.googleusercontent.com" useOneTap={false}>
             <BillingProvider>
                 <SearchKeyProvider>
+                    <NumberFormatProvider>
                     <App/>
+                    </NumberFormatProvider>
                 </SearchKeyProvider>
             </BillingProvider>
         </GoogleOAuthProvider>

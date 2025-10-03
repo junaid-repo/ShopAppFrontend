@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { useConfig } from "./ConfigProvider";
 import { formatDate } from "../utils/formatDate";
 import { Line, Bar } from 'react-chartjs-2';
+import { useNumberFormat } from "../context/NumberFormatContext";
 
 import {
     Chart as ChartJS,
@@ -52,7 +53,7 @@ const mockGoalData = {
 const DashboardPage = ({ setSelectedPage }) => {
     const [dashboardData, setDashboardData] = useState({});
     const [sales, setSales] = useState([]);
-    const [timeRange, setTimeRange] = useState('lastWeek');
+    const [timeRange, setTimeRange] = useState('lastMonth');
     const [isNewCusModalOpen, setIsNewCusModalOpen] = useState(false);
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
@@ -72,7 +73,7 @@ const DashboardPage = ({ setSelectedPage }) => {
 
     const config = useConfig();
     const navigate = useNavigate();
-
+    const format = useNumberFormat();
     let apiUrl = "";
     if (config) {
         apiUrl = config.API_URL;
@@ -192,7 +193,7 @@ const DashboardPage = ({ setSelectedPage }) => {
     const lineChartData = {
         labels: weeklySalesData.map(d => d.day),
         datasets: [
-            { label: 'Total Sales', data: weeklySalesData.map(d => d.totalSales), borderColor: '#00a6ff', yAxisID: 'y', tension: 0.4 },
+            { label: 'Total Sales', data: weeklySalesData.map(d => format(d.totalSales)), borderColor: '#00a6ff', yAxisID: 'y', tension: 0.4 },
             { label: 'Units Sold', data: weeklySalesData.map(d => d.unitsSold), borderColor: '#ff0000', yAxisID: 'y1', tension: 0.4 },
         ],
     };
@@ -413,9 +414,9 @@ const DashboardPage = ({ setSelectedPage }) => {
                     className="dropdown"
                 >
                     <option value="today">Today</option>
-                    <option value="lastWeek">Last Week</option>
-                    <option value="lastMonth">Last Month</option>
-                    <option value="lastYear">Last Year</option>
+                    <option value="lastWeek">This Week</option>
+                    <option value="lastMonth">This Month</option>
+                    <option value="lastYear">This Year</option>
                 </select>
             </div>
 
