@@ -87,26 +87,9 @@ body {
     margin-top: 20px; /* reduced so content sits closer under topbar */
 }
 
-/* Navigation Link */
-.nav-link {
-    display: flex;
-    align-items: center;
-    padding: 1rem;
-    margin-bottom: 0.5rem;
-    border-radius: 50px;
-    color: var(--text-color);
-    text-decoration: none;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    transform-origin: left center;
-}
 
-.nav-link.active {
-    background-color: var(--primary-color);
-    color: white;
-    box-shadow: 0 4px 15px rgba(0, 170, 255, 0.4);
-    transform: translateX(10px) scale(1.05);
-}
+
+
 
 /* Glassmorphism Card */
 .glass-card {
@@ -139,46 +122,66 @@ body {
     box-shadow: 0 0 0 3px var(--primary-color-light);
     border-color: var(--primary-color);
 }
-
-/* Buttons */
+/* Glass Buttons - Light Theme */
 .btn {
     padding: 0.75rem 1.5rem;
-    border: none;
     border-radius: 25px;
-    background-color: var(--primary-color);
-    color: white;
+    background: rgba(0, 170, 255, 0.12); /* faint glassy background */
+    border: 1px solid rgba(0, 170, 255, 0.3); /* visible faint border */
+    backdrop-filter: blur(8px); /* frosted effect */
+    -webkit-backdrop-filter: blur(8px);
+    color: #003366; /* darker readable text */
     font-size: 1rem;
+    font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 12px rgba(0, 50, 100, 0.25); /* darker shadow for light bg */
 }
 
 .btn:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0, 170, 255, 0.4);
+    transform: translateY(-2px) scale(1.02);
+    background: rgba(0, 170, 255, 0.2);
+    box-shadow: 0 6px 18px rgba(0, 50, 100, 0.35);
+    border-color: rgba(0, 170, 255, 0.45);
 }
 
 .btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+    box-shadow: none;
 }
 
 /* Cancel button modifier */
 .btn-cancel {
-    background-color: rgba(255, 107, 107, 0.15);
+    background: rgba(255, 107, 107, 0.15);
     border: 1px solid rgba(255, 107, 107, 0.4);
-    color: #ff6b6b;
+    color: #b30000; /* darker red text for visibility */
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
 }
 
 .btn-cancel:hover:not(:disabled) {
-    background-color: rgba(255, 107, 107, 0.25);
-    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+    background: rgba(255, 107, 107, 0.25);
+    box-shadow: 0 6px 18px rgba(179, 0, 0, 0.35);
+    border-color: rgba(255, 107, 107, 0.55);
 }
 
-body.dark-theme .btn-cancel {
-    background-color: rgba(255, 107, 107, 0.1);
-    border-color: rgba(255, 107, 107, 0.4);
-    color: #ff9a9a;
+.dark-theme .btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    background: rgba(0, 170, 255, 0.12); /* faint glassy background */
+    border: 1px solid rgba(0, 170, 255, 0.3); /* visible faint border */
+    backdrop-filter: blur(8px); /* frosted effect */
+    -webkit-backdrop-filter: blur(8px);
+    color: #ffffff; /* darker readable text */
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 12px rgba(0, 50, 100, 0.25); /* darker shadow for light bg */
 }
+
+
 /* Table Styles */
 .data-table {
     width: 100%;

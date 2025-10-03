@@ -7,11 +7,12 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    backdrop-filter: blur(20px);
+
     border-right: 0px solid var(--border-color);
     padding: 1rem 1rem 0.8rem 1rem; /* reduce top padding to move nav up */
     transition: width 0.32s cubic-bezier(.2,.8,.2,1), padding 0.25s ease, transform 0.3s ease;
     z-index: 100;
+    background: var(--glass-bg);
 }
 
 /* Collapsed sidebar - narrow */
@@ -142,10 +143,17 @@
 
 .sidebar .nav-link.active {
     /* make active tab use theme primary color and high-contrast text */
-    background: var(--primary-color);
-    color: #ffffff;
-    box-shadow: 0 4px 15px rgba(0, 170, 255, 0);
-    transform: translateX(10px) scale(1.05);
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    background: rgba(0, 170, 255, 0.12); /* faint glassy background */
+    border: 1px solid rgba(0, 170, 255, 0.3); /* visible faint border */
+    backdrop-filter: blur(8px); /* frosted effect */
+    -webkit-backdrop-filter: blur(8px);
+    color: #003366; /* darker readable text */
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
 }
 
 /* Active style when collapsed - keep icon highlighted but not translated */
