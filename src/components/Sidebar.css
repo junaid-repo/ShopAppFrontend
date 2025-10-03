@@ -131,6 +131,7 @@
     background-color: var(--primary-color-light);
     color: var(--primary-color);
     transform: translateX(10px) scale(1.05);
+    cursor: pointer;
 }
 
 /* In collapsed state, avoid horizontal translate on hover to keep icons centered */

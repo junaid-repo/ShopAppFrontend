@@ -422,28 +422,28 @@ const DashboardPage = ({ setSelectedPage }) => {
 
             {/* Stats */}
             <div className="stats-grid">
-                <div className="stat-card glass-card">
+                <div className="stat-card glass-card" onClick={() => { if (setSelectedPage) setSelectedPage('payments'); else navigate('/payments');}} >
                     <FaChartLine className="icon revenue" />
                     <div>
                         <p>Total Revenue</p>
                         <h3>₹{dashboardData.monthlyRevenue?.toLocaleString()}</h3>
                     </div>
                 </div>
-                <div className="stat-card glass-card">
+                <div className="stat-card glass-card" onClick={() => { if (setSelectedPage) setSelectedPage('sales'); else navigate('/sales');}}>
                     <FaBoxes className="icon units" />
                     <div>
                         <p>Total Units Sold</p>
                         <h3>{dashboardData.totalUnitsSold}</h3>
                     </div>
                 </div>
-                <div className="stat-card glass-card">
+                <div className="stat-card glass-card" onClick={() => { if (setSelectedPage) setSelectedPage('sales'); else navigate('/sales');}}>
                     <FaRupeeSign className="icon tax" />
                     <div>
                         <p>Tax Collected</p>
                         <h3>₹{dashboardData.taxCollected?.toLocaleString()}</h3>
                     </div>
                 </div>
-                <div className="stat-card glass-card">
+                <div className="stat-card glass-card" onClick={() => { if (setSelectedPage) setSelectedPage('products'); else navigate('/products');}}>
                     <FaBan className="icon stock" />
                     <div>
                         <p>Out of Stock Products</p>
@@ -522,7 +522,7 @@ const DashboardPage = ({ setSelectedPage }) => {
             <div className="sales-analytics-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
 
                 {/* Weekly Sales Graph */}
-                <div className="weekly-sales-graph glass-card">
+                <div className="weekly-sales-graph glass-card" onClick={() => { if (setSelectedPage) setSelectedPage('analytics'); else navigate('/analytics');}}>
                     <h3>Sales Performance</h3>
                     <div className="chart-container" style={{height: "250px"}}>
                         <Line options={chartOptions} data={chartData} />

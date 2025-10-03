@@ -10,6 +10,7 @@
     display: flex;
     align-items: center;
     gap: 1.5rem;
+    cursor: pointer;
 }
 
 .stat-card .icon {
@@ -37,6 +38,7 @@
 
 .quick-shortcuts, .recent-sales, .weekly-sales-graph, .goal-tracking {
     margin-top: 2rem;
+    cursor: pointer;
 }
 
 .shortcuts-container {
