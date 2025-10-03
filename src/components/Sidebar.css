@@ -12,7 +12,6 @@
     padding: 1rem 1rem 0.8rem 1rem; /* reduce top padding to move nav up */
     transition: width 0.32s cubic-bezier(.2,.8,.2,1), padding 0.25s ease, transform 0.3s ease;
     z-index: 100;
-    background: var(--glass-bg);
 }
 
 /* Collapsed sidebar - narrow */
@@ -77,6 +76,8 @@
     transition: background-color 0.25s ease, transform 0.22s ease;
     transform-origin: left center;
 }
+
+
 
 /* ensure default button background is removed (user-agent may add a grey background) */
 .sidebar .nav-link {
@@ -149,11 +150,12 @@
     border: 1px solid rgba(0, 170, 255, 0.3); /* visible faint border */
     backdrop-filter: blur(8px); /* frosted effect */
     -webkit-backdrop-filter: blur(8px);
-    color: #003366; /* darker readable text */
+    color: var(--text-color); /* darker readable text */
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.25s ease;
+
 }
 
 /* Active style when collapsed - keep icon highlighted but not translated */

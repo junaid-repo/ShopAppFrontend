@@ -675,6 +675,12 @@ body.dark-theme {
     font-size: 0.85rem;
 }
 
+/* small buttons */
+.dark-theme .small-btn {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.85rem;
+}
+
 /* ---------- Cart items ---------- */
 .cart-item {
     display: flex;
