@@ -9,6 +9,7 @@ import { useConfig } from "./ConfigProvider";
 import { formatDate } from "../utils/formatDate";
 import { Line, Bar } from 'react-chartjs-2';
 import { useNumberFormat } from "../context/NumberFormatContext";
+import { FaCashRegister, FaPlus, FaUserPlus, FaChartBar } from "react-icons/fa";
 
 import {
     Chart as ChartJS,
@@ -49,6 +50,20 @@ const mockGoalData = {
     actualProfit: 155124,
     estimatedProfit: 250000,
 };
+
+// ✨ START: MOCK DATA FOR NEW TOP PRODUCTS SECTION
+const mockMostSellingProducts = [
+    { productName: 'Cosmic Pro X', category: 'Smartphones', count: 152, amount: 912000, currentStock: 25 },
+    { productName: 'AeroBook Lite', category: 'Laptops', count: 98, amount: 686000, currentStock: 12 },
+    { productName: 'SoundWave Buds', category: 'Audio', count: 210, amount: 420000, currentStock: 50 },
+];
+
+const mockTopGrossingProducts = [
+    { productName: 'Galaxy Fold Z', category: 'Smartphones', count: 85, amount: 1275000, currentStock: 8 },
+    { productName: 'QuantumBook Pro', category: 'Laptops', count: 70, amount: 1050000, currentStock: 15 },
+    { productName: 'Cosmic Pro X', category: 'Smartphones', count: 152, amount: 912000, currentStock: 25 },
+];
+// ✨ END: MOCK DATA
 // Accept an optional setSelectedPage prop so shortcuts can switch pages internally
 const DashboardPage = ({ setSelectedPage }) => {
     const [dashboardData, setDashboardData] = useState({});
@@ -69,6 +84,12 @@ const DashboardPage = ({ setSelectedPage }) => {
     const [goalData, setGoalData] = useState(mockGoalData);
     const [graphView, setGraphView] = useState('all');
     const [isAdjusting, setIsAdjusting] = useState(false);
+
+    // ✨ START: NEW STATE FOR TOP PRODUCTS
+    const [productFactor, setProductFactor] = useState('mostSelling'); // 'mostSelling' or 'topGrossing'
+    const [topProducts, setTopProducts] = useState([]);
+    const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+    // ✨ END: NEW STATE
 
 
     const config = useConfig();
@@ -400,6 +421,53 @@ const DashboardPage = ({ setSelectedPage }) => {
         }
     };
 
+    // ✨ START: NEW API CALL LOGIC FOR TOP PRODUCTS
+    useEffect(() => {
+        const fetchTopProducts = async () => {
+            setIsLoadingProducts(true);
+            // Construct the request params
+            const params = new URLSearchParams({
+                count: 3,
+                timeRange: timeRange,
+                factor: productFactor,
+            });
+
+            try {
+                // --- THIS IS WHERE YOU'LL MAKE THE REAL API CALL ---
+                const response = await fetch(`${apiUrl}/api/shop/get/top/products?${params.toString()}`, {
+                   method: 'GET',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                });
+                 if (!response.ok) throw new Error('Failed to fetch top products');
+                const data = await response.json();
+                console.log("The top products are --> ", data);
+
+                setTopProducts(data);
+
+                // --- USING MOCK DATA FOR NOW ---
+                console.log(`Fetching top products with factor: ${productFactor}`);
+                await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
+                /*if (productFactor === 'mostSelling') {
+                    setTopProducts(mockMostSellingProducts);
+                } else {
+                    setTopProducts(mockTopGrossingProducts);
+                }*/
+
+            } catch (error) {
+                console.error("Error fetching top products:", error);
+                // Handle error state if needed
+            } finally {
+                setIsLoadingProducts(false);
+            }
+        };
+
+        if (apiUrl) {
+            fetchTopProducts();
+        }
+    }, [timeRange, productFactor, apiUrl]); // Re-run when timeRange or factor changes
+    // ✨ END: NEW API CALL LOGIC
+
     return (
         <div className="dashboard">
             <h2>Dashboard</h2>
@@ -505,7 +573,7 @@ const DashboardPage = ({ setSelectedPage }) => {
                 </div>
 
                 <div className="quick-shortcuts glass-card">
-                    <h3>Quick Shortcuts</h3>
+                    <h3 className="card-header">Quick Shortcuts</h3>
                     <div className="shortcuts-container">
                         <button className="btn" onClick={() => { if (setSelectedPage) setSelectedPage('billing'); else navigate('/billing'); }}>New Sale</button>
                         <button className="btn" onClick={() => setIsAddProdModalOpen(true)}>Add Product</button>
@@ -523,13 +591,13 @@ const DashboardPage = ({ setSelectedPage }) => {
 
                 {/* Weekly Sales Graph */}
                 <div className="weekly-sales-graph glass-card" onClick={() => { if (setSelectedPage) setSelectedPage('analytics'); else navigate('/analytics');}}>
-                    <h3>Sales Performance</h3>
+                    <h3 className="card-header">Sales Performance</h3>
                     <div className="chart-container" style={{height: "250px"}}>
                         <Line options={chartOptions} data={chartData} />
                     </div>
                 </div>
                 {/* Recent Sales Table */}
-                <div className="recent-sales glass-card">
+                {/*<div className="recent-sales glass-card">
                     <h3>Top Sales</h3>
                     <div className="table-container">
                         <table className="data-table">
@@ -553,7 +621,61 @@ const DashboardPage = ({ setSelectedPage }) => {
                             </tbody>
                         </table>
                     </div>
+                </div>*/}
+
+                {/* ✨ START: REPLACED 'Top Sales' WITH 'Top Products' ✨ */}
+                <div className="top-products glass-card">
+                    <div className="card-header">
+                        <div className="toggle-buttons">
+                            <button
+                                className={`toggle-btn ${productFactor === 'mostSelling' ? 'active' : ''}`}
+                                onClick={() => setProductFactor('mostSelling')}
+                            >
+                                Most Selling
+                            </button>
+                            <button
+                                className={`toggle-btn ${productFactor === 'topGrossing' ? 'active' : ''}`}
+                                onClick={() => setProductFactor('topGrossing')}
+                            >
+                                Top Grossing
+                            </button>
+                        </div>
+
+                        <h3>Top Products</h3>
+                    </div>
+
+
+                    <div className="table-container">
+                        {isLoadingProducts ? (
+                            <p>Loading...</p>
+                        ) : (
+                            <table className="data-table gradient-table">
+                                <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Category</th>
+                                    <th>Units Sold</th>
+                                    <th>Revenue</th>
+                                    <th>Stock</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {topProducts.map((product) => (
+                                    <tr key={product.productName}>
+                                        <td>{product.productName}</td>
+
+                                        <td>{product.category}</td>
+                                        <td>{product.count}</td>
+                                        <td>₹{product.amount.toLocaleString('en-IN')}</td>
+                                        <td>{product.currentStock}</td>
+                                    </tr>
+                                ))}
+                                </tbody>
+                            </table>
+                        )}
+                    </div>
                 </div>
+                {/* ✨ END: REPLACEMENT SECTION ✨ */}
 
             </div>
             {/* Add Customer Modal */}

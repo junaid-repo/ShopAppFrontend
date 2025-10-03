@@ -179,7 +179,6 @@ body.dark-theme .btn-cancel {
     border-color: rgba(255, 107, 107, 0.4);
     color: #ff9a9a;
 }
-
 /* Table Styles */
 .data-table {
     width: 100%;
@@ -189,7 +188,7 @@ body.dark-theme .btn-cancel {
 
 .data-table th,
 .data-table td {
-    padding: 1rem;
+    padding: 0.8rem;
     text-align: left;
     border-bottom: 1px solid var(--border-color);
 }
@@ -208,6 +207,15 @@ body.dark-theme .btn-cancel {
     background-color: var(--table-hover-bg);
 }
 
+/* Alternate row colors */
+.data-table tbody tr:nth-child(even) {
+    background-color: var(--body-bg); /* light grey */
+}
+
+.data-table tbody tr:nth-child(odd) {
+    background-color: transparent;
+}
+
 /* ---- Dark mode overrides ---- */
 .dark-theme .data-table {
     color: #fff; /* Table body text */
@@ -222,6 +230,16 @@ body.dark-theme .btn-cancel {
 .dark-theme .data-table td {
     border-bottom: 1px solid #444;
 }
+
+/* Alternate row colors in dark theme */
+.dark-theme .data-table tbody tr:nth-child(even) {
+    background-color: rgba(255, 255, 255, 0.05); /* subtle light shade */
+}
+
+.dark-theme .data-table tbody tr:nth-child(odd) {
+    background-color: transparent;
+}
+
 
 /* Status colors in dark mode */
 .dark-theme .status-paid {
@@ -957,7 +975,7 @@ body.dark-theme {
     min-width: 220px;
     padding: 16px;
 
-    border-radius: 16px;
+    border-radius: 30px;
     background: var(--glass-bg);
     border: 1px solid var(--border-color);
     box-shadow: 0 6px 18px var(--shadow-color);
@@ -971,6 +989,7 @@ body.dark-theme {
 .bars-card .payments-bars {
     height: 100%;
     display: flex;
+
     flex-direction: column;
     justify-content: center; /* center bars vertically within the card */
     gap: 12px;
