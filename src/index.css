@@ -3,7 +3,7 @@
     --primary-color: #00aaff;
     --primary-color-light: #e0f7ff;
     --background-color: #f0f8ff;
-    --glass-bg: rgba(240, 248, 255, 0.85); /* Slightly more opaque for better readability */
+    --glass-bg: rgba(255, 255, 255, 0.85); /* Slightly more opaque for better readability */
     --border-color: rgba(224, 247, 255, 0.7);
     --shadow-color: rgb(0 0 0 / 15%);
     --text-color: #103784;

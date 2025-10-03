@@ -11,19 +11,20 @@ import PeopleIcon from '@mui/icons-material/People';
 import CreditCardIcon from '@mui/icons-material/CreditCard';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import TableChartIcon from '@mui/icons-material/TableChart';
+import { Gauge, UsersFour, Invoice , Archive, ChartLineUp, MicrosoftExcelLogo, ShoppingCart, CreditCard, Receipt} from "@phosphor-icons/react";
 
 import './Sidebar.css';
 
 // 🎨 Assign static colors for each icon
 const iconColors = {
-  dashboard: "#FF6B6B",   // red
-  products: "#4ECDC4",    // teal
-  sales: "#45B7D1",       // blue
-  billing: "#FFA600",     // orange
-  customers: "#9B5DE5",   // purple
-  payments: "#06D6A0",    // green
-  reports: "#FFD93D",     // yellow
-  analytics: "#F15BB5"    // pink
+  dashboard: "#353aad",   // red
+  products: "#353aad",    // teal
+  sales: "#353aad",       // blue
+  billing: "#353aad",     // orange
+  customers: "#353aad",   // purple
+  payments: "#353aad",    // green
+  reports: "#353aad",     // yellow
+  analytics: "#353aad"    // pink
 };
 
 const Sidebar = ({ isCollapsed = false, toggleSidebar, selectedPage, setSelectedPage }) => {
@@ -70,7 +71,7 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar, selectedPage, setSelected
     }, []);
 
     // color to use for icons when sidebar is collapsed: primary in light, white in dark
-    const collapsedIconColor = isDark ? '#ffffff' : primaryColor || '#00aaff';
+    const collapsedIconColor = isDark ? '#ffffff' : '#353aad' || '#00aaff';
     const toggleColor = collapsedIconColor;
 
     const makeClickHandler = (page) => (e) => {
@@ -105,42 +106,42 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar, selectedPage, setSelected
             <nav className="sidebar-nav">
 
                 <button type="button" onClick={makeClickHandler('dashboard')} className={`nav-link ${selectedPage === 'dashboard' ? 'active' : ''}`} title="Dashboard" style={buttonStyleFor('dashboard')}>
-                    <DashboardIcon style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'dashboard' ? '#ffffff' : collapsedIconColor) : iconColors.dashboard) }} />
+                    <Gauge weight="bold" style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'dashboard' ? '#ffffff' : collapsedIconColor) : iconColors.dashboard) }} />
                     <span className="nav-text">Dashboard</span>
                 </button>
 
                 <button type="button" onClick={makeClickHandler('products')} className={`nav-link ${selectedPage === 'products' ? 'active' : ''}`} title="Products" style={buttonStyleFor('products')}>
-                    <Inventory2Icon style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'products' ? '#ffffff' : collapsedIconColor) : iconColors.products) }} />
+                    <Archive weight="bold" style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'products' ? '#ffffff' : collapsedIconColor) : iconColors.products) }} />
                     <span className="nav-text">Products</span>
                 </button>
 
                 <button type="button" onClick={makeClickHandler('sales')} className={`nav-link ${selectedPage === 'sales' ? 'active' : ''}`} title="Sales" style={buttonStyleFor('sales')}>
-                    <ShoppingCartIcon style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'sales' ? '#ffffff' : collapsedIconColor) : iconColors.sales) }} />
+                    <ShoppingCart weight="bold"  style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'sales' ? '#ffffff' : collapsedIconColor) : iconColors.sales) }} />
                     <span className="nav-text">Sales</span>
                 </button>
 
                 <button type="button" onClick={makeClickHandler('billing')} className={`nav-link ${selectedPage === 'billing' ? 'active' : ''}`} title="Billing" style={buttonStyleFor('billing')}>
-                    <ReceiptIcon style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'billing' ? '#ffffff' : collapsedIconColor) : iconColors.billing) }} />
+                    <Receipt style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'billing' ? '#ffffff' : collapsedIconColor) : iconColors.billing) }} />
                     <span className="nav-text">Billing</span>
                 </button>
 
                 <button type="button" onClick={makeClickHandler('customers')} className={`nav-link ${selectedPage === 'customers' ? 'active' : ''}`} title="Customers" style={buttonStyleFor('customers')}>
-                    <PeopleIcon style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'customers' ? '#ffffff' : collapsedIconColor) : iconColors.customers) }} />
+                    <UsersFour weight="bold" style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'customers' ? '#ffffff' : collapsedIconColor) : iconColors.customers) }} />
                     <span className="nav-text">Customers</span>
                 </button>
 
                 <button type="button" onClick={makeClickHandler('payments')} className={`nav-link ${selectedPage === 'payments' ? 'active' : ''}`} title="Payments" style={buttonStyleFor('payments')}>
-                    <CreditCardIcon style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'payments' ? '#ffffff' : collapsedIconColor) : iconColors.payments) }} />
+                    <CreditCard weight="bold"  style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'payments' ? '#ffffff' : collapsedIconColor) : iconColors.payments) }} />
                     <span className="nav-text">Payments</span>
                 </button>
 
                 <button type="button" onClick={makeClickHandler('reports')} className={`nav-link ${selectedPage === 'reports' ? 'active' : ''}`} title="Reports" style={buttonStyleFor('reports')}>
-                    <TableChartIcon style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'reports' ? '#ffffff' : collapsedIconColor) : iconColors.reports) }} />
+                    <MicrosoftExcelLogo weight="bold" style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'reports' ? '#ffffff' : collapsedIconColor) : iconColors.reports) }} />
                     <span className="nav-text">Reports</span>
                 </button>
 
                 <button type="button" onClick={makeClickHandler('analytics')} className={`nav-link ${selectedPage === 'analytics' ? 'active' : ''}`} title="Analytics" style={buttonStyleFor('analytics')}>
-                    <BarChartIcon style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'analytics' ? '#ffffff' : collapsedIconColor) : iconColors.analytics) }} />
+                    <ChartLineUp  weight="bold" style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'analytics' ? '#ffffff' : collapsedIconColor) : iconColors.analytics) }} />
                     <span className="nav-text">Analytics</span>
                 </button>
 
