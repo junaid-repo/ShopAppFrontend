@@ -35,8 +35,7 @@
 /* Hover effect — subtle and elegant */
 .stat-card .icon:hover {
     transform: translateY(-3px);
-    background: rgba(255, 255, 255, 0.25);
-    border-color: rgba(255, 255, 255, 0.6);
+
 }
 
 /* Themed glass tones */

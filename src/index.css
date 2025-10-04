@@ -97,10 +97,10 @@ body {
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px); /* For Safari */
     border-radius: 30px;
-    border: 1px solid var(--border-color);
-    box-shadow: 0 4px 30px var(--shadow-color);
+    border: 2px solid var(--border-color);
+    box-shadow: 0 4px 20px var(--shadow-color);
     padding: 1.5rem;
-    margin-top: 50px;
+    margin-top: 20px;
 }
 
 /* Search bar */

@@ -28,6 +28,7 @@ const SalesPage = () => {
     // Sorting state: default createdAt desc (no arrow shown until user clicks a column)
     const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
     const [hasSortActive, setHasSortActive] = useState(false);
+    const [hoveredRow, setHoveredRow] = useState(null);
 
     const config = useConfig();
     var apiUrl = "";
@@ -204,7 +205,7 @@ const SalesPage = () => {
                 />
             </div>
 
-            <div className="glass-card" style={{marginTop: "40px"}}>
+            <div className="glass-card" >
                 <table className="data-table">
                     <thead>
                     <tr>
@@ -236,20 +237,26 @@ const SalesPage = () => {
                     </tr>
                     </thead>
                     <tbody>
-                    {currentSales.map(sale => (
+                    {currentSales.map((sale) => (
                         <tr
                             key={sale.id}
-                            onClick={() => handleRowClick(sale.id)} // 🟢 click row to open modal
-                            style={{ cursor: "pointer" }}
+                            onClick={() => handleRowClick(sale.id)}
+                            onMouseEnter={() => setHoveredRow(sale.id)}
+                            onMouseLeave={() => setHoveredRow(null)}
+                            style={{
+                                cursor: "pointer",
+                                background: hoveredRow === sale.id ? "rgba(0, 170, 255, 0.08)" : "transparent",
+                                transition: "all 0.25s ease",
+                            }}
                         >
                             <td>{sale.id}</td>
                             <td>{sale.customer}</td>
                             <td>{formatDate(sale.date)}</td>
                             <td>₹{sale.total.toLocaleString()}</td>
                             <td>
-                  <span className={sale.status === 'Paid' ? 'status-paid' : 'status-pending'}>
-                    {sale.status}
-                  </span>
+                            <span className={sale.status === 'Paid' ? 'status-paid' : 'status-pending'}>
+                              {sale.status}
+                            </span>
                             </td>
                             <td>{sale.remarks}</td>
                             <td>
@@ -260,17 +267,14 @@ const SalesPage = () => {
                                         e.stopPropagation();
                                         handleDownloadInvoice(sale.id);
                                     }}
-
                                     style={{
                                         cursor: "pointer",
-                                        backgroundColor: "6CDB11FF",
                                         borderRadius: "6px",
                                         padding: "6px",
                                         marginRight: "8px",
                                         display: "inline-flex",
                                         alignItems: "center",
-                                        color: "blue",
-                                        justifyContent: "center"
+                                        justifyContent: "center",
                                     }}
                                 >
                                     <MdDownload size={18} color="#d32f2f" />
@@ -278,12 +282,8 @@ const SalesPage = () => {
                             </td>
                         </tr>
                     ))}
-                    {currentSales.length === 0 && (
-                        <tr>
-                            <td colSpan="6" style={{ textAlign: 'center' }}>No sales found.</td>
-                        </tr>
-                    )}
                     </tbody>
+
                 </table>
 
 
