@@ -149,267 +149,213 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage }) => {
         }
     };
 
-    return (
-        <header
-            className="topbar"
+    return (<header
+        className="topbar"
+        style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            alignItems: "center",
+            position: "relative",
+            zIndex: 1000, // keeps dropdown above content
+        }}
+    >
+        {/* 🔘 Button Container */}
+        <div
+            className="glass-card2"
             style={{
                 display: "flex",
-                justifyContent: "flex-end",
                 alignItems: "center",
-                position: "relative",
-                zIndex: 1000, // keeps dropdown above content
+                gap: "1.0rem",
+                padding: "0.4rem 1.2rem",
+                marginTop: "0rem",
+                borderRadius: "26px",
+                backdropFilter: "blur(10px)",
+                border: "1px solid rgba(255,255,255,0.25)",
             }}
         >
-            {/* 🔘 Button Container */}
+            {/* 🔔 Notifications */}
             <div
-                className="glass-card2"
+                ref={notifDropdownRef}
+                style={{
+                    position: 'relative',
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: "18px",
+                    padding: "8px",
+                    background: 'var(--primary-color-light)',
+                    transition: "all 0.25s ease",
+                    transform: setIsNotiHovered ? "translateY(-2px)" : "translateY(0)",
+                }}
+                onMouseEnter={() => {
+                    setIsNotiHovered(true);
+                    setNotifDropdownOpen(true);
+                }}
+                onMouseLeave={() => {
+                    setIsNotiHovered(false);
+                    setNotifDropdownOpen(false);
+                }}
+                onClick={() => setSelectedPage('notifications')}
+            >
+                <Bell size={28} weight="duotone" />
+                {unseenCount > 0 && (
+                    <span
+                        style={{
+                            position: "absolute",
+                            top: "-4px",
+                            right: "-4px",
+                            background: "#e80a0d",
+                            color: "#fff",
+                            borderRadius: "50%",
+                            fontSize: "0.65rem",
+                            width: "16px",
+                            height: "16px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                        }}
+                    >
+                    {unseenCount}
+                </span>
+                )}
+                {notifDropdownOpen && (
+                    <div
+                        style={{
+                            position: 'absolute',
+                            top: '50px',
+                            right: 0,
+                            minWidth: '320px',
+                            background: 'var(--modal-bg)',
+                            border: '1px solid var(--border-color)',
+                            borderRadius: '18px',
+                            boxShadow: '0 12px 24px rgba(0,0,0,0.2), 0 8px 16px rgba(0,0,0,0.15)',
+                            zIndex: 100,
+                            padding: '0.5rem 0',
+                        }}
+                        onMouseEnter={() => setNotifDropdownHover(true)}
+                        onMouseLeave={() => { setNotifDropdownHover(false); setNotifDropdownOpen(false); }}
+                    >
+                        <div style={{ padding: '0.5rem 1rem', fontWeight: 600, color: 'var(--primary-color)' }}>Notifications</div>
+                        {notifications.length === 0 ? (
+                            <div style={{ padding: '0.75rem 1rem', color: '#888' }}>No new notifications.</div>
+                        ) : (
+                            notifications.slice(0, 5).map(n => (
+                                <div key={n.id} style={{
+                                    padding: '0.5rem 1rem',
+                                    borderBottom: '1px solid var(--border-color)',
+                                    background: n.seen ? 'transparent' : 'rgba(0,170,255,0.08)',
+                                    fontWeight: n.seen ? 400 : 600,
+                                    cursor: 'pointer',
+                                }}
+                                     onClick={() => {
+                                         setNotifDropdownOpen(false);
+                                         navigate('/notifications');
+                                     }}
+                                >
+                                    <div style={{ fontSize: '1rem', fontWeight: "bold" }}>{n.title}</div>
+                                    <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>{n.subject}</div>
+                                    <div style={{ fontSize: '0.8rem', color: '#888', marginTop: 2, paddingLeft: "170px"}}>{getRelativeTime(n.createdAt)}</div>
+                                </div>
+                            ))
+                        )}
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '0.5rem 1rem' }}>
+                            <button className="btn btn-cancel" style={{ fontSize: '0.9rem', padding: '0.4rem 1rem' }} onClick={handleClearNotifications}>Clear</button>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* 🌙 / ☀️ Theme Toggle */}
+            <div
+                onClick={toggleTheme}
+                onMouseEnter={() => setIsThemeHovered(true)}
+                onMouseLeave={() => setIsThemeHovered(false)}
+                style={{
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: "18px",
+                    padding: "8px",
+                    background: 'var(--primary-color-light)',
+                    transition: "all 0.25s ease",
+                    transform: isThemeHovered ? "translateY(-2px)" : "translateY(0)",
+                }}
+            >
+                {theme === "light" ? (
+                    <Moon size={28} weight="duotone" />
+                ) : (
+                    <Sun size={28} weight="duotone" />
+                )}
+            </div>
+
+            {/* 👤 User Info */}
+            <div
+                onClick={() => setSelectedPage("profile")}
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
                 style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: "1.0rem",
-                    padding: "0.4rem 1.2rem",
-                    marginTop: "0rem",
-                    borderRadius: "26px",
-                    backdropFilter: "blur(10px)",
-                    border: "1px solid rgba(255,255,255,0.25)",
+                    gap: "10px",
+                    cursor: "pointer",
+                    padding: "6px 12px 6px 6px",
+                    borderRadius: "999px", // Pill shape
+                    background: 'var(--primary-color-light)',
+                    border: "1px solid rgba(200, 200, 200, 0.5)",
+                    transition: "all 0.25s ease",
+                    transform: isHovered ? "translateY(-2px)" : "translateY(0)",
                 }}
             >
-                {/* 🔔 Notifications */}
-                <div
-                    ref={notifDropdownRef}
-                    onMouseEnter={() => setIsNotiHovered(true)}
-                    onMouseLeave={() => setIsNotiHovered(false)}
-                    style={{
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        borderRadius: "50%",
-                        padding: "6px",
-                        transition: "all 0.25s ease", // ✅ smooth hover transition
-                        transform: setIsNotiHovered ? "translateY(-2px)" : "translateY(0)", // ✅ subtle lift
-                        background: setIsNotiHovered
-                            ? "rgba(255, 255, 255, 0.15)" // ✅ soft glassy hover background
-                            : "transparent",
-                        border: setIsNotiHovered
-                            ? "1px solid rgba(255, 255, 255, 0.25)"
-                            : "1px solid transparent",
-                    }}
-                    onMouseEnter={() => setNotifDropdownOpen(true)}
-                    onMouseLeave={() => setNotifDropdownOpen(false)}
-                    onClick={() => setSelectedPage('notifications')}
-                >
-                    <Bell size={28} weight="duotone" />
-                    {unseenCount > 0 && (
-                        <span
-                            style={{
-                                position: "absolute",
-                                top: "5px",
-                                right: "3px",
-                                background: "#e80a0d",
-                                color: "#fff",
-                                borderRadius: "50%",
-                                fontSize: "0.65rem",
-                                width: "14px",
-                                height: "14px",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                            }}
-                        >
-              {unseenCount}
-            </span>
-                    )}
-                    {notifDropdownOpen && (
-                        <div
-                            style={{
-                                position: 'absolute',
-                                top: '38px',
-                                right: 0,
-                                minWidth: '320px',
-                                background: 'var(--modal-bg)',
-                                border: '1px solid var(--border-color)',
-                                borderRadius: '5%',
-                                boxShadow: '0 12px 24px rgba(0,0,0,0.2), 0 8px 16px rgba(0,0,0,0.15)', // stronger dropdown depth
-                                zIndex: 100,
-                                padding: '0.5rem 0',
-                                transition: 'transform 0.2s, opacity 0.2s',
-                                transform: 'translateY(0)',
-                                opacity: 1,
-                            }}
-                            onMouseEnter={() => setNotifDropdownHover(true)}
-                            onMouseLeave={() => { setNotifDropdownHover(false); setNotifDropdownOpen(false); }}
-                        >
-                            <div style={{ padding: '0.5rem 1rem', fontWeight: 600, color: 'var(--primary-color)' }}>Notifications</div>
-                            {notifications.length === 0 ? (
-                                <div style={{ padding: '0.75rem 1rem', color: '#888' }}>No new notifications.</div>
-                            ) : (
-                                notifications.slice(0, 5).map(n => (
-                                    <div key={n.id} style={{
-                                        padding: '0.5rem 1rem',
-                                        borderBottom: '1px solid var(--border-color)',
-                                        background: n.seen ? 'transparent' : 'rgba(0,170,255,0.08)',
-                                        //  color: n.seen ? 'var(--text-color)' : '#103784',
-                                        fontWeight: n.seen ? 400 : 600,
-                                        cursor: 'pointer',
-                                        boxShadow: n.seen ? 'none' : '0 1px 6px rgba(0,0,0,0.08)', // subtle depth for unread
-                                        borderRadius: '0%',
-                                        marginBottom: '2px',
-                                        transition: 'background 0.2s, transform 0.2s',
-                                    }}
-                                         onClick={() => {
-                                             setNotifDropdownOpen(false);
-                                             navigate('/notifications');
-                                         }}
-                                         onMouseEnter={e => e.currentTarget.style.transform = 'translateX(2px)'}
-                                         onMouseLeave={e => e.currentTarget.style.transform = 'translateX(0)'}
-                                    >
-                                        <div style={{ fontSize: '1rem', fontWeight: "bold" }}>{n.title}</div>
-                                        <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>{n.subject}</div>
-                                        <div style={{ fontSize: '0.8rem', color: '#888', marginTop: 2, paddingLeft: "170px"}}>{getRelativeTime(n.createdAt)}</div>
-                                    </div>
-                                ))
-                            )}
-                            <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '0.5rem 1rem' }}>
-                                <button className="btn btn-cancel" style={{ fontSize: '0.9rem', padding: '0.4rem 1rem' }} onClick={handleClearNotifications}>Clear</button>
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                {/* 🌙 / ☀️ Theme Toggle */}
-
-
-
-                <div
-                    onClick={toggleTheme}
-                    // ✅ Added hover handlers
-                    onMouseEnter={() => setIsThemeHovered(true)}
-                    onMouseLeave={() => setIsThemeHovered(false)}
-                    style={{
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        borderRadius: "50%",
-                        padding: "0px",
-                        transition: "all 0.25s ease", // ✅ smooth hover transition
-                        transform: isThemeHovered ? "translateY(-2px)" : "translateY(0)", // ✅ subtle lift
-                        background: isThemeHovered
-                            ? "rgba(255, 255, 255, 0.15)" // ✅ soft glassy hover background
-                            : "transparent",
-                        border: isThemeHovered
-                            ? "1px solid rgba(255, 255, 255, 0.25)"
-                            : "1px solid transparent",
-                    }}
-                >
-                    {theme === "light" ? (
-                        <Moon
-                            size={28}
-                            weight="duotone"
-                            style={{
-                                transition: "transform 0.25s ease",
-                                transform: isThemeHovered ? "scale(1.2)" : "scale(1)", // ✅ icon pop
-                            }}
-                        />
-                    ) : (
-                        <Sun
-                            size={28}
-                            weight="duotone"
-                            style={{
-                                transition: "transform 0.25s ease",
-                                transform: isThemeHovered ? "scale(1.2)" : "scale(1)", // ✅ icon pop
-                            }}
-                        />
-                    )}
-                </div>
-
-                {/* 👤 User Info */}
-                <div
-                    onClick={() => setSelectedPage("profile")}
-                    // ✅ Added hover event handlers
-                    onMouseEnter={() => setIsHovered(true)}
-                    onMouseLeave={() => setIsHovered(false)}
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "10px",
-                        cursor: "pointer",
-                        padding: "6px 12px",
-                        borderRadius: "999px", // pill shape
-                        border: "1px solid rgba(200, 200, 200, 0.5)",
-                        transition: "all 0.25s ease", // ✅ smooth hover transition
-                        transform: isHovered ? "translateY(-2px)" : "translateY(0)", // ✅ subtle lift on hover
-                    }}
-                >
-                    {profilePic ? (
-                        <img
-                            src={profilePic}
-                            alt="Profile"
-                            // ✅ Added scale effect for hover pop
-                            style={{
-                                width: "34px",
-                                height: "34px",
-                                borderRadius: "50%",
-                                objectFit: "cover",
-                                transition: "transform 0.25s ease",
-                                transform: isHovered ? "scale(1.15)" : "scale(1)", // ✅ icon pops up slightly
-                            }}
-                        />
-                    ) : (
-                        <UserCircle
-                            size={32}
-                            weight="duotone"
-                            style={{
-                                transition: "transform 0.25s ease",
-                                transform: isHovered ? "scale(1.25)" : "scale(1)", // ✅ icon pops up slightly
-                            }}
-                        />
-                    )}
-                    <span style={{ fontWeight: 600, fontSize: "1rem" }}>
-    {userName || "Guest"}
-  </span>
-                </div>
-
-
-                {/* 🚪 Logout */}
-
-                <div
-                    onClick={handleLogout}
-                    // ✅ Added hover handlers
-                    onMouseEnter={() => setIsLogoutHovered(true)}
-                    onMouseLeave={() => setIsLogoutHovered(false)}
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "6px",
-                        background: isLogoutHovered
-                            ? "linear-gradient(135deg, rgba(232,10,13,0.5), rgba(232,10,13,0.25))" // ✅ brighter on hover
-                            : "linear-gradient(135deg, rgba(232,10,13,0.35), rgba(232,10,13,0.15))",
-                        border: isLogoutHovered
-                            ? "1px solid rgba(232,10,13,0.6)" // ✅ slightly stronger border
-                            : "1px solid rgba(232,10,13,0.4)",
-                        padding: "0.4rem 0.8rem",
-                        borderRadius: "12px",
-                        color: "#6f3838",
-                        cursor: "pointer",
-                        transition: "all 0.3s ease", // ✅ smooth animation
-                        fontSize: "0.9rem",
-                        transform: isLogoutHovered ? "translateY(-2px)" : "translateY(0)", // ✅ subtle lift
-                    }}
-                >
-                    <SignOut
-                        size={20}
-                        weight="duotone"
+                {profilePic ? (
+                    <img
+                        src={profilePic}
+                        alt="Profile"
                         style={{
-                            transition: "transform 0.25s ease",
-                            transform: isLogoutHovered ? "scale(1.2)" : "scale(1)", // ✅ icon pop effect
+                            width: "34px",
+                            height: "34px",
+                            borderRadius: "50%",
+                            objectFit: "cover",
                         }}
                     />
-                </div>
+                ) : (
+                    <UserCircle
+                        size={32}
+                        weight="duotone"
+                    />
+                )}
+                <span style={{ fontWeight: 600, fontSize: "1rem" }}>
+                {userName || "Guest"}
+            </span>
             </div>
-        </header>
-    );
+
+            {/* 🚪 Logout */}
+            <div
+                onClick={handleLogout}
+                onMouseEnter={() => setIsLogoutHovered(true)}
+                onMouseLeave={() => setIsLogoutHovered(false)}
+                style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    padding: "8px",
+                    borderRadius: "18px",
+                    background: 'rgba(232, 10, 13, 0.2)', // Light red background
+                    border: '0px solid rgba(232, 10, 13, 0.4)', // Optional: a slightly darker border
+                    transition: "all 0.3s ease",
+                    transform: isLogoutHovered ? "translateY(-2px)" : "translateY(0)",
+                }}
+            >
+                <SignOut
+                    size={28}
+                    weight="duotone"
+                    color="#e80a0d" // Making icon color solid red
+                />
+            </div>
+        </div>
+    </header>);
 };
 
 export default Topbar;
