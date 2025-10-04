@@ -166,7 +166,7 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage }) => {
                 style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: "1.5rem",
+                    gap: "1.0rem",
                     padding: "0.4rem 1.2rem",
                     marginTop: "0rem",
                     borderRadius: "26px",
@@ -292,7 +292,7 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage }) => {
                         alignItems: "center",
                         justifyContent: "center",
                         borderRadius: "50%",
-                        padding: "6px",
+                        padding: "0px",
                         transition: "all 0.25s ease", // ✅ smooth hover transition
                         transform: isThemeHovered ? "translateY(-2px)" : "translateY(0)", // ✅ subtle lift
                         background: isThemeHovered

@@ -1,16 +1,12 @@
 // src/pages/DashboardPage.js
 import React, { useState, useEffect } from 'react';
 import { FaRupeeSign, FaBoxes, FaBan, FaChartLine } from 'react-icons/fa';
-import CurrencyRupeeTwoToneIcon from '@mui/icons-material/CurrencyRupeeTwoTone';
 import Modal from '../components/Modal';
 import './DashboardPage.css';
 import { useNavigate } from 'react-router-dom';
 import { useConfig } from "./ConfigProvider";
-import { formatDate } from "../utils/formatDate";
 import { Line, Bar } from 'react-chartjs-2';
 import { useNumberFormat } from "../context/NumberFormatContext";
-import { FaCashRegister, FaPlus, FaUserPlus, FaChartBar } from "react-icons/fa";
-
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -21,6 +17,7 @@ import {
     Title,
     Tooltip,
     Legend,
+    Filler // ✅ 1. Import Filler
 } from 'chart.js';
 
 ChartJS.register(
@@ -31,7 +28,8 @@ ChartJS.register(
     BarElement,
     Title,
     Tooltip,
-    Legend
+    Legend,
+    Filler // ✅ 2. Register Filler
 );
 
 // Mock Data for the new weekly sales graph
@@ -80,7 +78,7 @@ const DashboardPage = ({ setSelectedPage }) => {
     const [tax, setTax] = useState("");
     const [isAddProdModalOpen, setIsAddProdModalOpen] = useState(false);
 
-        const [weeklySalesData, setWeeklySalesData] = useState([]); // State for graph data
+    const [weeklySalesData, setWeeklySalesData] = useState([]); // State for graph data
     const [goalData, setGoalData] = useState(mockGoalData);
     const [graphView, setGraphView] = useState('all');
     const [isAdjusting, setIsAdjusting] = useState(false);
@@ -102,26 +100,14 @@ const DashboardPage = ({ setSelectedPage }) => {
 
     /**
      * 📌 Fetches weekly sales data for the line graph.
-     * This function would make an API call to your backend analytics endpoint.
      */
     const fetchWeeklySales = async () => {
-        // API Endpoint: GET /api/shop/get/analytics/weekly-sales
-        // Payload Sent: None
-        // Expected Response (JSON):
-        // [
-        //   { "day": "Mon", "totalSales": 12000, "unitsSold": 15 },
-        //   { "day": "Tue", "totalSales": 18500, "unitsSold": 22 },
-        //   ...
-        // ]
         try {
-            // ---- MOCK DATA USAGE ----
-          //  setWeeklySalesData(mockWeeklySales);
-            // ---- ACTUAL API CALL (when ready)----
             const response = await fetch(`${apiUrl}/api/shop/get/analytics/weekly-sales/${timeRange}`, {
                 method: "GET",
                 credentials: 'include',
                 headers: { "Content-Type": "application/json" },
-             });
+            });
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const data = await response.json();
             console.log("Weekly Sales Data:", data);
@@ -193,30 +179,53 @@ const DashboardPage = ({ setSelectedPage }) => {
         },
     };
 
+    // ✅ 3. UPDATE CHART DATA FOR AREA GRAPH
     const chartData = {
         labels: weeklySalesData.map(d => d.day),
         datasets: [
             {
+                fill: true,
                 label: 'Total Sales',
                 data: weeklySalesData.map(d => d.totalSales),
-                borderColor: '#00a6ff',
-                backgroundColor: 'rgba(136, 132, 216, 0.2)',
+                borderColor: '#00b0ff',
+                backgroundColor: (context) => {
+                    const ctx = context.chart.ctx;
+                    if (!ctx) return 'rgba(0, 176, 255, 0.1)';
+                    const gradient = ctx.createLinearGradient(0, 0, 0, context.chart.height);
+                    gradient.addColorStop(0, 'rgba(0, 176, 255, 0.4)');      // Start color (slightly lighter alpha)
+                    gradient.addColorStop(0.6, 'rgba(0, 176, 255, 0.05)'); // Intermediate: very transparent by 60% down
+                    gradient.addColorStop(1, 'rgba(0, 176, 255, 0)');      // End color (fully transparent)
+                    return gradient;
+                },
                 yAxisID: 'y',
-                tension: 0.4 // Increased for smoother lines
+                tension: 0.4,
+                pointBackgroundColor: '#00b0ff',
+                pointRadius: 2,
             },
             {
+                fill: true,
                 label: 'Units Sold',
                 data: weeklySalesData.map(d => d.unitsSold),
-                borderColor: '#ff0000',
-                backgroundColor: 'rgba(130, 202, 157, 0.2)',
+                borderColor: '#00bfa5',
+                backgroundColor: (context) => {
+                    const ctx = context.chart.ctx;
+                    if (!ctx) return 'rgba(0, 191, 165, 0.1)';
+                    const gradient = ctx.createLinearGradient(0, 0, 0, context.chart.height);
+                    gradient.addColorStop(0, 'rgba(0, 191, 165, 0.4)');      // Start color (slightly lighter alpha)
+                    gradient.addColorStop(0.6, 'rgba(0, 191, 165, 0.05)'); // Intermediate: very transparent by 60% down
+                    gradient.addColorStop(1, 'rgba(0, 191, 165, 0)');      // End color (fully transparent)
+                    return gradient;
+                },
                 yAxisID: 'y1',
-                tension: 0.4 // Increased for smoother lines
+                tension: 0.4,
+                pointBackgroundColor: '#00bfa5',
+                pointRadius: 2,
             },
         ],
 
     };
 
-    // --- Chart Configurations ---
+    // --- Chart Configurations --- (The rest of the file is unchanged)
     const lineChartOptions = {
         responsive: true,
         maintainAspectRatio: false,
@@ -256,7 +265,6 @@ const DashboardPage = ({ setSelectedPage }) => {
         }
     };
 
-    // ✅ CHANGED: Bar chart configuration updated for overlap effect
     const createBarChartConfig = (label, actual, estimated) => {
         const color = label.includes('Sales') ? 'rgba(0,170,255,0.49)' : '#2ecc71';
         const fadedColor = label.includes('Sales') ? 'rgb(0,170,255)' : 'rgba(46, 204, 113, 0.2)';
@@ -320,7 +328,6 @@ const DashboardPage = ({ setSelectedPage }) => {
             credentials: 'include',
             headers: {
                 "Content-Type": "application/json"
-                // 🔑 Attach JWT
             },
         })
             .then((res) => {
@@ -336,16 +343,14 @@ const DashboardPage = ({ setSelectedPage }) => {
 
     // 📌 Fetch Sales
     useEffect(() => {
-        //alert(token);
         fetch(`${apiUrl}/api/shop/get/top/sales/${timeRange}`, {
             method: "GET",
             credentials: 'include',
             params: {
-                count: 3 // ✅ sent to backend
+                count: 3
             },
             headers: {
                 "Content-Type": "application/json"
-                // 🔑 Attach JWT
             },
         })
             .then((res) => {
@@ -363,7 +368,6 @@ const DashboardPage = ({ setSelectedPage }) => {
 
     useEffect(() => {
         const fetchGoalData = async () => {
-            // API Endpoint: GET /api/shop/get/dashboard/goals
             try {
                 const response = await fetch(`${apiUrl}/api/shop/get/dashboard/goals/${timeRange}`, {
                     method: "GET",
@@ -377,7 +381,6 @@ const DashboardPage = ({ setSelectedPage }) => {
                 console.error("Error fetching goal data:", error);
 
             }
-            //setGoalData(mockGoalData);
         };
         if (apiUrl) fetchGoalData();
     }, [timeRange, apiUrl]);
@@ -393,7 +396,6 @@ const DashboardPage = ({ setSelectedPage }) => {
                 credentials: 'include',
                 headers: {
                     "Content-Type": "application/json"
-                    // 🔑 Attach JWT
                 },
                 body: JSON.stringify(payload),
             });
@@ -419,7 +421,7 @@ const DashboardPage = ({ setSelectedPage }) => {
                 method: "POST",
                 credentials: 'include',
                 headers: {
-                    "Content-Type": "application/json"// 🔑 Attach JWT
+                    "Content-Type": "application/json"
                 },
                 body: JSON.stringify(payload),
             });
@@ -442,7 +444,6 @@ const DashboardPage = ({ setSelectedPage }) => {
     useEffect(() => {
         const fetchTopProducts = async () => {
             setIsLoadingProducts(true);
-            // Construct the request params
             const params = new URLSearchParams({
                 count: 3,
                 timeRange: timeRange,
@@ -450,30 +451,19 @@ const DashboardPage = ({ setSelectedPage }) => {
             });
 
             try {
-                // --- THIS IS WHERE YOU'LL MAKE THE REAL API CALL ---
                 const response = await fetch(`${apiUrl}/api/shop/get/top/products?${params.toString()}`, {
-                   method: 'GET',
+                    method: 'GET',
                     credentials: 'include',
                     headers: { 'Content-Type': 'application/json' },
                 });
-                 if (!response.ok) throw new Error('Failed to fetch top products');
+                if (!response.ok) throw new Error('Failed to fetch top products');
                 const data = await response.json();
                 console.log("The top products are --> ", data);
 
                 setTopProducts(data);
 
-                // --- USING MOCK DATA FOR NOW ---
-                console.log(`Fetching top products with factor: ${productFactor}`);
-                await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
-                /*if (productFactor === 'mostSelling') {
-                    setTopProducts(mockMostSellingProducts);
-                } else {
-                    setTopProducts(mockTopGrossingProducts);
-                }*/
-
             } catch (error) {
                 console.error("Error fetching top products:", error);
-                // Handle error state if needed
             } finally {
                 setIsLoadingProducts(false);
             }
@@ -482,7 +472,7 @@ const DashboardPage = ({ setSelectedPage }) => {
         if (apiUrl) {
             fetchTopProducts();
         }
-    }, [timeRange, productFactor, apiUrl]); // Re-run when timeRange or factor changes
+    }, [timeRange, productFactor, apiUrl]);
     // ✨ END: NEW API CALL LOGIC
 
     return (
@@ -665,35 +655,6 @@ const DashboardPage = ({ setSelectedPage }) => {
                         <Line options={chartOptions} data={chartData} />
                     </div>
                 </div>
-                {/* Recent Sales Table */}
-                {/*<div className="recent-sales glass-card">
-                    <h3>Top Sales</h3>
-                    <div className="table-container">
-                        <table className="data-table">
-                            <thead>
-                            <tr>
-                                <th>Invoice ID</th>
-                                <th>Customer</th>
-                                <th>Date</th>
-                                <th>Total</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {sales.map((sale) => (
-                                <tr key={sale.id}>
-                                    <td>{sale.id}</td>
-                                    <td>{sale.customer}</td>
-                                    <td>{formatDate(sale.date)}</td>
-                                    <td>₹{sale.total.toLocaleString()}</td>
-                                </tr>
-                            ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>*/}
-
-
-
             </div>
             {/* Add Customer Modal */}
             {isNewCusModalOpen && (
