@@ -186,7 +186,7 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage }) => {
                     padding: "8px",
                     background: 'var(--primary-color-light)',
                     transition: "all 0.25s ease",
-                    transform: setIsNotiHovered ? "translateY(-2px)" : "translateY(0)",
+                    transform: isNotiHovered ? "translateY(-5px)" : "translateY(0)",
                 }}
                 onMouseEnter={() => {
                     setIsNotiHovered(true);
@@ -280,7 +280,7 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage }) => {
                     padding: "8px",
                     background: 'var(--primary-color-light)',
                     transition: "all 0.25s ease",
-                    transform: isThemeHovered ? "translateY(-2px)" : "translateY(0)",
+                    transform: isThemeHovered ? "translateY(-5px)" : "translateY(0)",
                 }}
             >
                 {theme === "light" ? (
@@ -305,7 +305,7 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage }) => {
                     background: 'var(--primary-color-light)',
                     border: "1px solid rgba(200, 200, 200, 0.5)",
                     transition: "all 0.25s ease",
-                    transform: isHovered ? "translateY(-2px)" : "translateY(0)",
+                    transform: isHovered ? "translateY(-5px)" : "translateY(0)",
                 }}
             >
                 {profilePic ? (
@@ -345,7 +345,7 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage }) => {
                     background: 'rgba(232, 10, 13, 0.2)', // Light red background
                     border: '0px solid rgba(232, 10, 13, 0.4)', // Optional: a slightly darker border
                     transition: "all 0.3s ease",
-                    transform: isLogoutHovered ? "translateY(-2px)" : "translateY(0)",
+                    transform: isLogoutHovered ? "translateY(-5px)" : "translateY(0)",
                 }}
             >
                 <SignOut
