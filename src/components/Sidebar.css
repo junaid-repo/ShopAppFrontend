@@ -157,8 +157,8 @@
 .sidebar.collapsed .nav-link.active {
     transform: none;
     box-shadow: none;
-    color: #ffffff;
-    background: var(--primary-color);
+    color: var(--text-color);
+    background: var(--primary-color-light);
     border-radius: 12px;
 }
 

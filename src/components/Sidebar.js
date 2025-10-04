@@ -106,42 +106,42 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar, selectedPage, setSelected
             <nav className="sidebar-nav">
 
                 <button type="button" onClick={makeClickHandler('dashboard')} className={`nav-link ${selectedPage === 'dashboard' ? 'active' : ''}`} title="Dashboard" style={buttonStyleFor('dashboard')}>
-                    <Gauge weight="duotone" style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'dashboard' ? '#ffffff' : collapsedIconColor) : iconColors.dashboard) }} />
+                    <Gauge weight="duotone" style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'dashboard' ? 'var(--text-color)' : collapsedIconColor) : iconColors.dashboard) }} />
                     <span className="nav-text">Dashboard</span>
                 </button>
 
                 <button type="button" onClick={makeClickHandler('products')} className={`nav-link ${selectedPage === 'products' ? 'active' : ''}`} title="Products" style={buttonStyleFor('products')}>
-                    <Archive weight="duotone" style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'products' ? '#ffffff' : collapsedIconColor) : iconColors.products) }} />
+                    <Archive weight="duotone" style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'products' ? 'var(--text-color)' : collapsedIconColor) : iconColors.products) }} />
                     <span className="nav-text">Products</span>
                 </button>
 
                 <button type="button" onClick={makeClickHandler('sales')} className={`nav-link ${selectedPage === 'sales' ? 'active' : ''}`} title="Sales" style={buttonStyleFor('sales')}>
-                    <ShoppingCart weight="duotone"  style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'sales' ? '#ffffff' : collapsedIconColor) : iconColors.sales) }} />
+                    <ShoppingCart weight="duotone"  style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'sales' ? 'var(--text-color)' : collapsedIconColor) : iconColors.sales) }} />
                     <span className="nav-text">Sales</span>
                 </button>
 
                 <button type="button" onClick={makeClickHandler('billing')} className={`nav-link ${selectedPage === 'billing' ? 'active' : ''}`} title="Billing" style={buttonStyleFor('billing')}>
-                    <Receipt weight="duotone" style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'billing' ? '#ffffff' : collapsedIconColor) : iconColors.billing) }} />
+                    <Receipt weight="duotone" style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'billing' ? 'var(--text-color)' : collapsedIconColor) : iconColors.billing) }} />
                     <span className="nav-text">Billing</span>
                 </button>
 
                 <button type="button" onClick={makeClickHandler('customers')} className={`nav-link ${selectedPage === 'customers' ? 'active' : ''}`} title="Customers" style={buttonStyleFor('customers')}>
-                    <UsersFour weight="duotone" style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'customers' ? '#ffffff' : collapsedIconColor) : iconColors.customers) }} />
+                    <UsersFour weight="duotone" style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'customers' ? 'var(--text-color)' : collapsedIconColor) : iconColors.customers) }} />
                     <span className="nav-text">Customers</span>
                 </button>
 
                 <button type="button" onClick={makeClickHandler('payments')} className={`nav-link ${selectedPage === 'payments' ? 'active' : ''}`} title="Payments" style={buttonStyleFor('payments')}>
-                    <CreditCard weight="duotone"  style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'payments' ? '#ffffff' : collapsedIconColor) : iconColors.payments) }} />
+                    <CreditCard weight="duotone"  style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'payments' ? 'var(--text-color)' : collapsedIconColor) : iconColors.payments) }} />
                     <span className="nav-text">Payments</span>
                 </button>
 
                 <button type="button" onClick={makeClickHandler('reports')} className={`nav-link ${selectedPage === 'reports' ? 'active' : ''}`} title="Reports" style={buttonStyleFor('reports')}>
-                    <MicrosoftExcelLogo weight="duotone" style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'reports' ? '#ffffff' : collapsedIconColor) : iconColors.reports) }} />
+                    <MicrosoftExcelLogo weight="duotone" style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'reports' ? 'var(--text-color)' : collapsedIconColor) : iconColors.reports) }} />
                     <span className="nav-text">Reports</span>
                 </button>
 
                 <button type="button" onClick={makeClickHandler('analytics')} className={`nav-link ${selectedPage === 'analytics' ? 'active' : ''}`} title="Analytics" style={buttonStyleFor('analytics')}>
-                    <ChartLineUp  weight="duotone" style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'analytics' ? '#ffffff' : collapsedIconColor) : iconColors.analytics) }} />
+                    <ChartLineUp  weight="duotone" style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'analytics' ? 'var(--text-color)' : collapsedIconColor) : iconColors.analytics) }} />
                     <span className="nav-text">Analytics</span>
                 </button>
 

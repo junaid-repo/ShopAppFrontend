@@ -138,6 +138,18 @@ const DashboardPage = ({ setSelectedPage }) => {
         fetchWeeklySales();
     }, [timeRange, apiUrl]);
 
+    // Helper function to format large numbers
+    const formatLargeNumber = (value) => {
+        if (value >= 10000000) { // 10 million or more
+            return `${(value / 10000000).toFixed(1)}Cr`;
+        } else if (value >= 100000) { // 1 lakh or more
+            return `${(value / 100000).toFixed(1)}L`;
+        } else if (value >= 1000) {
+            return `${(value / 1000).toFixed(1)}K`;
+        }
+        return value.toString();
+    };
+
     // Chart.js Configuration
     const chartOptions = {
         responsive: true,
@@ -158,7 +170,12 @@ const DashboardPage = ({ setSelectedPage }) => {
                 display: true,
                 position: 'left',
                 title: { display: true, text: 'Revenue (₹)', color: '#8884d8' },
-                ticks: { color: '#9ca3af' },
+                ticks: {
+                    color: '#9ca3af',
+                    callback: function(value) {
+                        return '₹' + formatLargeNumber(value);
+                    }
+                },
                 grid: { color: 'rgba(156, 163, 175, 0.1)' }
             },
             y1: {
