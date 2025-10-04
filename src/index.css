@@ -105,23 +105,67 @@ body {
 
 /* Search bar */
 .search-bar {
-    width: 20%;
-    padding: 0.75rem 1.25rem;
-    border: rgba(39, 63, 107, 0.7);
-    border-radius: 50px;
-    background: var(--modal-bg);
+    width: 100%; /* full width of container or parent */
+    max-width: 300px; /* optional: limit width */
+    padding: 0.6rem 1.25rem;
+    border: 1px solid rgba(39, 63, 107, 0.3); /* subtle border */
+    border-radius: 50px; /* fully rounded pill shape */
+    background: var(--modal-bg, #ffffff);
 
-    color: var(--text-color);
+    color: var(--text-color, #272f6b);
     font-size: 1rem;
     outline: none;
 
-    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08); /* soft shadow */
+    transition: all 0.25s ease;
+    position: relative;
+
+    /* Smooth inner placeholder text */
+    caret-color: var(--primary-color);
 }
 
-.search-bar:focus {
-    box-shadow: 0 0 0 3px var(--primary-color-light);
+/* Hover effect */
+.search-bar:hover {
     border-color: var(--primary-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
+
+/* Focus effect */
+.search-bar:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+    background: var(--body-bg, #ffffff);
+}
+
+/* Optional: placeholder styling */
+.search-bar::placeholder {
+    color: rgba(39, 63, 107, 0.5);
+    font-weight: 400;
+}
+
+/* Optional: add a search icon inside (requires wrapping with a container) */
+.search-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    max-width: 300px;
+}
+
+.search-container svg {
+    position: absolute;
+    left: 12px;
+    width: 18px;
+    height: 18px;
+    fill: rgba(39, 63, 107, 0.5);
+    pointer-events: none;
+}
+
+.search-bar.with-icon {
+    padding-left: 2.5rem; /* leave space for icon */
+}
+
+
 /* Glass Buttons - Light Theme */
 .btn {
     padding: 0.75rem 1.5rem;

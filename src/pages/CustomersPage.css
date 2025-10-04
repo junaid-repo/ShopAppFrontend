@@ -1,19 +1,19 @@
 .customer-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 25px;
+    gap: 15px;
     margin-left: 10px;
     margin-right: 10px;
     margin-bottom: 18px;
 }
 
 .customer-card {
-    background: var(--glass-bg);
+    background: var(--body-bg);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px); /* For Safari */
     border-radius: 25px;
-    border: 1px solid var(--border-color);
-    box-shadow: 0 4px 30px var(--shadow-color);
+    border: 4px solid var(--border-color);
+
     padding: 1.5rem;
     margin-top: 15px;
 }

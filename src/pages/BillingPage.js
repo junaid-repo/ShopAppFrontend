@@ -588,6 +588,7 @@ const BillingPage = () => {
                     {/* 🔍 Search bar */}
                     <input
                         type="text"
+
                         //className="search-bar"
                         placeholder="Search products..."
                         value={productSearchTerm}

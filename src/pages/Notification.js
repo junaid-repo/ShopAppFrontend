@@ -193,7 +193,7 @@ const Notification = ({ setSelectedPage }) => {
     return (
         <div className="page-container" style={{display:"flex", flexDirection:"column"}}>
             <h2 style={{ marginBottom: "20px" }}>Notifications</h2>
-            <div className="glass-card" style={{ marginBottom: "2rem", padding: "1rem" }}>
+            <div className="glass-card" style={{ marginBottom: "2rem", padding: "1rem", marginRight: "63rem" }}>
                 <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
                     <label>
                         Filter Domain:
@@ -328,17 +328,17 @@ const Notification = ({ setSelectedPage }) => {
                                 </div>
                                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                                     {/* CHANGE 3: Updated button colors and added icons */}
-                                    <button className="btn" style={{ backgroundColor: '#28a745' }} onClick={() => handleTakeAction(selectedNotification)}>
+                                    <button className="btn" style={{ backgroundColor: '#28a745', color: 'white' }} onClick={() => handleTakeAction(selectedNotification)}>
                                         <FaCheck size={14}/> Take Action
                                     </button>
                                     <button
                                         className="btn"
-                                        style={{ backgroundColor: selectedNotification?.isFlagged ? '#6c757d' : '#ffc107' }}
+                                        style={{ backgroundColor: selectedNotification?.isFlagged ? '#6c757d' : '#ffc107', color: 'white' }}
                                         onClick={() => handleFlag(selectedNotification.id, !selectedNotification.isFlagged)}
                                     >
                                         <FaFlag size={14}/> {selectedNotification?.isFlagged ? 'Unflag' : 'Flag'}
                                     </button>
-                                    <button className="btn" style={{ backgroundColor: '#dc3545' }} onClick={() => handleDelete(selectedNotification.id)}>
+                                    <button className="btn" style={{ backgroundColor: '#dc3545', color: 'white' }} onClick={() => handleDelete(selectedNotification.id)}>
                                         <FaTrash size={14}/> Delete
                                     </button>
                                 </div>

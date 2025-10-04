@@ -588,41 +588,6 @@ const DashboardPage = ({ setSelectedPage }) => {
             {/* Recent Sales */}
             {/* Sales and Analytics Section */}
             <div className="sales-analytics-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-
-                {/* Weekly Sales Graph */}
-                <div className="weekly-sales-graph glass-card" onClick={() => { if (setSelectedPage) setSelectedPage('analytics'); else navigate('/analytics');}}>
-                    <h3 className="card-header">Sales Performance</h3>
-                    <div className="chart-container" style={{height: "250px"}}>
-                        <Line options={chartOptions} data={chartData} />
-                    </div>
-                </div>
-                {/* Recent Sales Table */}
-                {/*<div className="recent-sales glass-card">
-                    <h3>Top Sales</h3>
-                    <div className="table-container">
-                        <table className="data-table">
-                            <thead>
-                            <tr>
-                                <th>Invoice ID</th>
-                                <th>Customer</th>
-                                <th>Date</th>
-                                <th>Total</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {sales.map((sale) => (
-                                <tr key={sale.id}>
-                                    <td>{sale.id}</td>
-                                    <td>{sale.customer}</td>
-                                    <td>{formatDate(sale.date)}</td>
-                                    <td>₹{sale.total.toLocaleString()}</td>
-                                </tr>
-                            ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>*/}
-
                 {/* ✨ START: REPLACED 'Top Sales' WITH 'Top Products' ✨ */}
                 <div className="top-products glass-card">
                     <div className="card-header">
@@ -676,6 +641,41 @@ const DashboardPage = ({ setSelectedPage }) => {
                     </div>
                 </div>
                 {/* ✨ END: REPLACEMENT SECTION ✨ */}
+                {/* Weekly Sales Graph */}
+                <div className="weekly-sales-graph glass-card" onClick={() => { if (setSelectedPage) setSelectedPage('analytics'); else navigate('/analytics');}}>
+                    <h3 className="card-header">Sales Performance</h3>
+                    <div className="chart-container" style={{height: "250px"}}>
+                        <Line options={chartOptions} data={chartData} />
+                    </div>
+                </div>
+                {/* Recent Sales Table */}
+                {/*<div className="recent-sales glass-card">
+                    <h3>Top Sales</h3>
+                    <div className="table-container">
+                        <table className="data-table">
+                            <thead>
+                            <tr>
+                                <th>Invoice ID</th>
+                                <th>Customer</th>
+                                <th>Date</th>
+                                <th>Total</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {sales.map((sale) => (
+                                <tr key={sale.id}>
+                                    <td>{sale.id}</td>
+                                    <td>{sale.customer}</td>
+                                    <td>{formatDate(sale.date)}</td>
+                                    <td>₹{sale.total.toLocaleString()}</td>
+                                </tr>
+                            ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>*/}
+
+
 
             </div>
             {/* Add Customer Modal */}
