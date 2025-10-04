@@ -401,10 +401,12 @@ const Topbar = ({ onLogout, theme, toggleTheme, toggleSidebar, isCollapsed, setS
                         alignItems: "center",
                         gap: "6px",
                         background: "#e80a0d",
+                        color: "white",
                         boxShadow: "0 10px 10px rgba(255, 107, 107, 0.3)",
                         padding: "11px 15px",   // 🔹 smaller padding
                         fontSize: "0.85rem",   // 🔹 slightly smaller text
-                        borderRadius: "25px",   // 🔹 keep rounded look
+                        borderRadius: "25px",
+                        borderColor: "#e80a0d",// 🔹 keep rounded look
                         cursor: "pointer",
                     }}
                 >
