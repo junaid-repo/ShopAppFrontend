@@ -101,20 +101,20 @@
   position: absolute;
   right: 0.5rem;
   bottom: 0.5rem;
-  background: #00aaff;
-  color: white;
+    background-color: #ffebee;
+    color: #d32f2f;
   border: none;
-  border-radius: 50%;
+  border-radius: 20%;
   padding: 0.4rem;
   cursor: pointer;
-  font-size: 0.8rem;
+  font-size: 1.2rem;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .delete-btn:hover {
-  background: #d62828;
+    background-color: #ffcdd2;
 }
 /* Card Header */
 .card-header {

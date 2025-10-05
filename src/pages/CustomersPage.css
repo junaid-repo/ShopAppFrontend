@@ -79,3 +79,162 @@
 .dark-theme .icon {
     color: #ddd;
 }
+/* src/pages/CustomersPage.css */
+
+/* --- Header and Actions --- */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.search-bar {
+    flex-grow: 1;
+    min-width: 250px;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* --- View Toggle Buttons --- */
+.view-toggle-buttons {
+    display: flex;
+    background-color: var(--glass-bg);
+    border-radius: 8px;
+    padding: 4px;
+    border: 1px solid var(--border-color);
+}
+
+.view-toggle-buttons .toggle-btn {
+    background: transparent;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+    color: var(--text-color);
+    border-radius: 6px;
+    transition: background-color 0.2s, color 0.2s;
+    font-size: 1.2rem; /* Increased icon size */
+    line-height: 1;
+}
+
+.view-toggle-buttons .toggle-btn:hover {
+    color: var(--text-color);
+}
+
+.view-toggle-buttons .toggle-btn.active {
+    background-color: var(--primary-color);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(0, 170, 255, 0.3);
+}
+
+
+/* --- Styles for Multi-Select --- */
+
+/* Add a pointer cursor when in select mode */
+.customer-card,
+.data-table tbody tr {
+    position: relative; /* Needed for checkbox positioning */
+    transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+.customer-card.selected,
+.data-table tbody tr.selected {
+    background-color: var(--primary-color-light) !important;
+    box-shadow: 0 0 0 2px var(--primary-color);
+}
+
+.select-checkbox {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 20px;
+    height: 20px;
+    accent-color: var(--primary-color);
+}
+
+.data-table tr.selected td {
+    background-color: transparent; /* Override any alternating row colors */
+}
+
+/* --- General Button Styles --- */
+
+.btn.btn-outline {
+    background-color: transparent;
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+}
+.btn.btn-outline:hover {
+    background-color: var(--primary-color-light);
+}
+
+.btn.btn-danger {
+    background-color: #e74c3c;
+    border-color: #e74c3c;
+    color: white;
+}
+.btn.btn-danger:hover {
+    background-color: #c0392b;
+}
+
+.btn.btn-secondary {
+    background-color: #7f8c8d;
+    border-color: #7f8c8d;
+    color: white;
+}
+.btn.btn-secondary:hover {
+    background-color: #6c7a7b;
+}
+/* src/pages/CustomersPage.css */
+
+/* --- Header and Actions --- */
+.page-header {
+    display: flex;
+    justify-content: space-between; /* This is key for the new layout */
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem; /* Default spacing between action items */
+}
+
+.search-bar {
+    min-width: 250px;
+}
+
+/* --- New Icon Button for "Select Multiple" --- */
+.btn.btn-icon {
+    background-color: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    padding: 0.6rem; /* Makes it squarish */
+    border-radius: 8px;
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn.btn-icon:hover {
+    background-color: var(--primary-color-light);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+/* --- Specific spacing for Add Customer button --- */
+.header-actions .add-customer-btn {
+    margin-left: 16rem;
+    width: 100%/* Creates the "significant distance" */
+}

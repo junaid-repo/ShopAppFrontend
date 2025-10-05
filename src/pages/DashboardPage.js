@@ -1,11 +1,11 @@
 // src/pages/DashboardPage.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FaRupeeSign, FaBoxes, FaBan, FaChartLine } from 'react-icons/fa';
 import Modal from '../components/Modal';
 import './DashboardPage.css';
 import { useNavigate } from 'react-router-dom';
 import { useConfig } from "./ConfigProvider";
-import { Line, Bar } from 'react-chartjs-2';
+import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import { useNumberFormat } from "../context/NumberFormatContext";
 import {
     Chart as ChartJS,
@@ -17,7 +17,8 @@ import {
     Title,
     Tooltip,
     Legend,
-    Filler // ✅ 1. Import Filler
+    Filler,
+    ArcElement // for doughnut
 } from 'chart.js';
 
 ChartJS.register(
@@ -29,7 +30,8 @@ ChartJS.register(
     Title,
     Tooltip,
     Legend,
-    Filler // ✅ 2. Register Filler
+    Filler,
+    ArcElement
 );
 
 // Mock Data for the new weekly sales graph
@@ -49,20 +51,21 @@ const mockGoalData = {
     estimatedProfit: 250000,
 };
 
-// ✨ START: MOCK DATA FOR NEW TOP PRODUCTS SECTION
-const mockMostSellingProducts = [
-    { productName: 'Cosmic Pro X', category: 'Smartphones', count: 152, amount: 912000, currentStock: 25 },
-    { productName: 'AeroBook Lite', category: 'Laptops', count: 98, amount: 686000, currentStock: 12 },
-    { productName: 'SoundWave Buds', category: 'Audio', count: 210, amount: 420000, currentStock: 50 },
+// ✨ NEW MOCK DATA FOR RIGHT-SIDE TABLES
+const mockRecentOrders = [
+    { orderId: 'ORD-1001', customer: 'Amit Sharma', total: 12500, status: 'Completed' },
+    { orderId: 'ORD-1002', customer: 'Neha Verma', total: 7800, status: 'Pending' },
+    { orderId: 'ORD-1003', customer: 'Ravi Kumar', total: 22000, status: 'Completed' },
+    { orderId: 'ORD-1003', customer: 'Ravi Kumar', total: 22000, status: 'Completed' },
 ];
 
-const mockTopGrossingProducts = [
-    { productName: 'Galaxy Fold Z', category: 'Smartphones', count: 85, amount: 1275000, currentStock: 8 },
-    { productName: 'QuantumBook Pro', category: 'Laptops', count: 70, amount: 1050000, currentStock: 15 },
-    { productName: 'Cosmic Pro X', category: 'Smartphones', count: 152, amount: 912000, currentStock: 25 },
-];
-// ✨ END: MOCK DATA
-// Accept an optional setSelectedPage prop so shortcuts can switch pages internally
+// Mock payments breakdown (fallback)
+const mockPaymentBreakdown = {
+    cash: 0,
+    card: 0,
+    upi: 0
+};
+
 const DashboardPage = ({ setSelectedPage }) => {
     const [dashboardData, setDashboardData] = useState({});
     const [sales, setSales] = useState([]);
@@ -89,6 +92,15 @@ const DashboardPage = ({ setSelectedPage }) => {
     const [isLoadingProducts, setIsLoadingProducts] = useState(false);
     // ✨ END: NEW STATE
 
+    // ✨ NEW API / STATE FOR PAYMENT BREAKDOWN (pie chart)
+    const [paymentBreakdown, setPaymentBreakdown] = useState(null);
+    const [isLoadingPayments, setIsLoadingPayments] = useState(false);
+
+    // ✨ NEW STATE FOR RIGHT-SIDE TABLES
+    const [recentOrders, setRecentOrders] = useState([]);
+    const [topCustomers, setTopCustomers] = useState([]); // removed usage - kept empty
+    const [isLoadingRecentOrders, setIsLoadingRecentOrders] = useState(false);
+    const [isLoadingTopCustomers, setIsLoadingTopCustomers] = useState(false);
 
     const config = useConfig();
     const navigate = useNavigate();
@@ -98,11 +110,17 @@ const DashboardPage = ({ setSelectedPage }) => {
         apiUrl = config.API_URL;
     }
 
+    // Refs for responsive chart updates
+    const lineChartRef = useRef(null);
+    const barChartRef = useRef(null);
+    const donutChartRef = useRef(null);
+
     /**
      * 📌 Fetches weekly sales data for the line graph.
      */
     const fetchWeeklySales = async () => {
         try {
+            if (!apiUrl) throw new Error('No API URL');
             const response = await fetch(`${apiUrl}/api/shop/get/analytics/weekly-sales/${timeRange}`, {
                 method: "GET",
                 credentials: 'include',
@@ -111,17 +129,52 @@ const DashboardPage = ({ setSelectedPage }) => {
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const data = await response.json();
             console.log("Weekly Sales Data:", data);
-            setWeeklySalesData(data);
+            setWeeklySalesData(Array.isArray(data) ? data : mockWeeklySales);
         } catch (error) {
-            alert("Error fetching weekly sales data:")
-            console.error("Error fetching weekly sales data:", error);
+            console.warn("Error fetching weekly sales data:", error);
             setWeeklySalesData(mockWeeklySales); // Fallback to mock data on error
         }
     };
 
-    // Fetch Graph Data on component mount
+    // Fetch Graph Data on component mount / timeRange change
     useEffect(() => {
         fetchWeeklySales();
+    }, [timeRange, apiUrl]);
+
+    // Payment breakdown fetch (POST with timeRange payload). Uses mock fallback.
+    const fetchPaymentBreakdown = async () => {setIsLoadingPayments(true);
+        try {
+            if (!apiUrl) throw new Error('No API URL');
+
+
+            // ✅ Use GET request with path param instead of POST body
+            const res = await fetch(`${apiUrl}/api/shop/get/payments/breakdown/${timeRange}`, {
+                method: "GET",
+                credentials: "include",
+                headers: { "Content-Type": "application/json" },
+            });
+
+            if (!res.ok) throw new Error('Failed to fetch payments breakdown');
+
+            const data = await res.json();
+
+            // ✅ Handle response that comes as a map, e.g. { cash: 40, card: 35, upi: 25 }
+            setPaymentBreakdown({
+                cash: data.cash ?? mockPaymentBreakdown.cash,
+                card: data.card ?? mockPaymentBreakdown.card,
+                upi: data.upi ?? mockPaymentBreakdown.upi,
+            });
+        } catch (err) {
+            console.warn("Using mock payment breakdown due to fetch error", err);
+            setPaymentBreakdown(mockPaymentBreakdown);
+        } finally {
+            setIsLoadingPayments(false);
+        }
+    };
+
+    useEffect(() => {
+        // Fetch payments breakdown each time timeRange or apiUrl changes
+        fetchPaymentBreakdown();
     }, [timeRange, apiUrl]);
 
     // Helper function to format large numbers
@@ -133,7 +186,7 @@ const DashboardPage = ({ setSelectedPage }) => {
         } else if (value >= 1000) {
             return `${(value / 1000).toFixed(1)}K`;
         }
-        return value.toString();
+        return value?.toString?.() ?? '';
     };
 
     // Chart.js Configuration
@@ -179,22 +232,22 @@ const DashboardPage = ({ setSelectedPage }) => {
         },
     };
 
-    // ✅ 3. UPDATE CHART DATA FOR AREA GRAPH
+    // ✅ 3. UPDATE CHART DATA FOR AREA GRAPH (guard maps against undefined)
     const chartData = {
-        labels: weeklySalesData.map(d => d.day),
+        labels: (weeklySalesData || []).map(d => d.day),
         datasets: [
             {
                 fill: true,
                 label: 'Total Sales',
-                data: weeklySalesData.map(d => d.totalSales),
+                data: (weeklySalesData || []).map(d => d.totalSales),
                 borderColor: '#00b0ff',
                 backgroundColor: (context) => {
                     const ctx = context.chart.ctx;
                     if (!ctx) return 'rgba(0, 176, 255, 0.1)';
                     const gradient = ctx.createLinearGradient(0, 0, 0, context.chart.height);
-                    gradient.addColorStop(0, 'rgba(0, 176, 255, 0.4)');      // Start color (slightly lighter alpha)
-                    gradient.addColorStop(0.6, 'rgba(0, 176, 255, 0.05)'); // Intermediate: very transparent by 60% down
-                    gradient.addColorStop(1, 'rgba(0, 176, 255, 0)');      // End color (fully transparent)
+                    gradient.addColorStop(0, 'rgba(0, 176, 255, 0.4)');
+                    gradient.addColorStop(0.6, 'rgba(0, 176, 255, 0.05)');
+                    gradient.addColorStop(1, 'rgba(0, 176, 255, 0)');
                     return gradient;
                 },
                 yAxisID: 'y',
@@ -205,15 +258,15 @@ const DashboardPage = ({ setSelectedPage }) => {
             {
                 fill: true,
                 label: 'Units Sold',
-                data: weeklySalesData.map(d => d.unitsSold),
+                data: (weeklySalesData || []).map(d => d.unitsSold),
                 borderColor: '#00bfa5',
                 backgroundColor: (context) => {
                     const ctx = context.chart.ctx;
                     if (!ctx) return 'rgba(0, 191, 165, 0.1)';
                     const gradient = ctx.createLinearGradient(0, 0, 0, context.chart.height);
-                    gradient.addColorStop(0, 'rgba(0, 191, 165, 0.4)');      // Start color (slightly lighter alpha)
-                    gradient.addColorStop(0.6, 'rgba(0, 191, 165, 0.05)'); // Intermediate: very transparent by 60% down
-                    gradient.addColorStop(1, 'rgba(0, 191, 165, 0)');      // End color (fully transparent)
+                    gradient.addColorStop(0, 'rgba(0, 191, 165, 0.4)');
+                    gradient.addColorStop(0.6, 'rgba(0, 191, 165, 0.05)');
+                    gradient.addColorStop(1, 'rgba(0, 191, 165, 0)');
                     return gradient;
                 },
                 yAxisID: 'y1',
@@ -222,7 +275,6 @@ const DashboardPage = ({ setSelectedPage }) => {
                 pointRadius: 2,
             },
         ],
-
     };
 
     // --- Chart Configurations --- (The rest of the file is unchanged)
@@ -235,14 +287,6 @@ const DashboardPage = ({ setSelectedPage }) => {
             y: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'Revenue (₹)' } },
             y1: { type: 'linear', display: true, position: 'right', title: { display: true, text: 'Units Sold' }, grid: { drawOnChartArea: false } },
         },
-    };
-
-    const lineChartData = {
-        labels: weeklySalesData.map(d => d.day),
-        datasets: [
-            { label: 'Total Sales', data: weeklySalesData.map(d => format(d.totalSales)), borderColor: '#00a6ff', yAxisID: 'y', tension: 0.4 },
-            { label: 'Units Sold', data: weeklySalesData.map(d => d.unitsSold), borderColor: '#ff0000', yAxisID: 'y1', tension: 0.4 },
-        ],
     };
 
     const percentageLabelPlugin = {
@@ -302,12 +346,11 @@ const DashboardPage = ({ setSelectedPage }) => {
                         label: `Actual`,
                         data: [actual],
                         backgroundColor: color,
-                        barThickness: 25, // thinner so estimated still visible
+                        barThickness: 25,
                         borderRadius: 38,
                         order: 2, // draw second
                     },
                 ],
-
             },
             plugins: [percentageLabelPlugin]
         };
@@ -316,13 +359,9 @@ const DashboardPage = ({ setSelectedPage }) => {
     const salesChart = createBarChartConfig('Sales', goalData.actualSales, goalData.estimatedSales);
     const profitChart = createBarChartConfig('Profit', goalData.actualProfit, goalData.estimatedProfit);
 
-
-
-
-    // 📌 Get JWT from localStorage
-
-    // 📌 Fetch Dashboard Details
+    // Fetch Dashboard Details
     useEffect(() => {
+        if (!apiUrl) return;
         fetch(`${apiUrl}/api/shop/get/dashboardDetails/${timeRange}`, {
             method: "GET",
             credentials: 'include',
@@ -337,12 +376,13 @@ const DashboardPage = ({ setSelectedPage }) => {
             .then((data) => setDashboardData(data))
             .catch((err) => {
                 console.error("Error fetching dashboardData:", err);
-                alert("Something went wrong while fetching dashboard details.");
+                // keep dashboardData as-is (empty) if fetch fails
             });
     }, [timeRange, apiUrl]);
 
-    // 📌 Fetch Sales
+    // Fetch Sales
     useEffect(() => {
+        if (!apiUrl) return;
         fetch(`${apiUrl}/api/shop/get/top/sales/${timeRange}`, {
             method: "GET",
             credentials: 'include',
@@ -357,18 +397,18 @@ const DashboardPage = ({ setSelectedPage }) => {
                 if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
                 return res.json();
             })
-            .then((data) => setSales(data))
+            .then((data) => setSales(Array.isArray(data) ? data : []))
             .catch((err) => {
                 console.error("Error fetching sales:", err);
-                alert("Something went wrong while fetching sales data.");
             });
     }, [timeRange, apiUrl]);
 
-    const recentSales = sales.slice(0, 3);
+    const recentSales = (sales || []).slice(0, 3);
 
     useEffect(() => {
         const fetchGoalData = async () => {
             try {
+                if (!apiUrl) throw new Error('No API URL');
                 const response = await fetch(`${apiUrl}/api/shop/get/dashboard/goals/${timeRange}`, {
                     method: "GET",
                     credentials: 'include',
@@ -378,15 +418,13 @@ const DashboardPage = ({ setSelectedPage }) => {
                 const data = await response.json();
                 setGoalData(data);
             } catch (error) {
-                console.error("Error fetching goal data:", error);
-
+                console.warn("Error fetching goal data:", error);
             }
         };
         if (apiUrl) fetchGoalData();
     }, [timeRange, apiUrl]);
 
-
-    // 📌 Add Customer
+    // Add Customer
     const handleAddCustomer = async (e) => {
         e.preventDefault();
         try {
@@ -412,7 +450,7 @@ const DashboardPage = ({ setSelectedPage }) => {
         setPhone("");
     };
 
-    // 📌 Add Product
+    // Add Product
     const handleAddProduct = async (e) => {
         e.preventDefault();
         try {
@@ -440,7 +478,7 @@ const DashboardPage = ({ setSelectedPage }) => {
         }
     };
 
-    // ✨ START: NEW API CALL LOGIC FOR TOP PRODUCTS
+    // Fetch Top Products
     useEffect(() => {
         const fetchTopProducts = async () => {
             setIsLoadingProducts(true);
@@ -451,6 +489,7 @@ const DashboardPage = ({ setSelectedPage }) => {
             });
 
             try {
+                if (!apiUrl) throw new Error('No API URL');
                 const response = await fetch(`${apiUrl}/api/shop/get/top/products?${params.toString()}`, {
                     method: 'GET',
                     credentials: 'include',
@@ -459,11 +498,10 @@ const DashboardPage = ({ setSelectedPage }) => {
                 if (!response.ok) throw new Error('Failed to fetch top products');
                 const data = await response.json();
                 console.log("The top products are --> ", data);
-
-                setTopProducts(data);
-
+                setTopProducts(Array.isArray(data) ? data : []);
             } catch (error) {
                 console.error("Error fetching top products:", error);
+                setTopProducts([]); // safe fallback
             } finally {
                 setIsLoadingProducts(false);
             }
@@ -473,11 +511,122 @@ const DashboardPage = ({ setSelectedPage }) => {
             fetchTopProducts();
         }
     }, [timeRange, productFactor, apiUrl]);
-    // ✨ END: NEW API CALL LOGIC
+
+    // --- NEW: Fetch Recent Orders (moved near Sales Performance)
+    useEffect(() => {
+        const fetchRecentOrders = async () => {
+            setIsLoadingRecentOrders(true);
+            try {
+                if (!apiUrl) throw new Error('No API URL');
+                const params = new URLSearchParams({ count: 4, timeRange });
+                const res = await fetch(`${apiUrl}/api/shop/get/top/orders?${params.toString()}`, {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                });
+                if (!res.ok) throw new Error('Failed to fetch recent orders');
+                const data = await res.json();
+                console.log("the top order fetched are ", data);
+                setRecentOrders(Array.isArray(data) ? data : mockRecentOrders);
+            } catch (err) {
+                console.warn('Using mock recent orders due to fetch error', err);
+                setRecentOrders(mockRecentOrders);
+            } finally {
+                setIsLoadingRecentOrders(false);
+            }
+        };
+
+        if (apiUrl) {
+            fetchRecentOrders();
+        } else {
+            // use mock if no apiUrl for local dev
+            setRecentOrders(mockRecentOrders);
+            setIsLoadingRecentOrders(false);
+        }
+    }, [timeRange, apiUrl]);
+
+    // --- RESPONSIVENESS: update charts when window size or layout changes (sidebar toggles)
+    useEffect(() => {
+        const resizeHandler = () => {
+            try {
+                lineChartRef.current?.chartInstance?.resize?.();
+            } catch (e) { /* ignore */ }
+            try {
+                barChartRef.current?.chartInstance?.resize?.();
+            } catch (e) { /* ignore */ }
+            try {
+                donutChartRef.current?.chartInstance?.resize?.();
+            } catch (e) { /* ignore */ }
+            // For react-chartjs-2 v4+, you can call .resize() on the chart's canvas chart instance.
+            if (lineChartRef.current?.resize) lineChartRef.current.resize();
+            if (barChartRef.current?.resize) barChartRef.current.resize();
+            if (donutChartRef.current?.resize) donutChartRef.current.resize();
+        };
+
+        window.addEventListener('resize', resizeHandler);
+
+        // Additionally observe body attribute/class changes (common for toggling sidebar)
+        const observer = new MutationObserver(() => {
+            resizeHandler();
+        });
+        observer.observe(document.body, { attributes: true, attributeFilter: ['class', 'style'] });
+
+        return () => {
+            window.removeEventListener('resize', resizeHandler);
+            observer.disconnect();
+        };
+    }, []);
+
+    // Payment Doughnut Data & Options (hollow + gradient-ish via background alpha variations)
+    const paymentLabels = ['Cash', 'Card', 'UPI'];
+    const paymentValues = paymentBreakdown ? [
+        paymentBreakdown.cash ?? 0,
+        paymentBreakdown.card ?? 0,
+        paymentBreakdown.upi ?? 0
+    ] : [0,0,0];
+
+    const totalPayments = paymentValues.reduce((s, v) => s + (Number(v) || 0), 0) || 1;
+
+    const donutData = {
+        labels: paymentLabels,
+        datasets: [{
+            label: 'Payments',
+            data: paymentValues,
+            // use rgba alpha variations to mimic gradient (Chart.js doesn't natively do radial gradients per slice easily)
+            backgroundColor: [
+                'rgb(0,170,255)',
+                'rgba(0,170,255,0.49)',
+                'rgba(0,170,255,0.19)'
+            ],
+            hoverOffset: 6,
+            borderWidth: 0,
+        }]
+    };
+
+    const donutOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '72%', // hollow
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: { color: document.body.classList.contains('dark-theme') ? '#c9d1d9' : '#333' }
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        const v = context.parsed ?? 0;
+                        const pct = ((v / totalPayments) * 100).toFixed(0);
+                        return `${context.label}: ${v} (${pct}%)`;
+                    }
+                }
+            }
+        }
+    };
 
     return (
         <div className="dashboard">
-            <h2>Dashboard</h2>
+            <h2 style={{marginBottom: "1.0rem"}}>Dashboard</h2>
 
             {/* Time Range Selector */}
             <div className="time-range-selector glass-card">
@@ -495,7 +644,6 @@ const DashboardPage = ({ setSelectedPage }) => {
                 </select>
             </div>
 
-            {/* Stats */}
             <div className="stats-grid">
                 <div className="stat-card glass-card" onClick={() => { if (setSelectedPage) setSelectedPage('payments'); else navigate('/payments');}} >
                     <FaChartLine className="icon revenue" />
@@ -527,135 +675,325 @@ const DashboardPage = ({ setSelectedPage }) => {
                 </div>
             </div>
 
-            {/* Shortcuts */}
-            <div className="dashboard-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-
-                <div className="goal-tracking glass-card">
+            {/* Two-column layout starting from quick-shortcuts level.
+                Now: goals | quick-shortcuts + payment donut (side-by-side)
+            */}
+            <div
+                style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 100px",
+                    gap: "1.5rem",
+                    alignItems: "start",
+                    marginTop: "1rem",
+                }}
+            >
+                <div>
+                    {/* === Row 1: Goals | Quick Shortcuts | Payment Type === */}
                     <div
-                        className="card-header"
+                        className="dashboard-row"
                         style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
+                            display: "grid",
+                            gridTemplateColumns: "40% 40% 25%",
+                            gap: "1.5rem",
+                            alignItems: "stretch",
                         }}
                     >
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                            <h3 style={{ margin: 0 }}>Goals</h3>
-                            {goalData.fromDate && goalData.toDate && (
-                                <span style={{ fontSize: "0.8rem", color: "#888" }}>
-                            ({goalData.fromDate} - {goalData.toDate})
-                          </span>
-                            )}
-                        </div>
-
-                        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                            <button
-                                className="btn small-btn"
-                                onClick={async () => {
-                                    if (isAdjusting) {
-                                        // Save changes on Done
-                                        await fetch(`${apiUrl}/api/shop/update/goals`, {
-                                            method: "POST",
-                                            credentials: "include",
-                                            headers: { "Content-Type": "application/json" },
-                                            body: JSON.stringify(goalData),
-                                        });
-                                    }
-                                    setIsAdjusting(!isAdjusting);
+                        {/* GOALS */}
+                        <div className="goal-tracking glass-card">
+                            <div
+                                className="card-header"
+                                style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
                                 }}
                             >
-                                {isAdjusting ? "Done" : "Adjust"}
-                            </button>
+                                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                    <h3 style={{ margin: 0 }}>Goals</h3>
+                                    {goalData.fromDate && goalData.toDate && (
+                                        <span style={{ fontSize: "0.8rem", color: "#888" }}>
+                ({goalData.fromDate} - {goalData.toDate})
+              </span>
+                                    )}
+                                </div>
+                                <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                                    <button
+                                        className="btn small-btn"
+                                        onClick={async () => {
+                                            if (isAdjusting) {
+                                                try {
+                                                    await fetch(`${apiUrl}/api/shop/update/goals`, {
+                                                        method: "POST",
+                                                        credentials: "include",
+                                                        headers: { "Content-Type": "application/json" },
+                                                        body: JSON.stringify(goalData),
+                                                    });
+                                                } catch (e) {
+                                                    console.warn("Failed to update goals", e);
+                                                }
+                                            }
+                                            setIsAdjusting(!isAdjusting);
+                                        }}
+                                    >
+                                        {isAdjusting ? "Done" : "Adjust"}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div style={{ height: "80px", margin: 0, padding: 0 }}>
+                                <Bar
+                                    ref={barChartRef}
+                                    options={salesChart.options}
+                                    data={salesChart.data}
+                                    plugins={salesChart.plugins}
+                                />
+                            </div>
+                        </div>
+
+                        {/* QUICK SHORTCUTS */}
+                        <div className="quick-shortcuts glass-card">
+                            <h3 className="card-header">Quick Shortcuts</h3>
+                            <div className="shortcuts-container">
+                                <button className="btn" onClick={() => { if (setSelectedPage) setSelectedPage('billing'); else navigate('/billing'); }}>New Sale</button>
+                                <button className="btn" onClick={() => setIsAddProdModalOpen(true)}>Add Product</button>
+                                <button className="btn" onClick={() => setIsNewCusModalOpen(true)}>New Customer</button>
+                            </div>
+                        </div>
+
+                        {/* PAYMENT TYPE DONUT */}
+                        <div
+                            className="glass-card"
+                            style={{
+                                padding: "12px",
+                                display: "flex",
+                                flexDirection: "column",
+                                justifyContent: "space-between",
+                            }}
+                        >
+                            <h3 className="card-header">Payment Type</h3>
+                            <div
+                                style={{
+                                    height: "120px",
+                                    width: "100%",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                }}
+                            >
+                                {isLoadingPayments || !paymentBreakdown ? (
+                                    <div style={{ textAlign: "center" }}>Loading...</div>
+                                ) : (
+                                    <div
+                                        style={{
+                                            height: "100%",
+                                            width: "100%",
+                                            maxWidth: "220px",
+                                        }}
+                                    >
+                                        <div
+                                            style={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                gap: "16px",
+                                            }}
+                                        >
+                                            {/* ✅ Custom Vertical Legend on the LEFT */}
+                                            <div
+                                                style={{
+                                                    display: "absolute",
+                                                    flexDirection: "column",
+                                                    alignItems: "flex-end",
+                                                    gap: "18px",
+                                                    fontSize: "0.85rem",
+                                                    minWidth: "60px",
+                                                }}
+                                            >
+                                                {[
+                                                    { label: "Cash", color: "rgb(0,170,255)" },
+                                                    { label: "Card", color: "rgba(0,170,255,0.49)" },
+                                                    { label: "UPI", color: "rgba(0,170,255,0.19)" },
+                                                ].map((item) => (
+                                                    <div key={item.label} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+        <span
+            style={{
+                width: "10px",
+                height: "10px",
+                backgroundColor: item.color,
+                borderRadius: "50%",
+                display: "inline-block",
+            }}
+        ></span>
+                                                        <span>{item.label}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+
+                                            {/* Donut Chart */}
+                                            <div
+                                                style={{
+                                                    width: "130px", // 👈 keeps the size small
+                                                    height: "130px",
+                                                    flexShrink: 0,
+                                                }}
+                                            >
+                                                <Doughnut
+                                                    ref={donutChartRef}
+                                                    data={donutData}
+                                                    options={{
+                                                        ...donutOptions,
+                                                        maintainAspectRatio: false,
+                                                        plugins: {
+                                                            legend: { display: false },
+                                                            tooltip: { enabled: true },
+                                                        },
+                                                        cutout: "70%",
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
 
-                    <div style={{ height: "80px", margin: 0, padding: 0 }}>
-                        <Bar
-                            options={salesChart.options}
-                            data={salesChart.data}
-                            plugins={salesChart.plugins}
-                        />
-                    </div>
-
-                </div>
-
-                <div className="quick-shortcuts glass-card">
-                    <h3 className="card-header">Quick Shortcuts</h3>
-                    <div className="shortcuts-container">
-                        <button className="btn" onClick={() => { if (setSelectedPage) setSelectedPage('billing'); else navigate('/billing'); }}>New Sale</button>
-                        <button className="btn" onClick={() => setIsAddProdModalOpen(true)}>Add Product</button>
-                        <button className="btn" onClick={() => setIsNewCusModalOpen(true)}>New Customer</button>
-                        <button className="btn" onClick={() => { if (setSelectedPage) setSelectedPage('reports'); else navigate('/reports'); }}>Report</button>
-                    </div>
-                </div>
-
-
-            </div>
-
-            {/* Recent Sales */}
-            {/* Sales and Analytics Section */}
-            <div className="sales-analytics-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                {/* ✨ START: REPLACED 'Top Sales' WITH 'Top Products' ✨ */}
-                <div className="top-products glass-card">
-                    <div className="card-header">
-                        <div className="toggle-buttons">
-                            <button
-                                className={`toggle-btn ${productFactor === 'mostSelling' ? 'active' : ''}`}
-                                onClick={() => setProductFactor('mostSelling')}
+                    {/* === Row 2: Top Products | Sales Performance | Recent Orders === */}
+                    <div
+                        className="dashboard-row"
+                        style={{
+                            display: "grid",
+                            gridTemplateColumns: "40% 40% 25%",
+                            gap: "1.5rem",
+                            marginTop: "1rem",
+                            alignItems: "start",
+                        }}
+                    >
+                        {/* TOP PRODUCTS */}
+                        <div className="top-products glass-card">
+                            <div
+                                className="card-header"
+                                style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                }}
                             >
-                                Most Selling
-                            </button>
-                            <button
-                                className={`toggle-btn ${productFactor === 'topGrossing' ? 'active' : ''}`}
-                                onClick={() => setProductFactor('topGrossing')}
-                            >
-                                Top Grossing
-                            </button>
+                                <div className="toggle-buttons">
+                                    <button
+                                        className={`toggle-btn ${
+                                            productFactor === "mostSelling" ? "active" : ""
+                                        }`}
+                                        onClick={() => setProductFactor("mostSelling")}
+                                    >
+                                        Most Selling
+                                    </button>
+                                    <button
+                                        className={`toggle-btn ${
+                                            productFactor === "topGrossing" ? "active" : ""
+                                        }`}
+                                        onClick={() => setProductFactor("topGrossing")}
+                                    >
+                                        Top Grossing
+                                    </button>
+                                </div>
+                                <h3>Top Products</h3>
+                            </div>
+
+                            <div className="table-container">
+                                {isLoadingProducts ? (
+                                    <p>Loading...</p>
+                                ) : (
+                                    <table className="data-table gradient-table">
+                                        <thead>
+                                        <tr>
+                                            <th>Product</th>
+                                            <th>Category</th>
+                                            <th>Units Sold</th>
+                                            <th>Revenue</th>
+                                            <th>Stock</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {(topProducts || []).map((product) => (
+                                            <tr key={product.productName || JSON.stringify(product)}>
+                                                <td>{product.productName}</td>
+                                                <td>{product.category}</td>
+                                                <td>{product.count}</td>
+                                                <td>
+                                                    ₹{(product.amount ?? 0).toLocaleString("en-IN")}
+                                                </td>
+                                                <td>{product.currentStock}</td>
+                                            </tr>
+                                        ))}
+                                        </tbody>
+                                    </table>
+                                )}
+                            </div>
                         </div>
 
-                        <h3>Top Products</h3>
-                    </div>
+                        {/* SALES PERFORMANCE */}
+                        <div className="weekly-sales-graph glass-card">
+                            <h3 className="card-header">Sales Performance</h3>
+                            <div className="chart-container" style={{ height: "250px" }}>
+                                <Line ref={lineChartRef} options={chartOptions} data={chartData} />
+                            </div>
+                        </div>
 
-
-                    <div className="table-container">
-                        {isLoadingProducts ? (
-                            <p>Loading...</p>
-                        ) : (
-                            <table className="data-table gradient-table">
-                                <thead>
-                                <tr>
-                                    <th>Product</th>
-                                    <th>Category</th>
-                                    <th>Units Sold</th>
-                                    <th>Revenue</th>
-                                    <th>Stock</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                {topProducts.map((product) => (
-                                    <tr key={product.productName}>
-                                        <td>{product.productName}</td>
-
-                                        <td>{product.category}</td>
-                                        <td>{product.count}</td>
-                                        <td>₹{product.amount.toLocaleString('en-IN')}</td>
-                                        <td>{product.currentStock}</td>
-                                    </tr>
-                                ))}
-                                </tbody>
-                            </table>
-                        )}
+                        {/* RECENT ORDERS */}
+                        <div
+                            className="glass-card"
+                            style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                padding: "12px",
+                            }}
+                        >
+                            <h3 className="card-header">Top Sales</h3>
+                            <div className="table-container" style={{ overflow: "auto" }}>
+                                {isLoadingRecentOrders ? (
+                                    <p>Loading...</p>
+                                ) : (
+                                    <table className="data-table small-table">
+                                        <thead>
+                                        <tr>
+                                            <th>OrderId</th>
+                                            <th>Amount</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {(recentOrders || [])
+                                            .slice(0, 6)
+                                            .map((o) => (
+                                                <tr key={o.orderId || `${o.customer}-${Math.random()}`}>
+                                                    <td>{o.orderId}</td>
+                                                    <td>₹{(o.total ?? 0).toLocaleString("en-IN")}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
-                {/* ✨ END: REPLACEMENT SECTION ✨ */}
-                {/* Weekly Sales Graph */}
-                <div className="weekly-sales-graph glass-card" onClick={() => { if (setSelectedPage) setSelectedPage('analytics'); else navigate('/analytics');}}>
-                    <h3 className="card-header">Sales Performance</h3>
-                    <div className="chart-container" style={{height: "250px"}}>
-                        <Line options={chartOptions} data={chartData} />
-                    </div>
+
+                {/* RIGHT SIDEBAR (empty for now) */}
+                <div
+                    style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "1rem",
+                        alignSelf: "start",
+                        height: "100%",
+                    }}
+                >
+                    <div style={{ minHeight: "1px" }} />
                 </div>
             </div>
+
+
             {/* Add Customer Modal */}
             {isNewCusModalOpen && (
                 <Modal title ="Add New Customer" show={isNewCusModalOpen} onClose={() => setIsNewCusModalOpen(false)}>
@@ -730,12 +1068,16 @@ const DashboardPage = ({ setSelectedPage }) => {
                         <button
                             className="btn"
                             onClick={async () => {
-                                await fetch(`${apiUrl}/api/shop/update/goals`, {
-                                    method: "POST",
-                                    credentials: "include",
-                                    headers: { "Content-Type": "application/json" },
-                                    body: JSON.stringify(goalData),
-                                });
+                                try {
+                                    await fetch(`${apiUrl}/api/shop/update/goals`, {
+                                        method: "POST",
+                                        credentials: "include",
+                                        headers: { "Content-Type": "application/json" },
+                                        body: JSON.stringify(goalData),
+                                    });
+                                } catch (e) {
+                                    console.warn('Failed to save goals', e);
+                                }
                                 setIsAdjusting(false);
                             }}
                         >
@@ -750,9 +1092,6 @@ const DashboardPage = ({ setSelectedPage }) => {
                     </div>
                 </div>
             </Modal>
-
-
-
 
             {/* Add Product Modal */}
             <Modal title="Add New Product" show={isAddProdModalOpen} onClose={() => setIsAddProdModalOpen(false)}>

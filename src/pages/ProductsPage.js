@@ -481,19 +481,49 @@ const ProductsPage = () => {
                         placeholder="Search products..."
                         className="search-bar"
                         value={searchTerm}
-                        style={{marginBottom: "0px"}}
+                        style={{ marginBottom: "0px" }}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
-                    <div className="actions-group-left" style={{marginLeft: "1px"}}>
+
+                    <div className="actions-group-left" style={{ marginLeft: "1px" }}>
                         <button type="button" className="btn" onClick={() => setIsModalOpen(true)}>Add Product</button>
                         <button type="button" className="btn" onClick={() => setIsCsvModalOpen(true)}>Upload CSV</button>
                         <button type="button" className="btn" onClick={handleExportCSV}>Export CSV</button>
                     </div>
 
                     <div ref={columnsRef} className="columns-dropdown-container">
-                        <button type="button" style ={{background: "white", color: "var(--primary-color)", border: "2px solid var(--primary-color)"}} onClick={() => setIsColumnsOpen(v => !v)} aria-expanded={isColumnsOpen} className="btn btn-outline">
-                            {columnsButtonLabel} ▾
-                        </button>
+            <span
+                role="button"
+                tabIndex={0}
+                onClick={() => setIsColumnsOpen(v => !v)}
+                onKeyDown={(e) => (e.key === 'Enter' ? setIsColumnsOpen(v => !v) : null)}
+                aria-expanded={isColumnsOpen}
+                style={{
+                    background: "white",
+                    color: "var(--primary-color)",
+                    border: "2px solid var(--primary-color)",
+                    borderRadius: "8px",
+                    padding: "8px 14px",
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    fontWeight: 500,
+                    transition: "all 0.3s ease",
+                    userSelect: "none",
+                    marginLeft: "auto", // pushes to the far right
+                }}
+                onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "var(--primary-color)";
+                    e.currentTarget.style.color = "white";
+                }}
+                onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "white";
+                    e.currentTarget.style.color = "var(--primary-color)";
+                }}
+            >
+                {columnsButtonLabel} ▾
+            </span>
+
                         {isColumnsOpen && (
                             <div className="columns-dropdown-menu">
                                 <div className="columns-list">
@@ -501,6 +531,7 @@ const ProductsPage = () => {
                                         <label key={col} className="column-item">
                                             <input
                                                 type="checkbox"
+                                                className="styled-checkbox"
                                                 checked={visibleColumns[col]}
                                                 onChange={() => toggleColumn(col)}
                                             />
@@ -508,9 +539,10 @@ const ProductsPage = () => {
                                         </label>
                                     ))}
                                 </div>
+
                                 <div className="columns-dropdown-footer">
-                                    <button type="button" onClick={() => setVisibleColumns(defaultVisibleColumns)}>Show All</button>
-                                    <button type="button" onClick={() => setIsColumnsOpen(false)}>Done</button>
+                                    <button type="button" className="btn small-btn" onClick={() => setVisibleColumns(defaultVisibleColumns)}>Show All</button>
+                                    <button type="button" className="btn small-btn" onClick={() => setIsColumnsOpen(false)}>Done</button>
                                 </div>
                             </div>
                         )}

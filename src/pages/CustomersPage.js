@@ -1,22 +1,16 @@
-import React, {useState, useEffect, useRef, useCallback, useContext} from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Modal from '../components/Modal';
 import './CustomersPage.css';
-import { FaEnvelope, FaPhone, FaMoneyBillWave, FaTrash } from 'react-icons/fa';
+import { FaEnvelope, FaPhone, FaMoneyBillWave, FaTrash, FaThLarge, FaList, FaCheckDouble } from 'react-icons/fa';
 import { useConfig } from "./ConfigProvider";
-import { authFetch } from "../utils/authFetch";
 import { useLocation } from 'react-router-dom';
 import { useSearchKey } from '../context/SearchKeyContext';
-
 
 const useDebounce = (value, delay) => {
     const [debouncedValue, setDebouncedValue] = useState(value);
     useEffect(() => {
-        const handler = setTimeout(() => {
-            setDebouncedValue(value);
-        }, delay);
-        return () => {
-            clearTimeout(handler);
-        };
+        const handler = setTimeout(() => setDebouncedValue(value), delay);
+        return () => clearTimeout(handler);
     }, [value, delay]);
     return debouncedValue;
 };
@@ -28,63 +22,51 @@ const CustomersPage = () => {
     const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("");
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const config = useConfig();
-    var apiUrl="";
-
-
-    // NEW: Pagination & Caching State
     const [isLoading, setIsLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
-    const [totalCustomers, setTotalCustomers] = useState(0);
-    const productsCache = useRef({}); // In-memory cache: { cacheKey: { data, totalPages, totalCount } }
-    const ITEMS_PER_PAGE = 12; // Or make this configurable
 
-    // NEW: Debounced search term to reduce API calls
+    const [viewMode, setViewMode] = useState(
+        () => localStorage.getItem('customerViewMode') || 'grid'
+    );
+
+    const [isSelectMode, setIsSelectMode] = useState(false);
+    const [selectedCustomers, setSelectedCustomers] = useState(new Set());
+
+
+    const config = useConfig();
+    const ITEMS_PER_PAGE = 12;
     const debouncedSearchTerm = useDebounce(searchTerm, 500);
     const location = useLocation();
     const { searchKey, setSearchKey } = useSearchKey();
 
+    const apiUrl = config ? config.API_URL : '';
+
     useEffect(() => {
-        return () => {
-            setSearchKey('');
-        };
+        localStorage.setItem('customerViewMode', viewMode);
+    }, [viewMode]);
+
+    useEffect(() => {
+        return () => setSearchKey('');
     }, [setSearchKey]);
 
-    if(config){
-        console.log(config.API_URL);
-        apiUrl=config.API_URL;
-    }
-
-    const fetchCustomers = useCallback(async () => {
+    const fetchCustomers = useCallback(async (page = 1) => {
         if (!apiUrl) return;
 
-
-
-
-        // 2. Fetch from API if not in cache
-       // setIsLoading(true);
+        setIsLoading(true);
         try {
             const url = new URL(`${apiUrl}/api/shop/get/cacheable/customersList`);
-            url.searchParams.append('page', currentPage);
+            url.searchParams.append('page', page);
             url.searchParams.append('limit', ITEMS_PER_PAGE);
-            console.log("Fetching customers with URL:", url.toString());
-            if (debouncedSearchTerm) {
-                url.searchParams.append('search', debouncedSearchTerm);
-            }
+            if (debouncedSearchTerm) url.searchParams.append('search', debouncedSearchTerm);
 
             const response = await fetch(url, { method: "GET", credentials: 'include' });
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
-            // Backend should return: { data: [], totalPages: N, totalCount: N }
             const result = await response.json();
-
-            // 3. Update state and cache
             setCustomers(result.data || []);
             setTotalPages(result.totalPages || 0);
-            setTotalCustomers(result.totalCount || 0);
-
-
+            setCurrentPage(page);
         } catch (error) {
             console.error("Error fetching customers:", error);
             alert("Something went wrong while fetching customers.");
@@ -92,70 +74,34 @@ const CustomersPage = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [apiUrl, currentPage, debouncedSearchTerm]);
+    }, [apiUrl, debouncedSearchTerm]);
 
-    // Fetch customers on load
     useEffect(() => {
-        fetchCustomers();
-    }, [fetchCustomers]);
+        fetchCustomers(currentPage);
+    }, [fetchCustomers, currentPage]);
 
-    // On mount, check for searchKey in query string
     useEffect(() => {
         const params = new URLSearchParams(location.search);
         const key = params.get('searchKey');
-        if (key) {
-            setSearchTerm(key);
-        }
+        if (key) setSearchTerm(key);
     }, [location.search]);
 
-    // Sync search bar with global search key
     useEffect(() => {
-        if (searchKey && searchKey !== searchTerm) {
-            setSearchTerm(searchKey);
-        }
+        if (searchKey && searchKey !== searchTerm) setSearchTerm(searchKey);
     }, [searchKey]);
-
-    /* const fetchCustomers = () => {
-         authFetch(apiUrl + "/api/shop/get/customersList", {
-             method: "GET",
-             credentials: 'include',
-             headers: {
-                 "Content-Type": "application/json"
-             }
-         })
-             .then((response) => {
-                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                 return response.json();
-             })
-             .then((data) => setCustomers(data))
-             .catch((error) => {
-                 console.error("Error fetching customers:", error);
-                 alert("Something went wrong while fetching customers.");
-             });
-     };*/
-
-
-    const filteredCustomers = customers.filter(c =>
-        c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
 
     const handleAddCustomer = async (e) => {
         e.preventDefault();
-
         try {
             const payload = { name, email, phone };
-            const response = await fetch(apiUrl+"/api/shop/create/customer", {
+            const response = await fetch(`${apiUrl}/api/shop/create/customer`, {
                 method: "POST",
                 credentials: 'include',
-                headers: {
-                    "Content-Type": "application/json"
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
             });
-
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            fetchCustomers();
+            fetchCustomers(1);
         } catch (error) {
             console.error("Error adding customer:", error);
             alert("Something went wrong while adding the customer.");
@@ -164,120 +110,158 @@ const CustomersPage = () => {
     };
 
     const handleDeleteCustomer = async (id) => {
-        if (!window.confirm("Are you sure you want to delete this customer?")) return;
-
         try {
-            const response = await fetch(
-                `${apiUrl}/api/shop/customer/delete/${id}`,
-                {
-                    method: "DELETE",
-                    credentials: 'include',
-                    headers: {
-                        "Content-Type": "application/json"
-                    }
-                }
-            );
-
+            const response = await fetch(`${apiUrl}/api/shop/customer/delete/${id}`, {
+                method: "DELETE",
+                credentials: 'include',
+                headers: { "Content-Type": "application/json" }
+            });
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
-            // Remove from state without refetching
-            setCustomers(prev => prev.filter(c => c.id !== id));
+            return { status: 'fulfilled', id };
         } catch (error) {
-            console.error("Error deleting customer:", error);
-            alert("Something went wrong while deleting the customer.");
+            console.error(`Error deleting customer ${id}:`, error);
+            alert(`Something went wrong while deleting customer ${id}.`);
+            return { status: 'rejected', id, error };
         }
     };
 
-    // NEW: Pagination Component
+    const handleToggleSelectMode = () => {
+        setIsSelectMode(!isSelectMode);
+        setSelectedCustomers(new Set());
+    };
+
+    const handleSelectCustomer = (customerId) => {
+        const newSelection = new Set(selectedCustomers);
+        if (newSelection.has(customerId)) {
+            newSelection.delete(customerId);
+        } else {
+            newSelection.add(customerId);
+        }
+        setSelectedCustomers(newSelection);
+    };
+
+    const handleBulkDelete = async () => {
+        if (selectedCustomers.size === 0) return;
+        if (!window.confirm(`Are you sure you want to delete ${selectedCustomers.size} customer(s)?`)) return;
+
+        const deletePromises = Array.from(selectedCustomers).map(id => handleDeleteCustomer(id));
+        await Promise.allSettled(deletePromises);
+
+        setSelectedCustomers(new Set());
+        setIsSelectMode(false);
+        fetchCustomers(1);
+    };
+
+
     const Pagination = () => {
         if (totalPages <= 1) return null;
-
-        const getPaginationItems = () => {
-            const items = [];
-            if (totalPages <= 5) {
-                for (let i = 1; i <= totalPages; i++) items.push(i);
-                return items;
-            }
-            items.push(1);
-            if (currentPage > 3) items.push('...');
-            if (currentPage > 2) items.push(currentPage - 1);
-            if (currentPage !== 1 && currentPage !== totalPages) items.push(currentPage);
-            if (currentPage < totalPages - 1) items.push(currentPage + 1);
-            if (currentPage < totalPages - 2) items.push('...');
-            items.push(totalPages);
-            return [...new Set(items)];
-        };
-
         return (
             <div className="pagination">
-
-                <div className="pagination-controls">
-                    <button onClick={() => setCurrentPage(p => p - 1)} disabled={currentPage === 1}>
-                        &laquo; Prev
-                    </button>
-                    {getPaginationItems().map((page, index) => (
-                        <button
-                            key={index}
-                            onClick={() => setCurrentPage(page)}
-                            className={currentPage === page ? 'active' : ''}
-                            disabled={page === '...'}
-                        >
-                            {page}
-                        </button>
-                    ))}
-                    <button onClick={() => setCurrentPage(p => p + 1)} disabled={currentPage === totalPages}>
-                        Next &raquo;
-                    </button>
-                </div>
+                <button onClick={() => setCurrentPage(p => p - 1)} disabled={currentPage === 1}>&laquo; Prev</button>
+                <span>Page {currentPage} of {totalPages}</span>
+                <button onClick={() => setCurrentPage(p => p + 1)} disabled={currentPage === totalPages}>Next &raquo;</button>
             </div>
         );
     };
 
     return (
         <div className="page-container">
-            <h2 style={{marginBottom:"70px"}}>Customers</h2>
+            <h2>Customers</h2>
             <div className="page-header">
-                <input
-                    type="text"
-                    placeholder="Search customers..."
-                    value={searchTerm}
-                    className="search-bar"
-                    style={{marginBottom:"20px"}}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <button className="btn"  style={{marginLeft:"350px"}} onClick={() => setIsModalOpen(true)}>Add Customer</button>
+                <div className="header-actions">
+                    {isSelectMode ? (
+                        <>
+                            <button className="btn btn-danger" onClick={handleBulkDelete} disabled={selectedCustomers.size === 0}>
+                                <FaTrash /> Delete ({selectedCustomers.size})
+                            </button>
+                            <button className="btn btn-secondary" onClick={handleToggleSelectMode}>Cancel</button>
+                        </>
+                    ) : (
+                        <>
+                            <input
+                                type="text"
+                                placeholder="Search customers..."
+                                value={searchTerm}
+                                className="search-bar"
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                            <div className="view-toggle-buttons">
+                                <button
+                                    className={`toggle-btn ${viewMode === 'grid' ? 'active' : ''}`}
+                                    onClick={() => setViewMode('grid')}
+                                    title="Grid View"
+                                >
+                                    <FaThLarge />
+                                </button>
+                                <button
+                                    className={`toggle-btn ${viewMode === 'table' ? 'active' : ''}`}
+                                    onClick={() => setViewMode('table')}
+                                    title="Table View"
+                                >
+                                    <FaList />
+                                </button>
+                            </div>
+                            <button className="btn btn-icon" onClick={handleToggleSelectMode} title="Select Multiple">
+                                <FaCheckDouble />
+                            </button>
+                            <button className="btn add-customer-btn" onClick={() => setIsModalOpen(true)}>New Customer</button>
+                        </>
+                    )}
+                </div>
+
             </div>
 
             <div className="glass-card">
-                <div className="customer-grid">
-                    {filteredCustomers.map(customer => (
-                        <div key={customer.id} className="customer-card">
-                            <h3>{customer.name}</h3>
-                            <p className="customer-info">
-                                <FaEnvelope className="icon" /> {customer.email}
-                            </p>
-                            <p className="customer-info spaced">
-                                <FaPhone className="icon" /> {customer.phone}
-                            </p>
-                            <p className="customer-info money">
-                                <FaMoneyBillWave className="icon" /> ₹{customer.totalSpent.toLocaleString()}
-                            </p>
-
-                            {/* Bin button */}
-
-
-                            <button
-                                className="delete-btn"
-                                onClick={() => handleDeleteCustomer(customer.id)}
-                            >
-                                <FaTrash />
-                            </button>
+                {isLoading ? <p style={{ textAlign: 'center', padding: '2rem' }}>Loading...</p> : (
+                    viewMode === 'grid' ? (
+                        <div className="customer-grid">
+                            {customers.map(customer => {
+                                const isSelected = selectedCustomers.has(customer.id);
+                                return (
+                                    <div key={customer.id} className={`customer-card ${isSelected ? 'selected' : ''}`} onClick={() => isSelectMode && handleSelectCustomer(customer.id)}>
+                                        {isSelectMode && <input type="checkbox"  className="styled-checkbox" checked={isSelected} readOnly />}
+                                        <h3>{customer.name}</h3>
+                                        <p className="customer-info"><FaEnvelope className="icon" /> {customer.email}</p>
+                                        <p className="customer-info spaced"><FaPhone className="icon" /> {customer.phone}</p>
+                                        <p className="customer-info money"><FaMoneyBillWave className="icon" /> ₹{customer.totalSpent?.toLocaleString('en-IN')}</p>
+                                    </div>
+                                );
+                            })}
                         </div>
-                    ))}
-                </div>
+                    ) : (
+                        <div className="table-container">
+                            <table className="data-table">
+                                <thead>
+                                <tr>
+                                    {isSelectMode && <th><input type="checkbox"  disabled /></th>}
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Total Spent</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {customers.map(customer => {
+                                    const isSelected = selectedCustomers.has(customer.id);
+                                    return (
+                                        <tr key={customer.id} className={isSelected ? 'selected' : ''} onClick={() => isSelectMode && handleSelectCustomer(customer.id)}>
+                                            {isSelectMode && <td><input type="checkbox" checked={isSelected} className="styled-checkbox" readOnly /></td>}
+                                            <td>{customer.name}</td>
+                                            <td>{customer.email}</td>
+                                            <td>{customer.phone}</td>
+                                            <td>₹{customer.totalSpent?.toLocaleString('en-IN')}</td>
+                                        </tr>
+                                    );
+                                })}
+                                </tbody>
+                            </table>
+                        </div>
+                    )
+                )}
             </div>
 
             <Pagination />
+
             <Modal title="Add New Customer" show={isModalOpen} onClose={() => setIsModalOpen(false)}>
                 <form onSubmit={handleAddCustomer}>
                     <div className="form-group">

@@ -203,8 +203,8 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage }) => {
                     <span
                         style={{
                             position: "absolute",
-                            top: "-4px",
-                            right: "-4px",
+                            top: "5px",
+                            right: "7px",
                             background: "#e80a0d",
                             color: "#fff",
                             borderRadius: "50%",
