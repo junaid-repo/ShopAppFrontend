@@ -109,7 +109,7 @@ body {
     max-width: 300px; /* optional: limit width */
     padding: 0.6rem 1.25rem;
     border: 1px solid rgba(39, 63, 107, 0.3); /* subtle border */
-    border-radius: 50px; /* fully rounded pill shape */
+    border-radius: 15px; /* fully rounded pill shape */
     background: var(--modal-bg, #ffffff);
 
     color: var(--text-color, #272f6b);
@@ -170,7 +170,7 @@ body {
 .btn {
     padding: 0.75rem 1.5rem;
     border-radius: 25px;
-    background: rgba(0, 170, 255, 0.12); /* faint glassy background */
+    background: rgba(0, 170, 255, 0.12) ; /* faint glassy background */
     border: 1px solid rgba(0, 170, 255, 0.3); /* visible faint border */
     backdrop-filter: blur(8px); /* frosted effect */
     -webkit-backdrop-filter: blur(8px);
@@ -181,6 +181,8 @@ body {
     transition: all 0.25s ease;
     box-shadow: 0 4px 12px rgba(0, 50, 100, 0.25); /* darker shadow for light bg */
 }
+
+
 
 .btn:hover:not(:disabled) {
     transform: translateY(-2px) scale(1.02);
@@ -864,7 +866,7 @@ body.dark-theme {
 
 .process-payment-btn:hover {
     /* slightly darker on hover; uses alpha overlay on primary */
-    background: linear-gradient(0deg, rgba(0,0,0,0.06), rgba(0,0,0,0.06)), var(--bp-primary);
+    background: linear-gradient(0deg, green, green), green;
 }
 
 /* ---------- Mini popup (small confirmations) ---------- */

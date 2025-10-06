@@ -3,7 +3,7 @@ import Modal from '../components/Modal';
 import './CustomersPage.css';
 import { FaEnvelope, FaPhone, FaMoneyBillWave, FaTrash, FaThLarge, FaList, FaCheckDouble } from 'react-icons/fa';
 import { useConfig } from "./ConfigProvider";
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useSearchKey } from '../context/SearchKeyContext';
 
 const useDebounce = (value, delay) => {
@@ -15,7 +15,7 @@ const useDebounce = (value, delay) => {
     return debouncedValue;
 };
 
-const CustomersPage = () => {
+const CustomersPage = ({ setSelectedPage }) => {
     const [customers, setCustomers] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [name, setName] = useState("");
@@ -29,7 +29,11 @@ const CustomersPage = () => {
     const [viewMode, setViewMode] = useState(
         () => localStorage.getItem('customerViewMode') || 'grid'
     );
-
+    const domainToRoute = {
+        products: 'products',
+        sales: 'sales',
+        customers: 'customers',
+    };
     const [isSelectMode, setIsSelectMode] = useState(false);
     const [selectedCustomers, setSelectedCustomers] = useState(new Set());
 
@@ -152,6 +156,15 @@ const CustomersPage = () => {
         fetchCustomers(1);
     };
 
+    const handleTakeAction = (customerName) => {
+        const route = domainToRoute['sales'];
+        if (!route) return;
+        setSearchKey(customerName);
+        if (setSelectedPage) {
+            setSelectedPage(route);
+        }
+    };
+
 
     const Pagination = () => {
         if (totalPages <= 1) return null;
@@ -218,7 +231,7 @@ const CustomersPage = () => {
                             {customers.map(customer => {
                                 const isSelected = selectedCustomers.has(customer.id);
                                 return (
-                                    <div key={customer.id} className={`customer-card ${isSelected ? 'selected' : ''}`} onClick={() => isSelectMode && handleSelectCustomer(customer.id)}>
+                                    <div key={customer.id}  className={`customer-card ${isSelected ? 'selected' : ''}`} onClick={() => isSelectMode ? handleSelectCustomer(customer.id) : handleTakeAction(customer.name)}>
                                         {isSelectMode && <input type="checkbox"  className="styled-checkbox" checked={isSelected} readOnly />}
                                         <h3>{customer.name}</h3>
                                         <p className="customer-info"><FaEnvelope className="icon" /> {customer.email}</p>
@@ -244,7 +257,7 @@ const CustomersPage = () => {
                                 {customers.map(customer => {
                                     const isSelected = selectedCustomers.has(customer.id);
                                     return (
-                                        <tr key={customer.id} className={isSelected ? 'selected' : ''} onClick={() => isSelectMode && handleSelectCustomer(customer.id)}>
+                                        <tr key={customer.id} className={isSelected ? 'selected' : ''} onClick={() => isSelectMode ? handleSelectCustomer(customer.id) : handleTakeAction(customer.name)}>
                                             {isSelectMode && <td><input type="checkbox" checked={isSelected} className="styled-checkbox" readOnly /></td>}
                                             <td>{customer.name}</td>
                                             <td>{customer.email}</td>
@@ -277,7 +290,7 @@ const CustomersPage = () => {
                         <input type="tel" required value={phone} onChange={(e) => setPhone(e.target.value)} />
                     </div>
                     <div className="form-actions">
-                        <button type="submit" className="btn">Add Customer</button>
+                        <button  className="btn add-customer-btn">Add Customer</button>
                     </div>
                 </form>
             </Modal>

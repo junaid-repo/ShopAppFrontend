@@ -20,6 +20,7 @@ import {
     Filler,
     ArcElement // for doughnut
 } from 'chart.js';
+import {useSearchKey} from "../context/SearchKeyContext";
 
 ChartJS.register(
     CategoryScale,
@@ -69,7 +70,7 @@ const mockPaymentBreakdown = {
 const DashboardPage = ({ setSelectedPage }) => {
     const [dashboardData, setDashboardData] = useState({});
     const [sales, setSales] = useState([]);
-    const [timeRange, setTimeRange] = useState('lastMonth');
+
     const [isNewCusModalOpen, setIsNewCusModalOpen] = useState(false);
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
@@ -114,6 +115,12 @@ const DashboardPage = ({ setSelectedPage }) => {
     const lineChartRef = useRef(null);
     const barChartRef = useRef(null);
     const donutChartRef = useRef(null);
+
+
+
+    const [timeRange, setTimeRange] = useState(
+        () => localStorage.getItem('selectedTimeRange') || 'lastMonth'
+    );
 
     /**
      * 📌 Fetches weekly sales data for the line graph.
@@ -176,6 +183,10 @@ const DashboardPage = ({ setSelectedPage }) => {
         // Fetch payments breakdown each time timeRange or apiUrl changes
         fetchPaymentBreakdown();
     }, [timeRange, apiUrl]);
+
+    useEffect(() => {
+        localStorage.setItem('selectedTimeRange', timeRange);
+    }, [timeRange]);
 
     // Helper function to format large numbers
     const formatLargeNumber = (value) => {
@@ -623,6 +634,28 @@ const DashboardPage = ({ setSelectedPage }) => {
             }
         }
     };
+    const domainToRoute = {
+        products: 'products',
+        sales: 'sales',
+        customers: 'customers',
+    };
+    const { searchKey, setSearchKey } = useSearchKey();
+    const handleTakeActionSales = (orderNumber) => {
+        const route = domainToRoute['sales'];
+        if (!route) return;
+        setSearchKey(orderNumber);
+        if (setSelectedPage) {
+            setSelectedPage(route);
+        }
+    };
+    const handleTakeActionProducts = (productName) => {
+        const route = domainToRoute['products'];
+        if (!route) return;
+        setSearchKey(productName);
+        if (setSelectedPage) {
+            setSelectedPage(route);
+        }
+    };
 
     return (
         <div className="dashboard">
@@ -768,9 +801,11 @@ const DashboardPage = ({ setSelectedPage }) => {
                                 display: "flex",
                                 flexDirection: "column",
                                 justifyContent: "space-between",
+                                cursor: "pointer"
                             }}
+                            onClick={() => { if (setSelectedPage) setSelectedPage('payments'); else navigate('/payments'); }}
                         >
-                            <h3 className="card-header">Payment Type</h3>
+                            <h3 className="card-header">Payment Types</h3>
                             <div
                                 style={{
                                     height: "120px",
@@ -910,21 +945,21 @@ const DashboardPage = ({ setSelectedPage }) => {
                                         <tr>
                                             <th>Product</th>
                                             <th>Category</th>
-                                            <th>Units Sold</th>
-                                            <th>Revenue</th>
                                             <th>Stock</th>
+                                            <th>Revenue</th>
+                                            <th>Units Sold</th>
                                         </tr>
                                         </thead>
                                         <tbody>
                                         {(topProducts || []).map((product) => (
-                                            <tr key={product.productName || JSON.stringify(product)}>
+                                            <tr key={product.productName || JSON.stringify(product)} onClick={() => handleTakeActionProducts(product.productName)}>
                                                 <td>{product.productName}</td>
                                                 <td>{product.category}</td>
-                                                <td>{product.count}</td>
+                                                <td>{product.currentStock}</td>
                                                 <td>
                                                     ₹{(product.amount ?? 0).toLocaleString("en-IN")}
                                                 </td>
-                                                <td>{product.currentStock}</td>
+                                                <td>{product.count}</td>
                                             </tr>
                                         ))}
                                         </tbody>
@@ -935,7 +970,7 @@ const DashboardPage = ({ setSelectedPage }) => {
 
                         {/* SALES PERFORMANCE */}
                         <div className="weekly-sales-graph glass-card">
-                            <h3 className="card-header">Sales Performance</h3>
+                            <h3 className="card-header"  onClick={() => { if (setSelectedPage) setSelectedPage('sales'); else navigate('/sales'); }}>Sales Performance</h3>
                             <div className="chart-container" style={{ height: "250px" }}>
                                 <Line ref={lineChartRef} options={chartOptions} data={chartData} />
                             </div>
@@ -966,7 +1001,7 @@ const DashboardPage = ({ setSelectedPage }) => {
                                         {(recentOrders || [])
                                             .slice(0, 6)
                                             .map((o) => (
-                                                <tr key={o.orderId || `${o.customer}-${Math.random()}`}>
+                                                <tr key={o.orderId || `${o.customer}-${Math.random()}`} onClick={() => handleTakeActionSales(o.orderId)}>
                                                     <td>{o.orderId}</td>
                                                     <td>₹{(o.total ?? 0).toLocaleString("en-IN")}</td>
                                                 </tr>

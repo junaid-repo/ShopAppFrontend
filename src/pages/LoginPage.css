@@ -293,9 +293,24 @@
         margin-top: 1.5rem;
     }
     .form-actions .btn {
-        width: 100%;
-        background-color: #00aaff;
-        color: #fff;
+        display: block; /* ✅ Make the button a block element */
+        margin-left: auto;   /* ✅ Set left margin to auto */
+        margin-right: auto;  /* ✅ Set right margin to auto */
+
+        /* --- Keep your other styles --- */
+        width: 80%;
+        padding: 0.75rem 1.5rem;
+        border-radius: 25px;
+        background: rgba(0, 170, 255, 0.12);
+        border: 1px solid rgba(0, 170, 255, 0.3);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        color: #003366;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        box-shadow: 0 4px 12px rgba(0, 50, 100, 0.25);
     }
 
     /* Responsive Design */

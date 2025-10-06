@@ -57,10 +57,6 @@ const ProductsPage = () => {
     const productsCache = useRef({}); // In-memory cache: { cacheKey: { data, totalPages, totalCount } }
     const ITEMS_PER_PAGE = 10; // Or make this configurable
 
-    // NEW: Backend-driven Sorting State
-    const [sortConfig, setSortConfig] = useState({ key: 'createdAt', direction: 'desc' });
-    // Whether the user has interacted with column sorting. Default sorting (createdAt/desc) shows no arrow.
-    const [hasSortActive, setHasSortActive] = useState(false);
 
     // NEW: Debounced search term to reduce API calls
     const debouncedSearchTerm = useDebounce(searchTerm, 500);
@@ -93,6 +89,41 @@ const ProductsPage = () => {
         document.addEventListener('mousedown', onClick);
         return () => document.removeEventListener('mousedown', onClick);
     }, []);
+
+    // ✅ --- START: PERSISTED SORT STATE ---
+
+    // 1. Define a constant for the localStorage key.
+    const SORT_STORAGE_KEY = 'products_sort_config_v1';
+
+    // 2. Initialize sortConfig state by reading from localStorage.
+    const [sortConfig, setSortConfig] = useState(() => {
+        try {
+            const saved = localStorage.getItem(SORT_STORAGE_KEY);
+            return saved ? JSON.parse(saved) : { key: 'createdAt', direction: 'desc' };
+        } catch (err) {
+            console.error("Failed to parse sort config from localStorage", err);
+            return { key: 'createdAt', direction: 'desc' };
+        }
+    });
+
+    // 3. Initialize hasSortActive based on the loaded sortConfig.
+    const [hasSortActive, setHasSortActive] = useState(() => {
+        try {
+            const saved = localStorage.getItem(SORT_STORAGE_KEY);
+            if (saved) {
+                const parsedConfig = JSON.parse(saved);
+                return parsedConfig.key !== 'createdAt';
+            }
+        } catch (err) { /* fall through */ }
+        return false;
+    });
+
+    // 4. Add a useEffect to save sortConfig whenever it changes.
+    useEffect(() => {
+        localStorage.setItem(SORT_STORAGE_KEY, JSON.stringify(sortConfig));
+    }, [sortConfig]);
+
+    // ✅ --- END: PERSISTED SORT STATE ---
 
 
     // --- API & DATA HANDLING ---
@@ -401,6 +432,24 @@ const ProductsPage = () => {
         }
     };
 
+
+
+    // Column Chooser State (already using localStorage, no changes needed here)
+
+
+    useEffect(() => {
+        localStorage.setItem(COLUMN_STORAGE_KEY, JSON.stringify(visibleColumns));
+    }, [visibleColumns]);
+
+    useEffect(() => {
+        const onClick = (e) => {
+            if (columnsRef.current && !columnsRef.current.contains(e.target)) {
+                setIsColumnsOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', onClick);
+        return () => document.removeEventListener('mousedown', onClick);
+    }, []);
     // UPDATED: Sort handler now just updates state
     const toggleSort = (key) => {
         setSortConfig(prev => ({
@@ -501,8 +550,8 @@ const ProductsPage = () => {
                 style={{
                     background: "white",
                     color: "var(--primary-color)",
-                    border: "2px solid var(--primary-color)",
-                    borderRadius: "8px",
+                    border: "2px solid var(--primary-color-light)",
+                    borderRadius: "18px",
                     padding: "8px 14px",
                     cursor: "pointer",
                     display: "inline-flex",
@@ -513,12 +562,10 @@ const ProductsPage = () => {
                     marginLeft: "auto", // pushes to the far right
                 }}
                 onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "var(--primary-color)";
-                    e.currentTarget.style.color = "white";
+                    e.currentTarget.style.background = "var(--primary-color-light)";
                 }}
                 onMouseLeave={(e) => {
                     e.currentTarget.style.background = "white";
-                    e.currentTarget.style.color = "var(--primary-color)";
                 }}
             >
                 {columnsButtonLabel} ▾

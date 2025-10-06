@@ -2,8 +2,9 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useConfig } from "./ConfigProvider";
 import { formatDate } from "../utils/formatDate";
+import {useSearchKey} from "../context/SearchKeyContext";
 
-const PaymentsPage = () => {
+const PaymentsPage = ({setSelectedPage}) => {
   const [payments, setPayments] = useState([]);
   // initialize searchTerm and paymentMode from localStorage if present
   const [searchTerm, setSearchTerm] = useState(() => {
@@ -24,7 +25,7 @@ const PaymentsPage = () => {
   const [itemsPerPage] = useState(10); // show 5 records per page
 
     const now = new Date();
-
+    const { searchKey, setSearchKey } = useSearchKey();
 // Default to last 7 days (including today)
     const defaultTo = now; // today
     const defaultFrom = new Date();
@@ -38,6 +39,11 @@ const PaymentsPage = () => {
         return `${yyyy}-${mm}-${dd}`;
     };
 
+    const domainToRoute = {
+        products: 'products',
+        sales: 'sales',
+        customers: 'customers',
+    };
 
     const config = useConfig();
   var apiUrl = "";
@@ -176,6 +182,15 @@ const PaymentsPage = () => {
     });
   }, [payments, searchTerm, fromDate, toDate, paymentMode]);
 
+    const handleTakeAction = (orderNumber) => {
+        const route = domainToRoute['sales'];
+        if (!route) return;
+        setSearchKey(orderNumber);
+        if (setSelectedPage) {
+            setSelectedPage(route);
+        }
+    };
+
   // compute totals and mode counts for the selected range
   const { totalAmount, modeCounts } = useMemo(() => {
     const counts = {};
@@ -308,7 +323,7 @@ const PaymentsPage = () => {
           <tbody>
             {currentPayments.length > 0 ? (
               currentPayments.map((payment) => (
-                <tr key={payment.id}>
+                <tr key={payment.id} onClick={() => handleTakeAction(payment.saleId)}>
                   <td>{payment.id}</td>
                   <td>{payment.saleId}</td>
                   <td>{formatDate(payment.date)}</td>
