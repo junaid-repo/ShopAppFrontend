@@ -384,7 +384,7 @@ const ReportsPage = () => {
       {/* Top section: filters and actions */}
       {/* Important: make overflow visible so the inline menu won't be clipped when not using portal,
           but we render via portal below so this is just defensive */}
-      <div className="glass-card" style={{ padding: '1rem', overflow: 'visible' }}>
+      <div className="glass-card" style={{ padding: '1rem', overflow: 'visible', boxShadow: "inset 0 -1px 0 rgba(0,0,0,0.06)", borderRadius: "25px", border: "2px solid var(--primary-color-light)"  }}>
         <form onSubmit={onGenerate}>
           <div
             className="generate-report-grid"
@@ -480,11 +480,11 @@ const ReportsPage = () => {
                 )}
               </div>
 
-              <div className="form-actions" style={{ alignSelf: 'end' }}>
+
                 <button type="submit" className="btn" disabled={!canGenerate}>
                   {isGenerating ? 'Generating…' : 'Generate report'}
                 </button>
-              </div>
+
             </div>
           </div>
 

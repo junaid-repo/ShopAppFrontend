@@ -18,6 +18,7 @@ import Notification from './pages/Notification';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useConfig } from "./pages/ConfigProvider";
 import {useSearchKey} from "./context/SearchKeyContext";
+import { Toaster } from 'react-hot-toast';
 const queryClient = new QueryClient();
 
 function App() {
@@ -201,6 +202,16 @@ function App() {
                     />
                 </Routes>
             </Router>
+            <Toaster
+                position="top-center"
+                toastOptions={{
+                    duration: 9000,
+                    style: {
+                        background: 'var(--primary-color-light)',
+                        color: 'var(--text-color)',
+                    },
+                }}
+            />
         </QueryClientProvider>
     );
 }

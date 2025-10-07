@@ -17,6 +17,9 @@
     --pagination-border: #ccc;
     --pagination-disabled-bg: #f2f2f2;
     --pagination-disabled-color: #999;
+    --error-bg: rgba(207, 50, 50, 0.39);
+    --error-message: #ff6b6b;
+    --error-color: #c80b0b;
     --bp-order-summary-bg: var(--modal-bg, #fff); /* global fallback for billing/order summary */
 }
 

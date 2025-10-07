@@ -1,6 +1,6 @@
 // src/pages/DashboardPage.js
 import React, { useState, useEffect, useRef } from 'react';
-import { FaRupeeSign, FaBoxes, FaBan, FaChartLine } from 'react-icons/fa';
+import {FaRupeeSign, FaBoxes, FaBan, FaChartLine, FaShoppingBasket} from 'react-icons/fa';
 import Modal from '../components/Modal';
 import './DashboardPage.css';
 import { useNavigate } from 'react-router-dom';
@@ -662,7 +662,7 @@ const DashboardPage = ({ setSelectedPage }) => {
             <h2 style={{marginBottom: "1.0rem"}}>Dashboard</h2>
 
             {/* Time Range Selector */}
-            <div className="time-range-selector glass-card">
+            <div className="time-range-selector glass-card" style={{ boxShadow: "inset 0 -1px 0 rgba(0,0,0,0.06)", borderRadius: "20px", border: "2px solid var(--primary-color-light)"} }>
                 <label htmlFor="timeRange">📅 </label>
                 <select
                     id="timeRange"
@@ -686,6 +686,13 @@ const DashboardPage = ({ setSelectedPage }) => {
                     </div>
                 </div>
                 <div className="stat-card glass-card" onClick={() => { if (setSelectedPage) setSelectedPage('sales'); else navigate('/sales');}}>
+                    <FaShoppingBasket className="icon sales" />
+                    <div>
+                        <p>Number of Sales</p>
+                        <h3>{dashboardData.countOfSales}</h3>
+                    </div>
+                </div>
+                <div className="stat-card glass-card" onClick={() => { if (setSelectedPage) setSelectedPage('sales'); else navigate('/sales');}}>
                     <FaBoxes className="icon units" />
                     <div>
                         <p>Total Units Sold</p>
@@ -706,6 +713,7 @@ const DashboardPage = ({ setSelectedPage }) => {
                         <h3>{dashboardData.outOfStockCount}</h3>
                     </div>
                 </div>
+
             </div>
 
             {/* Two-column layout starting from quick-shortcuts level.
@@ -970,7 +978,7 @@ const DashboardPage = ({ setSelectedPage }) => {
 
                         {/* SALES PERFORMANCE */}
                         <div className="weekly-sales-graph glass-card">
-                            <h3 className="card-header"  onClick={() => { if (setSelectedPage) setSelectedPage('sales'); else navigate('/sales'); }}>Sales Performance</h3>
+                            <h3 className="card-header"  onClick={() => { if (setSelectedPage) setSelectedPage('analytics'); else navigate('/analytics'); }}>Sales Performance</h3>
                             <div className="chart-container" style={{ height: "250px" }}>
                                 <Line ref={lineChartRef} options={chartOptions} data={chartData} />
                             </div>

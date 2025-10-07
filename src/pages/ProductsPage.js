@@ -37,6 +37,7 @@ const ProductsPage = () => {
 
     // Form State
     const [name, setName] = useState("");
+    const [hsn, setHsn] = useState("");
     const [category, setCategory] = useState("");
     const [price, setPrice] = useState("");
     const [costPrice, setCostPrice] = useState("");
@@ -65,7 +66,7 @@ const ProductsPage = () => {
     const COLUMN_STORAGE_KEY = 'products_visible_columns_v1';
     const columnsRef = useRef(null);
     const [isColumnsOpen, setIsColumnsOpen] = useState(false);
-    const defaultVisibleColumns = { id: true, name: true, category: true, costPrice: true, price: true, tax: true, stock: true, status: true, actions: true };
+    const defaultVisibleColumns = { id: true, name: true, category: true, hsn: true, costPrice: true, price: true, tax: true, stock: true, status: true, actions: true };
     const [visibleColumns, setVisibleColumns] = useState(() => {
         try {
             const saved = localStorage.getItem(COLUMN_STORAGE_KEY);
@@ -207,6 +208,7 @@ const ProductsPage = () => {
     const handleEditClick = (product) => {
         setSelectedProductId(product.id);
         setName(product.name);
+        setHsn(product.hsn);
         setCategory(product.category);
         setPrice(product.price);
         setCostPrice(product.costPrice || "");
@@ -217,6 +219,7 @@ const ProductsPage = () => {
 
     const resetForm = () => {
         setName("");
+        setHsn("");
         setCategory("");
         setPrice("");
         setStock("");
@@ -609,11 +612,18 @@ const ProductsPage = () => {
                                 Name {hasSortActive && sortConfig.key === 'name' ? (sortConfig.direction === 'asc' ? ' ▲' : ' ▼') : ''}
                             </th>
                         )}
+                        {visibleColumns.hsn && (
+                            <th style={{ cursor: 'pointer' }} onClick={() => toggleSort('hsn')}>
+                                HSN {hasSortActive && sortConfig.key === 'hsn' ? (sortConfig.direction === 'asc' ? ' ▲' : ' ▼') : ''}
+                            </th>
+                        )}
+
                         {visibleColumns.category && (
                             <th style={{ cursor: 'pointer' }} onClick={() => toggleSort('category')}>
                                 Category {hasSortActive && sortConfig.key === 'category' ? (sortConfig.direction === 'asc' ? ' ▲' : ' ▼') : ''}
                             </th>
                         )}
+
                         {visibleColumns.price && (
                             <th style={{ cursor: 'pointer' }} onClick={() => toggleSort('price')}>
                                 Cost Price {hasSortActive && sortConfig.key === 'price' ? (sortConfig.direction === 'asc' ? ' ▲' : ' ▼') : ''}
@@ -650,6 +660,7 @@ const ProductsPage = () => {
                         products.map(product => (
                             <tr key={product.id}>
                                 {visibleColumns.name && <td>{product.name}</td>}
+                                {visibleColumns.category && <td>{product.hsn}</td>}
                                 {visibleColumns.category && <td>{product.category}</td>}
                                 {visibleColumns.costPrice && <td>{product.costPrice != null ? `₹${Number(product.costPrice).toLocaleString()}` : '–'}</td>}
                                 {visibleColumns.price && <td>₹{product.price.toLocaleString()}</td>}
@@ -685,6 +696,8 @@ const ProductsPage = () => {
                 <form onSubmit={handleAddProduct}>
                     {/* Form groups for name, category, costPrice, price, stock, tax */}
                     <div className="form-group"><label>Product Name</label><input type="text" required value={name} onChange={e => setName(e.target.value)} /></div>
+                    <div className="form-group"><label>HSN</label><input type="text" required value={hsn} onChange={e => setHsn(e.target.value)} /></div>
+
                     <div className="form-group"><label>Category</label><select required value={category} onChange={e => setCategory(e.target.value)}><option value="">-- Select --</option><option>Smartphones</option><option>Laptops</option><option>Audio</option><option>Accessories</option><option>Others</option></select></div>
                     <div className="form-group"><label>Cost Price</label><input type="number" step="0.01" required value={costPrice} onChange={e => setCostPrice(e.target.value)} /></div>
                     <div className="form-group"><label>Selling Price</label><input type="number" step="0.01" required value={price} onChange={e => setPrice(e.target.value)} /></div>
@@ -698,6 +711,7 @@ const ProductsPage = () => {
                 <form onSubmit={handleUpdateProduct}>
                     {/* Form groups for name, category, costPrice, price, stock, tax */}
                     <div className="form-group"><label>Product Name</label><input type="text" required value={name} onChange={e => setName(e.target.value)} /></div>
+                    <div className="form-group"><label>HSN</label><input type="text" required value={hsn} onChange={e => setHsn(e.target.value)} /></div>
                     <div className="form-group"><label>Category</label><input type="text" required value={category} onChange={e => setCategory(e.target.value)} /></div>
                     <div className="form-group"><label>Cost Price</label><input type="number" step="0.01" required value={costPrice} onChange={e => setCostPrice(e.target.value)} /></div>
                     <div className="form-group"><label>Selling Price</label><input type="number" step="0.01" required value={price} onChange={e => setPrice(e.target.value)} /></div>

@@ -81,10 +81,10 @@ const PaymentsPage = ({setSelectedPage}) => {
         }
 
         const diffDays = Math.floor((to - from) / (1000 * 60 * 60 * 24));
-        if (diffDays > 7) {
-            alert("Date range cannot exceed 7 days. Adjusting the end date.");
+        if (diffDays > 31) {
+            alert("Date range cannot exceed 31 days. Adjusting the end date.");
             const newTo = new Date(from);
-            newTo.setDate(newTo.getDate() + 7);
+            newTo.setDate(newTo.getDate() + 31);
             setToDate(formatDateInput(newTo));
         }
     }, [fromDate, toDate]);

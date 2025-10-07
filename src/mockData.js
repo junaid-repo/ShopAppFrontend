@@ -1,11 +1,6 @@
 // src/mockData.js
 
-export const mockDashboardData = {
-    monthlyRevenue: 54560.75,
-    taxCollected: 6547.29,
-    totalUnitsSold: 1245,
-    outOfStockCount: 8,
-};
+
 
 export const mockProducts = [
     { id: 1, name: 'Wireless Mouse', category: 'Electronics', price: 799, stock: 56, status: 'In Stock' },

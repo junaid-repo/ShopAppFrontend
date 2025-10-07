@@ -5,6 +5,8 @@ import { FaEnvelope, FaPhone, FaMoneyBillWave, FaTrash, FaThLarge, FaList, FaChe
 import { useConfig } from "./ConfigProvider";
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useSearchKey } from '../context/SearchKeyContext';
+import { MdEdit, MdDelete } from "react-icons/md";
+import toast from 'react-hot-toast';
 
 const useDebounce = (value, delay) => {
     const [debouncedValue, setDebouncedValue] = useState(value);
@@ -36,6 +38,8 @@ const CustomersPage = ({ setSelectedPage }) => {
     };
     const [isSelectMode, setIsSelectMode] = useState(false);
     const [selectedCustomers, setSelectedCustomers] = useState(new Set());
+    // ✅ 2. Add state to track which customer is being deleted
+    const [deletingCustomerId, setDeletingCustomerId] = useState(null);
 
 
     const config = useConfig();
@@ -113,18 +117,41 @@ const CustomersPage = ({ setSelectedPage }) => {
         setIsModalOpen(false);
     };
 
-    const handleDeleteCustomer = async (id) => {
+    // ✅ 3. MODIFIED: The handleDeleteCustomer function
+    const handleDeleteCustomer = async (id, customerName) => {
+        // Find the customer to get their name for the toast message
+        const customerToDelete = customers.find(c => c.id === id);
+        if (!customerToDelete) return;
+
+        // Start the animation
+        setDeletingCustomerId(id);
+
         try {
             const response = await fetch(`${apiUrl}/api/shop/customer/delete/${id}`, {
                 method: "DELETE",
                 credentials: 'include',
-                headers: { "Content-Type": "application/json" }
             });
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            // Show success message
+            toast.success(`${customerName || 'Customer'} has been deleted.`);
+
+            // Wait for the animation to finish (500ms) before removing from state
+            setTimeout(() => {
+                setCustomers(prevCustomers => prevCustomers.filter(customer => customer.id !== id));
+                setDeletingCustomerId(null); // Reset animation state
+            }, 500);
+
             return { status: 'fulfilled', id };
+
         } catch (error) {
             console.error(`Error deleting customer ${id}:`, error);
-            alert(`Something went wrong while deleting customer ${id}.`);
+            toast.error(`Failed to delete ${customerName || 'customer'}.`);
+            // Reset animation state on failure
+            setDeletingCustomerId(null);
             return { status: 'rejected', id, error };
         }
     };
@@ -231,12 +258,21 @@ const CustomersPage = ({ setSelectedPage }) => {
                             {customers.map(customer => {
                                 const isSelected = selectedCustomers.has(customer.id);
                                 return (
-                                    <div key={customer.id}  className={`customer-card ${isSelected ? 'selected' : ''}`} onClick={() => isSelectMode ? handleSelectCustomer(customer.id) : handleTakeAction(customer.name)}>
+                                    <div
+                                        key={customer.id}
+                                        className={`customer-card ${isSelected ? 'selected' : ''} ${deletingCustomerId === customer.id ? 'deleting' : ''}`}
+                                        onClick={() => isSelectMode ? handleSelectCustomer(customer.id) : handleTakeAction(customer.name)}
+                                    >
                                         {isSelectMode && <input type="checkbox"  className="styled-checkbox" checked={isSelected} readOnly />}
                                         <h3>{customer.name}</h3>
                                         <p className="customer-info"><FaEnvelope className="icon" /> {customer.email}</p>
                                         <p className="customer-info spaced"><FaPhone className="icon" /> {customer.phone}</p>
                                         <p className="customer-info money"><FaMoneyBillWave className="icon" /> ₹{customer.totalSpent?.toLocaleString('en-IN')}</p>
+                                        <button className="delete-btn" onClick={(e) =>{e.stopPropagation();  handleDeleteCustomer(customer.id, customer.name)}}>
+                                            <MdDelete />
+                                        </button>
+
+
                                     </div>
                                 );
                             })}
@@ -251,19 +287,38 @@ const CustomersPage = ({ setSelectedPage }) => {
                                     <th>Email</th>
                                     <th>Phone</th>
                                     <th>Total Spent</th>
+                                    <th>Action</th>
                                 </tr>
                                 </thead>
                                 <tbody>
                                 {customers.map(customer => {
                                     const isSelected = selectedCustomers.has(customer.id);
                                     return (
-                                        <tr key={customer.id} className={isSelected ? 'selected' : ''} onClick={() => isSelectMode ? handleSelectCustomer(customer.id) : handleTakeAction(customer.name)}>
+                                        // ✅ 5. Add the 'deleting' class conditionally
+                                        <tr
+                                            key={customer.id}
+                                            className={`${isSelected ? 'selected' : ''} ${deletingCustomerId === customer.id ? 'deleting' : ''}`}
+                                            onClick={() => isSelectMode ? handleSelectCustomer(customer.id) : handleTakeAction(customer.name)}
+                                        >
                                             {isSelectMode && <td><input type="checkbox" checked={isSelected} className="styled-checkbox" readOnly /></td>}
                                             <td>{customer.name}</td>
                                             <td>{customer.email}</td>
                                             <td>{customer.phone}</td>
                                             <td>₹{customer.totalSpent?.toLocaleString('en-IN')}</td>
+                                            <td>
+                                                <div className="action-icons">
+                                                <span   onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDeleteCustomer(customer.id, customer.name);
+                                                }} className="action-icon delete">
+                                                    <MdDelete size={18} />
+                                                </span>
+                                                </div>
+
+                                            </td>
                                         </tr>
+
+
                                     );
                                 })}
                                 </tbody>
@@ -274,6 +329,9 @@ const CustomersPage = ({ setSelectedPage }) => {
             </div>
 
             <Pagination />
+
+
+
 
             <Modal title="Add New Customer" show={isModalOpen} onClose={() => setIsModalOpen(false)}>
                 <form onSubmit={handleAddCustomer}>

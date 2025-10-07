@@ -193,7 +193,7 @@ const Notification = ({ setSelectedPage }) => {
     return (
         <div className="page-container" style={{display:"flex", flexDirection:"column"}}>
             <h2 style={{ marginBottom: "20px" }}>Notifications</h2>
-            <div className="glass-card" style={{ marginBottom: "2rem", padding: "1rem", marginRight: "63rem" }}>
+            <div className="glass-card" style={{ marginBottom: "2rem", padding: "1rem", marginRight: "63rem", boxShadow: "inset 0 -1px 0 rgba(0,0,0,0.06)", borderRadius: "20px", border: "2px solid var(--primary-color-light)" }}>
                 <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
                     <label>
                         Filter Domain:
