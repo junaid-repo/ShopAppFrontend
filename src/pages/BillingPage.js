@@ -4,6 +4,8 @@ import Modal from '../components/Modal';
 import { FaPlus, FaTrash } from 'react-icons/fa';
 import '../index.css';
 import { useConfig } from "./ConfigProvider";
+import {getIndianStates} from "../utils/statesUtil";
+
 
 const BillingPage = () => {
     const {
@@ -26,11 +28,13 @@ const BillingPage = () => {
     const [phone, setPhone] = useState("");
     const [productSearchTerm, setProductSearchTerm] = useState("");
     const [sellingPrices, setSellingPrices] = useState({}); // <-- Selling Price state
-
+    const [customerState, setCustomerState] = useState("");
+    const [shopState, setShopState] = useState("");
     // pagination state
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalProducts, setTotalProducts] = useState(0);
+    const [city, setCity] = useState("");
     const pageSize = 10; // rows per page
     const [loading, setLoading] = useState(false);
     const [availableMethods, setAvailableMethods]= useState([]);
@@ -38,6 +42,8 @@ const BillingPage = () => {
     const displayedProducts = products;
 
     const [searchTerm, setSearchTerm] = useState('');
+
+    const statesList = getIndianStates();
 
     const config = useConfig();
     var apiUrl = "";
@@ -158,6 +164,27 @@ const BillingPage = () => {
             .catch(err => console.error("Error fetching products:", err));
     };
 
+    useEffect(() => {
+        const fetchShopDetails = async () => {
+            try {
+                const username = null; // assuming username stored in localStorage
+                const detailsRes = await fetch(`${apiUrl}/api/shop/user/get/userprofile/${username}`, {
+                    method: "GET",
+                    credentials: 'include',
+                    headers: { Accept: "application/json" },
+                });
+                if (detailsRes.ok) {
+                    const data = await detailsRes.json();
+                    setShopState(data?.shopState || '');
+                    setCustomerState(data?.shopState || '');
+                }
+            } catch (err) {
+                console.error("Error fetching shop details:", err);
+            }
+        };
+        fetchShopDetails();
+    }, [apiUrl]);
+
     // keep sellingPrices initialized for products that might come from context (preserve any user edits)
     useEffect(() => {
         setSellingPrices(prev => {
@@ -272,7 +299,7 @@ const BillingPage = () => {
     const handleAddCustomer = async (e) => {
         e.preventDefault();
 
-        const payload = { name, email, phone };
+        const payload = { name, email, phone, city, customerState };
 
         // DEBUG: Let's see what we are sending
         console.log("Attempting to create customer with payload:", payload);
@@ -1150,9 +1177,23 @@ const BillingPage = () => {
                         <label>Phone Number</label>
                         <input type="tel" required value={phone} onChange={(e) => setPhone(e.target.value)} />
                     </div>
+                    <div className="form-group">
+                        <label>State</label>
+                        <select value={customerState} onChange={(e) => setCustomerState(e.target.value)}>
+                            <option value="">Select State</option>
+                            {statesList.map((state, i) => (
+                                <option key={i} value={state}>{state}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="form-group">
+                        <label>City</label>
+                        <input type="tel" required value={city} onChange={(e) => setCity(e.target.value)} />
+                    </div>
                     <div className="form-actions">
                         <button type="submit" className="btn">Add & Select Customer</button>
                     </div>
+
                 </form>
             </Modal>
         </div>

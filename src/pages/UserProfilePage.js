@@ -362,6 +362,50 @@ const UserProfilePage = () => {
             console.error('IFSC lookup failed:', err);
         }
     };
+
+    const handlePincodeBlur = async () => {
+        const pincode = (formData.shopPincode || '').trim(); // or whichever field you’re using
+        if (!pincode) return;
+
+        try {
+            const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+            if (!res.ok) {
+                console.warn('Pincode lookup returned non-ok');
+                alert('Invalid Pincode or API error');
+                return;
+            }
+
+            const data = await res.json();
+
+            if (!data || !Array.isArray(data) || data.length === 0 || data[0].Status !== 'Success') {
+                alert('No details found for this Pincode');
+                return;
+            }
+
+            const postOffice = data[0].PostOffice && data[0].PostOffice[0];
+            if (!postOffice) {
+                alert('No post office details found for this Pincode');
+                return;
+            }
+
+            const stateFromApi = postOffice.State || '';
+            const districtFromApi = postOffice.District || '';
+            const countryFromApi = postOffice.Country || '';
+            const areaFromApi = postOffice.Name || '';
+
+            setFormData(prev => ({
+                ...prev,
+                shopState: stateFromApi,
+                shopCity: districtFromApi
+            }));
+        } catch (err) {
+            console.error('Pincode lookup failed:', err);
+            alert('Failed to fetch pincode details');
+        }
+    };
+
+
+
     // Custom hoverable button now using global .btn style
     const HoverButton = ({ onClick, disabled, children, className = '', hoverStyle }) => {
         const [hover, setHover] = useState(false);
@@ -409,7 +453,12 @@ const UserProfilePage = () => {
                     shopName: formData.shopName,
                     shopAddress: formData.shopAddress,
                     shopEmail: formData.shopEmail,
-                    shopPhone: formData.shopPhone
+                    shopPhone: formData.shopPhone,
+                    shopSlogan: formData.shopSlogan,
+                    shopPincode: formData.shopPincode,
+                    shopCity: formData.shopCity,
+                    shopState: formData.shopState
+
                 };
 
                 const resp = await fetch(`${apiUrl}/api/shop/user/edit/details/basic`, {
@@ -612,6 +661,22 @@ const UserProfilePage = () => {
                             <div className="form-group">
                                 <label>Address</label>
                                 <input type="text" value={formData.shopAddress || ''} disabled={!sectionEdit.basic} onChange={e => setFormData({ ...formData, shopAddress: e.target.value })} />
+                            </div>
+                            <div className="form-group">
+                                <label>Pincode</label>
+                                <input type="text" value={formData.shopPincode || ''} disabled={!sectionEdit.basic} onChange={e => setFormData({ ...formData, shopPincode: e.target.value })} onBlur={handlePincodeBlur} />
+                            </div>
+                            <div className="form-group">
+                                <label>City</label>
+                                <input type="text" value={formData.shopCity || ''} disabled={!sectionEdit.basic} onChange={e => setFormData({ ...formData, shopCity: e.target.value })} />
+                            </div>
+                            <div className="form-group">
+                                <label>State</label>
+                                <input type="text" value={formData.shopState || ''} disabled={!sectionEdit.basic} onChange={e => setFormData({ ...formData, shopState: e.target.value })} />
+                            </div>
+                            <div className="form-group">
+                                <label>Shop Slogan</label>
+                                <input type="text" value={formData.shopSlogan || ''} disabled={!sectionEdit.basic} onChange={e => setFormData({ ...formData, shopSlogan: e.target.value })} />
                             </div>
                             <div className="form-group">
                                 <label>Email</label>

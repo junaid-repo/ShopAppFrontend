@@ -6,6 +6,7 @@ import { useConfig } from "./ConfigProvider";
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useSearchKey } from '../context/SearchKeyContext';
 import { MdEdit, MdDelete } from "react-icons/md";
+import { getIndianStates } from '../utils/statesUtil';
 import toast from 'react-hot-toast';
 
 const useDebounce = (value, delay) => {
@@ -23,11 +24,14 @@ const CustomersPage = ({ setSelectedPage }) => {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("");
+    const [state, setState] = useState("");
+    const [city, setCity] = useState("");
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
-
+    const [customerState, setCustomerState] = useState("");
+    const [shopState, setShopState] = useState("");
     const [viewMode, setViewMode] = useState(
         () => localStorage.getItem('customerViewMode') || 'grid'
     );
@@ -40,6 +44,7 @@ const CustomersPage = ({ setSelectedPage }) => {
     const [selectedCustomers, setSelectedCustomers] = useState(new Set());
     // ✅ 2. Add state to track which customer is being deleted
     const [deletingCustomerId, setDeletingCustomerId] = useState(null);
+    const statesList = getIndianStates();
 
 
     const config = useConfig();
@@ -98,10 +103,32 @@ const CustomersPage = ({ setSelectedPage }) => {
         if (searchKey && searchKey !== searchTerm) setSearchTerm(searchKey);
     }, [searchKey]);
 
+    useEffect(() => {
+        const fetchShopDetails = async () => {
+            try {
+                const username = null; // assuming username stored in localStorage
+                const detailsRes = await fetch(`${apiUrl}/api/shop/user/get/userprofile/${username}`, {
+                    method: "GET",
+                    credentials: 'include',
+                    headers: { Accept: "application/json" },
+                });
+                if (detailsRes.ok) {
+                    const data = await detailsRes.json();
+                    setShopState(data?.shopState || '');
+                    setCustomerState(data?.shopState || '');
+                }
+            } catch (err) {
+                console.error("Error fetching shop details:", err);
+            }
+        };
+        fetchShopDetails();
+    }, [apiUrl]);
+
     const handleAddCustomer = async (e) => {
         e.preventDefault();
         try {
-            const payload = { name, email, phone };
+            const payload = { name, email, phone, city,  customerState};
+            alert(customerState);
             const response = await fetch(`${apiUrl}/api/shop/create/customer`, {
                 method: "POST",
                 credentials: 'include',
@@ -265,6 +292,8 @@ const CustomersPage = ({ setSelectedPage }) => {
                                     >
                                         {isSelectMode && <input type="checkbox"  className="styled-checkbox" checked={isSelected} readOnly />}
                                         <h3>{customer.name}</h3>
+                                        <h4>{customer.state}</h4>
+                                        <h4>{customer.city}</h4>
                                         <p className="customer-info"><FaEnvelope className="icon" /> {customer.email}</p>
                                         <p className="customer-info spaced"><FaPhone className="icon" /> {customer.phone}</p>
                                         <p className="customer-info money"><FaMoneyBillWave className="icon" /> ₹{customer.totalSpent?.toLocaleString('en-IN')}</p>
@@ -286,6 +315,8 @@ const CustomersPage = ({ setSelectedPage }) => {
                                     <th>Name</th>
                                     <th>Email</th>
                                     <th>Phone</th>
+                                    <th>State</th>
+                                    <th>City</th>
                                     <th>Total Spent</th>
                                     <th>Action</th>
                                 </tr>
@@ -304,6 +335,8 @@ const CustomersPage = ({ setSelectedPage }) => {
                                             <td>{customer.name}</td>
                                             <td>{customer.email}</td>
                                             <td>{customer.phone}</td>
+                                            <td>{customer.state}</td>
+                                            <td>{customer.city}</td>
                                             <td>₹{customer.totalSpent?.toLocaleString('en-IN')}</td>
                                             <td>
                                                 <div className="action-icons">
@@ -346,6 +379,19 @@ const CustomersPage = ({ setSelectedPage }) => {
                     <div className="form-group">
                         <label>Phone Number</label>
                         <input type="tel" required value={phone} onChange={(e) => setPhone(e.target.value)} />
+                    </div>
+                    <div className="form-group">
+                        <label>State</label>
+                        <select value={customerState} onChange={(e) => setCustomerState(e.target.value)}>
+                            <option value="">Select State</option>
+                            {statesList.map((state, i) => (
+                                <option key={i} value={state}>{state}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="form-group">
+                        <label>City</label>
+                        <input type="text" required value={city} onChange={(e) => setCity(e.target.value)} />
                     </div>
                     <div className="form-actions">
                         <button  className="btn add-customer-btn">Add Customer</button>

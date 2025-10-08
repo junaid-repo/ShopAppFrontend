@@ -214,6 +214,7 @@ const ProductsPage = () => {
         setCostPrice(product.costPrice || "");
         setStock(product.stock);
         setTax(product.tax);
+        setHsn(product.hsn);
         setIsUpdateModalOpen(true);
     };
 
@@ -227,7 +228,10 @@ const ProductsPage = () => {
         setCostPrice("");
         setSelectedProductId(null);
     };
-
+    const handleCloseUpdateModal = () => {
+        setIsUpdateModalOpen(false); // This closes the modal
+        resetForm();               // This clears the form fields
+    };
     // UPDATED: CUD operations now invalidate the cache
     const handleAddProduct = async (e) => {
         e.preventDefault();
@@ -252,7 +256,7 @@ const ProductsPage = () => {
     const handleUpdateProduct = async (e) => {
         e.preventDefault();
         try {
-            const payload = { selectedProductId, name, category, price, costPrice, stock, tax };
+            const payload = { selectedProductId, name, category, price, costPrice, stock, tax, hsn };
             const response = await fetch(`${apiUrl}/api/shop/update/product`, {
                 method: "PUT",
                 credentials: 'include',
@@ -707,7 +711,7 @@ const ProductsPage = () => {
                 </form>
             </Modal>
 
-            <Modal title="Update Product" show={isUpdateModalOpen} onClose={() => setIsUpdateModalOpen(false)}>
+            <Modal title="Update Product" show={isUpdateModalOpen} onClose={handleCloseUpdateModal}>
                 <form onSubmit={handleUpdateProduct}>
                     {/* Form groups for name, category, costPrice, price, stock, tax */}
                     <div className="form-group"><label>Product Name</label><input type="text" required value={name} onChange={e => setName(e.target.value)} /></div>
