@@ -40,7 +40,7 @@ const BillingPage = () => {
     const [paidAmount, setPaidAmount] = useState(0);
     const [loading, setLoading] = useState(false);
     const [availableMethods, setAvailableMethods] = useState([]);
-
+    const [notification, setNotification] = useState(null);
     // --- State for New Customer Modal ---
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
@@ -105,6 +105,7 @@ const BillingPage = () => {
                     const data = await detailsRes.json();
                     console.log("The shop detail are ", data);
                     setShopState(data?.shopState || '');
+                    setCustomerState(data?.shopState || '');
                 }
             } catch (err) {
                 console.error("Error fetching shop details:", err);
@@ -112,6 +113,47 @@ const BillingPage = () => {
         };
         fetchShopDetails();
     }, [apiUrl]);
+
+
+    // --- Sanity Check API Call on Page Load ---
+    useEffect(() => {
+        if (!apiUrl) return;
+
+        const runSanityCheck = async () => {
+            try {
+                // NOTE: Replace with your actual sanity check endpoint
+                const response = await fetch(`${apiUrl}/api/shop/gstBilling/sanityCheck`, {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                });
+                if (!response.ok) return; // Don't show an error if the API itself fails
+
+                const data = await response.json();
+
+                // Only show a notification if the check is NOT successful
+                if (data && data.success === false) {
+                    setNotification({ type: data.type, message: data.message });
+                }
+            } catch (error) {
+                console.error("Sanity check API failed:", error);
+            }
+        };
+
+        runSanityCheck();
+    }, [apiUrl]); // Runs once when the component mounts and apiUrl is available
+
+// --- Timer to automatically dismiss the notification ---
+    useEffect(() => {
+        if (notification) {
+            const timer = setTimeout(() => {
+                setNotification(null); // Hide notification after 5 seconds
+            }, 5000);
+
+            // Cleanup the timer if the component unmounts
+            return () => clearTimeout(timer);
+        }
+    }, [notification]);
 
     // --- NEW: Product Search API Call ---
     const fetchProductsFromAPI = useCallback((q = '') => {
@@ -434,6 +476,26 @@ const BillingPage = () => {
     // --- Render ---
     return (
         <div className="billing-page">
+
+            {notification && (
+                <div style={{
+                    padding: '1rem',
+                    color: '#fff',
+                    textAlign: 'center',
+                    fontWeight: 500,
+                    position: 'sticky',
+                    top: 0,
+                    width: '80%',
+                    zIndex: 1050,
+                    borderRadius: '20px',
+                    // Background color changes based on notification type
+                    backgroundColor: notification.type === 'error' ? '#d9534f' : '#f0ad4e',
+                    boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
+                }}>
+                    <strong>{notification.type.toUpperCase()}: </strong>
+                    {notification.message}
+                </div>
+            )}
             {/* Page Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h2>Billing</h2>
@@ -551,7 +613,7 @@ const BillingPage = () => {
                                                         <span>{totalTaxAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
 
                                                         {(() => {
-                                                            const labelStyle = { fontSize: '0.8em', color: '#777', display: 'block', marginTop: '2px' };
+                                                            const labelStyle = { fontSize: '0.8em', color: "var(--tiny-text-color)", fontStyle: "italic", display: 'block', marginTop: '2px', marginLeft: '10px' };
 
                                                             // Check if customer and shop state are available
                                                             if (selectedCustomer && shopState) {
@@ -610,7 +672,7 @@ const BillingPage = () => {
                         {/* --- ADD THIS NEW DIV FOR THE TAX BREAKDOWN --- */}
                         <div className="tax-breakdown" style={{ fontSize: '0.85em', color: '#666', borderLeft: '2px solid var(--border-color)', paddingLeft: '10px', marginLeft: '5px' }}>
                             {Object.entries(groupedTaxes).map(([key, value]) => (
-                                <p key={key} style={{ margin: '2px 0', display: 'flex', justifyContent: 'space-between' }}>
+                                <p key={key} style={{ margin: '2px 0', color: "var(--tiny-text-color)", display: 'flex', justifyContent: 'space-between' }}>
                                     <span>{key}:</span>
                                     <span>₹{value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                 </p>

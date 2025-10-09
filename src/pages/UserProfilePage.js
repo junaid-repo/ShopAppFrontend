@@ -106,7 +106,7 @@ const UserProfilePage = () => {
                 });
                 if (!detailsRes.ok) throw new Error(`User details fetch failed (${detailsRes.status})`);
                 const details = await detailsRes.json();
-
+                console.log("The full profile details from backend ", details);
                 // set state from API
                 setUser(details);
                 setFormData(details);
@@ -587,38 +587,7 @@ const UserProfilePage = () => {
                                 </div>
                             </div>
 
-                            <div className="column">
-                                <div className="form-group">
-                                    <label>Shop Name</label>
-                                    <input type="text" value={formData.shopName || ''} disabled={!isEditing} onChange={e => setFormData({ ...formData, shopName: e.target.value })} className={errors.shopName ? 'error' : ''} />
-                                    {errors.shopName && <div className="error-message">{errors.shopName}</div>}
-                                </div>
-                                <div className="form-group">
-                                    <label>Shop Owner</label>
-                                    <input type="text" value={formData.shopOwner || ''} disabled={!isEditing} onChange={e => setFormData({ ...formData, shopOwner: e.target.value })} className={errors.shopOwner ? 'error' : ''} />
-                                    {errors.shopOwner && <div className="error-message">{errors.shopOwner}</div>}
-                                </div>
-                                <div className="form-group">
-                                    <label>Shop Email</label>
-                                    <input type="text" value={formData.shopEmail || ''} disabled={!isEditing} onChange={e => setFormData({ ...formData, shopEmail: e.target.value })} className={errors.shopEmail ? 'error' : ''} />
-                                    {errors.shopEmail && <div className="error-message">{errors.shopEmail}</div>}
-                                </div>
-                                <div className="form-group">
-                                    <label>Shop Phone</label>
-                                    <input type="number" value={formData.shopPhone || ''} disabled={!isEditing} onChange={e => setFormData({ ...formData, shopPhone: e.target.value })} className={errors.shopPhone ? 'error' : ''} />
-                                    {errors.shopPhone && <div className="error-message">{errors.shopPhone}</div>}
-                                </div>
-                                <div className="form-group">
-                                    <label>Shop Location</label>
-                                    <input type="text" value={formData.shopLocation || ''} disabled={!isEditing} onChange={e => setFormData({ ...formData, shopLocation: e.target.value })} className={errors.shopLocation ? 'error' : ''} />
-                                    {errors.shopLocation && <div className="error-message">{errors.shopLocation}</div>}
-                                </div>
-                                <div className="form-group">
-                                    <label>GST Number</label>
-                                    <input type="text" value={formData.gstNumber || formData.gstin || ''} disabled={!isEditing} onChange={e => setFormData({ ...formData, gstNumber: e.target.value })} className={errors.gstNumber ? 'error' : ''} />
-                                    {errors.gstNumber && <div className="error-message">{errors.gstNumber}</div>}
-                                </div>
-                            </div>
+
                         </div>
 
                         <div className="button-row">
@@ -776,9 +745,21 @@ const UserProfilePage = () => {
         </span>
                                 </label>
                                 <textarea
+
                                     value={formData.terms1 || ''}
                                     disabled={!sectionEdit.others}
                                     onChange={e => setFormData({ ...formData, terms1: e.target.value })}
+                                    style={{
+                                        width: '100%',
+                                        minHeight: '60px',
+                                        padding: '10px',
+                                        borderRadius: '15px',
+                                        border: '1px solid var(--border-color)',
+                                        background: 'var(--glass-bg)',
+                                        resize: 'vertical',
+                                        fontSize: '1rem',
+                                        color: 'var(--text-color)'
+                                    }}
                                 />
                             </div>
 

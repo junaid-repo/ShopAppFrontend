@@ -15,6 +15,7 @@
     --table-hover-bg: rgba(224, 247, 255, 0.5);
     --pagination-bg: #fff;
     --pagination-border: #ccc;
+    --tiny-text-color: #9d9898;
     --pagination-disabled-bg: #f2f2f2;
     --pagination-disabled-color: #999;
     --error-bg: rgba(207, 50, 50, 0.39);
@@ -37,6 +38,7 @@ body.dark-theme {
     --input-bg: #0d1117;
     --input-border: var(--border-color);
     --table-hover-bg: rgba(0, 170, 255, 0.1);
+    --tiny-text-color: #bfb6b6;
     --pagination-bg: #21262d;
     --pagination-border: var(--border-color);
     --pagination-disabled-bg: #161b22;

@@ -120,10 +120,10 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar, selectedPage, setSelected
                     <span className="nav-text">Sales</span>
                 </button>
 
-                <button type="button" onClick={makeClickHandler('billing')} className={`nav-link ${selectedPage === 'billing' ? 'active' : ''}`} title="Billing" style={buttonStyleFor('billing')}>
+              {/*  <button type="button" onClick={makeClickHandler('billing')} className={`nav-link ${selectedPage === 'billing' ? 'active' : ''}`} title="Billing" style={buttonStyleFor('billing')}>
                     <Receipt weight="duotone" style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'billing' ? 'var(--text-color)' : collapsedIconColor) : iconColors.billing) }} />
                     <span className="nav-text">Billing</span>
-                </button>
+                </button>*/}
                 <button type="button" onClick={makeClickHandler('billing2')} className={`nav-link ${selectedPage === 'billing2' ? 'active' : ''}`} title="GSTBilling" style={buttonStyleFor('billing2')}>
                     <Receipt weight="duotone" style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'billing2' ? 'var(--text-color)' : collapsedIconColor) : iconColors.billing) }} />
                     <span className="nav-text">GSTBilling</span>
