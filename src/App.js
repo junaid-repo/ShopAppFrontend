@@ -8,6 +8,7 @@ import SalesPage from './pages/SalesPage';
 import CustomersPage from './pages/CustomersPage';
 import PaymentsPage from './pages/PaymentsPage';
 import BillingPage from './pages/BillingPage';
+import BillingPage2 from './pages/BillingPage2';
 import ReportsPage from './pages/ReportsPage';
 import UserProfilePage from './pages/UserProfilePage';
 import AnalyticsPage from './pages/AnalyticsPage';
@@ -164,6 +165,7 @@ function App() {
         customers: <CustomersPage setSelectedPage={setSelectedPage} />,
         payments: <PaymentsPage setSelectedPage={setSelectedPage} />,
         billing: <BillingPage setSelectedPage={setSelectedPage} />,
+        billing2: <BillingPage2 setSelectedPage={setSelectedPage} />,
         reports: <ReportsPage setSelectedPage={setSelectedPage} />,
         profile: <UserProfilePage setSelectedPage={setSelectedPage} />,
         analytics: <AnalyticsPage setSelectedPage={setSelectedPage} />,

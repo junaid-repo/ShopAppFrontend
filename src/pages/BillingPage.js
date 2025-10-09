@@ -874,21 +874,21 @@ const BillingPage = () => {
                                                 opacity: enabled ? 1 : 0.6
                                             }}
                                         >
-        <span
-            style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '20px',
-                height: '20px',
-                borderRadius: '50%',
-                backgroundColor: method.color,
-                color: 'white',
-                fontSize: '0.85rem'
-            }}
-        >
-          {method.icon}
-        </span>
+                                            <span
+                                                style={{
+                                                    display: 'inline-flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    width: '20px',
+                                                    height: '20px',
+                                                    borderRadius: '50%',
+                                                    backgroundColor: method.color,
+                                                    color: 'white',
+                                                    fontSize: '0.85rem'
+                                                }}
+                                            >
+                                                          {method.icon}
+                                                        </span>
                                             <input
                                                 type="radio"
                                                 value={method.type}

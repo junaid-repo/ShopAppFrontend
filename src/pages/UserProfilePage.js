@@ -532,10 +532,11 @@ const UserProfilePage = () => {
     return (
         <div className="user-profile-page">
             <div className="glass-card" style={{width:'100%'}}>
-                <div className="ribbon"><span>Account Source: {userSource}</span></div>
-                <h2>User & Shop Profile</h2>
-                <span className="info-text">* You cannot update Name, Email and Profile Photo if source is google</span>
-
+                <div className="profile-header">
+                    <div className="ribbon"><span>Account Source: {userSource}</span></div>
+                    <h2>User & Shop Profile</h2>
+                    <span className="info-text" style={{marginLeft: "-1100px"}}>* You cannot update Name, Email and Profile Photo if source is google</span>
+                </div>
                 {/* Tabs */}
                 <div className="tab-header">
                     <button className={`tab-btn ${activeTab === 'user' ? 'active' : ''}`} onClick={() => setActiveTab('user')}>User Details</button>

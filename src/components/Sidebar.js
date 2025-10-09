@@ -124,6 +124,10 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar, selectedPage, setSelected
                     <Receipt weight="duotone" style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'billing' ? 'var(--text-color)' : collapsedIconColor) : iconColors.billing) }} />
                     <span className="nav-text">Billing</span>
                 </button>
+                <button type="button" onClick={makeClickHandler('billing2')} className={`nav-link ${selectedPage === 'billing2' ? 'active' : ''}`} title="GSTBilling" style={buttonStyleFor('billing2')}>
+                    <Receipt weight="duotone" style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'billing2' ? 'var(--text-color)' : collapsedIconColor) : iconColors.billing) }} />
+                    <span className="nav-text">GSTBilling</span>
+                </button>
 
                 <button type="button" onClick={makeClickHandler('customers')} className={`nav-link ${selectedPage === 'customers' ? 'active' : ''}`} title="Customers" style={buttonStyleFor('customers')}>
                     <UsersFour weight="duotone" style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'customers' ? 'var(--text-color)' : collapsedIconColor) : iconColors.customers) }} />

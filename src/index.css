@@ -803,7 +803,7 @@ body.dark-theme {
 /* ---------- Cart list ---------- */
 .cart-items {
     margin-top: 1rem;
-    max-height: 200px;
+    max-height: 800px;
     overflow-y: auto;
     padding-right: 0.5rem;
 }
@@ -854,22 +854,25 @@ body.dark-theme {
 }
 
 /* process payment button - primary color */
-.process-payment-btn {
-    width: 100%;
-    background: var(--bp-primary);
-    color: white;
-    border: none;
-    padding: 0.8rem;
+.process-payment-btn {    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    background: rgba(25, 180, 61, 0.4); /* faint glassy background */
+    border: 1px solid rgb(26, 255, 0); /* visible faint border */
+    backdrop-filter: blur(8px); /* frosted effect */
+    -webkit-backdrop-filter: blur(8px);
+    color: var(--text-color); /* darker readable text */
     font-size: 1rem;
-    margin-top: 1rem;
-    border-radius: 8px;
+    font-weight: 600;
     cursor: pointer;
-    transition: background 0.2s ease;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 12px rgba(0, 50, 100, 0.25); /* darker shadow for light bg */
+
 }
 
 .process-payment-btn:hover {
     /* slightly darker on hover; uses alpha overlay on primary */
-    background: linear-gradient(0deg, green, green), green;
+    background: linear-gradient(0deg, rgba(0, 128, 0, 0.53), rgba(0, 128, 0, 0.51)), rgba(0, 128, 0, 0.62);
+    color: white;
 }
 
 /* ---------- Mini popup (small confirmations) ---------- */
