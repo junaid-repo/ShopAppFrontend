@@ -5,6 +5,14 @@ import { useConfig } from "./ConfigProvider";
 import { MdEdit, MdDelete } from "react-icons/md";
 import { useLocation } from 'react-router-dom';
 import { useSearchKey } from '../context/SearchKeyContext';
+import toast, { Toaster } from 'react-hot-toast';
+import {  FaCheckDouble, FaTimes } from 'react-icons/fa';
+
+import PlaylistAddCheckIcon from '@mui/icons-material/PlaylistAddCheck';
+import DeleteIcon from '@mui/icons-material/Delete';
+import {
+    Trash
+} from "@phosphor-icons/react";
 
 /**
  * Custom hook to debounce a value.
@@ -58,6 +66,9 @@ const ProductsPage = () => {
     const productsCache = useRef({}); // In-memory cache: { cacheKey: { data, totalPages, totalCount } }
     const ITEMS_PER_PAGE = 10; // Or make this configurable
 
+// Add these with your other useState declarations
+    const [isSelectionMode, setIsSelectionMode] = useState(false);
+    const [selectedProducts, setSelectedProducts] = useState(new Set());
 
     // NEW: Debounced search term to reduce API calls
     const debouncedSearchTerm = useDebounce(searchTerm, 500);
@@ -244,7 +255,8 @@ const ProductsPage = () => {
                 body: JSON.stringify(payload),
             });
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
+            toast.success('Product added successfully!');
+            fetchProducts(); // <-- Refresh the product list
             setIsModalOpen(false);
             resetForm();
         } catch (error) {
@@ -264,7 +276,8 @@ const ProductsPage = () => {
                 body: JSON.stringify(payload),
             });
             if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
-
+            toast.success('Product updated successfully!');
+            fetchProducts(); // <-- Refresh the product list
             setIsUpdateModalOpen(false);
             resetForm();
         } catch (err) {
@@ -281,11 +294,71 @@ const ProductsPage = () => {
                     credentials: 'include'
                 });
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
+                toast.error('Product deleted successfully!');
+                fetchProducts();
+                return { success: true, id }; // Return success for Promise.all
             } catch (error) {
                 console.error("Error deleting product:", error);
                 alert("Something went wrong while deleting the product.");
             }
+        }
+    };
+
+    const handleDeleteProductBulk = async (id) => {
+        // This function will now be wrapped by the bulk delete handler
+        try {
+            const response = await fetch(`${apiUrl}/api/shop/product/delete/${id}`, {
+                method: "DELETE",
+                credentials: 'include'
+            });
+            if (!response.ok) {
+                throw new Error(`Failed to delete product ID ${id}`);
+            }
+            return { success: true, id }; // Return success for Promise.all
+        } catch (error) {
+            console.error("Error deleting product:", error);
+            toast.error(`Failed to delete product ID ${id}.`);
+            return { success: false, id }; // Return failure for Promise.all
+        }
+    };
+
+    const handleToggleSelectionMode = () => {
+        setIsSelectionMode(prev => !prev);
+        setSelectedProducts(new Set()); // Clear selections when toggling
+    };
+
+    const handleSelectProduct = (productId) => {
+        setSelectedProducts(prevSelected => {
+            const newSelected = new Set(prevSelected);
+            if (newSelected.has(productId)) {
+                newSelected.delete(productId);
+            } else {
+                newSelected.add(productId);
+            }
+            return newSelected;
+        });
+    };
+
+    const handleBulkDelete = async () => {
+        const numSelected = selectedProducts.size;
+        if (numSelected === 0) return;
+
+        if (window.confirm(`Are you sure you want to delete ${numSelected} selected product(s)?`)) {
+            const deletePromises = Array.from(selectedProducts).map(id => handleDeleteProductBulk(id));
+
+            // We use Promise.all to run delete requests concurrently
+            const results = await Promise.all(deletePromises);
+
+            const successfulDeletes = results.filter(r => r.success).length;
+
+            if (successfulDeletes > 0) {
+                toast.success(`${successfulDeletes} product(s) deleted successfully!`);
+                fetchProducts(); // <-- Refresh the list after all deletions are done
+            }
+
+            // Exit selection mode after operation
+            setIsSelectionMode(false);
+            setSelectedProducts(new Set());
         }
     };
 
@@ -527,56 +600,91 @@ const ProductsPage = () => {
 
     return (
         <div className="page-container">
+            <Toaster position="top-center" reverseOrder={false} />
             <h2 style={{paddingBottom:"30px"}}>Products</h2>
 
             <div className="page-header">
 
                 <div className="actions-toolbar">
-                    <input
-                        type="text"
-                        placeholder="Search products..."
-                        className="search-bar"
-                        value={searchTerm}
-                        style={{ marginBottom: "0px" }}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
+                    {/* Group for Search and Selection actions */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <input
+                            type="text"
+                            placeholder="Search products..."
+                            className="search-bar"
+                            value={searchTerm}
+                            style={{ marginBottom: "0px", marginRight: "60px" }}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
 
-                    <div className="actions-group-left" style={{ marginLeft: "1px" }}>
+                        <button
+                            type="button"
+                            // Consider using a class like "icon-btn" for specific styling
+                            className={`btn ${isSelectionMode ? 'btn-active' : ''}`}
+                            onClick={handleToggleSelectionMode}
+                            title={isSelectionMode ? 'Cancel Selection' : 'Select Multiple'}
+                            style={{
+                                width: '80px',
+                                height: '40px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                padding: 0
+                            }}
+                        >
+                            {isSelectionMode ? <FaTimes size={18} /> : <FaCheckDouble size={18} />}
+                        </button>
+
+                        {isSelectionMode && selectedProducts.size > 0 && (
+                            <button
+                                type="button"
+                                className="btn btn-danger"
+                                onClick={handleBulkDelete}
+                                style={{ whiteSpace: 'nowrap' }} // Prevents text wrapping
+                            >
+                                Delete Selected ({selectedProducts.size})
+                            </button>
+                        )}
+                    </div>
+
+
+                    {/* Group for primary actions */}
+                    <div className="actions-group-left">
                         <button type="button" className="btn" onClick={() => setIsModalOpen(true)}>Add Product</button>
                         <button type="button" className="btn" onClick={() => setIsCsvModalOpen(true)}>Upload CSV</button>
                         <button type="button" className="btn" onClick={handleExportCSV}>Export CSV</button>
                     </div>
 
                     <div ref={columnsRef} className="columns-dropdown-container">
-            <span
-                role="button"
-                tabIndex={0}
-                onClick={() => setIsColumnsOpen(v => !v)}
-                onKeyDown={(e) => (e.key === 'Enter' ? setIsColumnsOpen(v => !v) : null)}
-                aria-expanded={isColumnsOpen}
-                style={{
-                    background: "white",
-                    color: "var(--primary-color)",
-                    border: "2px solid var(--primary-color-light)",
-                    borderRadius: "18px",
-                    padding: "8px 14px",
-                    cursor: "pointer",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    fontWeight: 500,
-                    transition: "all 0.3s ease",
-                    userSelect: "none",
-                    marginLeft: "auto", // pushes to the far right
-                }}
-                onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "var(--primary-color-light)";
-                }}
-                onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "white";
-                }}
-            >
-                {columnsButtonLabel} ▾
-            </span>
+                                 <span
+                                role="button"
+                                tabIndex={0}
+                                onClick={() => setIsColumnsOpen(v => !v)}
+                                onKeyDown={(e) => (e.key === 'Enter' ? setIsColumnsOpen(v => !v) : null)}
+                                aria-expanded={isColumnsOpen}
+                                style={{
+                                    background: "white",
+                                    color: "var(--primary-color)",
+                                    border: "2px solid var(--primary-color-light)",
+                                    borderRadius: "18px",
+                                    padding: "8px 14px",
+                                    cursor: "pointer",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    fontWeight: 500,
+                                    transition: "all 0.3s ease",
+                                    userSelect: "none",
+                                    marginLeft: "auto", // pushes to the far right
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.background = "var(--primary-color-light)";
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.background = "white";
+                                }}
+                            >
+                                {columnsButtonLabel} ▾
+                            </span>
 
                         {isColumnsOpen && (
                             <div className="columns-dropdown-menu">
@@ -611,6 +719,9 @@ const ProductsPage = () => {
                 <table className="data-table">
                     <thead>
                     <tr>
+                        {/* --- ADDED: Checkbox column header for selection mode --- */}
+                        {isSelectionMode && <th style={{ width: "30px" }}></th>}
+
                         {visibleColumns.name && (
                             <th style={{ cursor: 'pointer' }} onClick={() => toggleSort('name')}>
                                 Name {hasSortActive && sortConfig.key === 'name' ? (sortConfig.direction === 'asc' ? ' ▲' : ' ▼') : ''}
@@ -621,13 +732,11 @@ const ProductsPage = () => {
                                 HSN {hasSortActive && sortConfig.key === 'hsn' ? (sortConfig.direction === 'asc' ? ' ▲' : ' ▼') : ''}
                             </th>
                         )}
-
                         {visibleColumns.category && (
                             <th style={{ cursor: 'pointer' }} onClick={() => toggleSort('category')}>
                                 Category {hasSortActive && sortConfig.key === 'category' ? (sortConfig.direction === 'asc' ? ' ▲' : ' ▼') : ''}
                             </th>
                         )}
-
                         {visibleColumns.price && (
                             <th style={{ cursor: 'pointer' }} onClick={() => toggleSort('price')}>
                                 Cost Price {hasSortActive && sortConfig.key === 'price' ? (sortConfig.direction === 'asc' ? ' ▲' : ' ▼') : ''}
@@ -638,7 +747,6 @@ const ProductsPage = () => {
                                 Price {hasSortActive && sortConfig.key === 'costPrice' ? (sortConfig.direction === 'asc' ? ' ▲' : ' ▼') : ''}
                             </th>
                         )}
-
                         {visibleColumns.tax && (
                             <th style={{ cursor: 'pointer' }} onClick={() => toggleSort('tax')}>
                                 Tax (%) {hasSortActive && sortConfig.key === 'tax' ? (sortConfig.direction === 'asc' ? ' ▲' : ' ▼') : ''}
@@ -649,22 +757,38 @@ const ProductsPage = () => {
                                 Stock {hasSortActive && sortConfig.key === 'stock' ? (sortConfig.direction === 'asc' ? ' ▲' : ' ▼') : ''}
                             </th>
                         )}
-                         {visibleColumns.status &&  (
-                             <th style={{ cursor: 'pointer' }} onClick={() => toggleSort('status')}>
-                                 Status {hasSortActive && sortConfig.key === 'status' ? (sortConfig.direction === 'asc' ? ' ▲' : ' ▼') : ''}
-                             </th>
-                         )}
-                         {visibleColumns.actions && <th>Actions</th>}
-                     </tr>
+                        {visibleColumns.status && (
+                            <th style={{ cursor: 'pointer' }} onClick={() => toggleSort('status')}>
+                                Status {hasSortActive && sortConfig.key === 'status' ? (sortConfig.direction === 'asc' ? ' ▲' : ' ▼') : ''}
+                            </th>
+                        )}
+                        {visibleColumns.actions && <th>Actions</th>}
+                    </tr>
                     </thead>
                     <tbody>
                     {isLoading ? (
-                        <tr><td colSpan={selectedColsCount} style={{ textAlign: 'center', padding: '20px' }}>Loading...</td></tr>
+                        <tr><td colSpan={selectedColsCount + (isSelectionMode ? 1 : 0)} style={{ textAlign: 'center', padding: '20px' }}>Loading...</td></tr>
                     ) : products.length > 0 ? (
                         products.map(product => (
-                            <tr key={product.id}>
+                            <tr
+                                key={product.id}
+                                onClick={isSelectionMode ? () => handleSelectProduct(product.id) : undefined}
+                                style={{ cursor: isSelectionMode ? 'pointer' : 'default' }}
+                                className={isSelectionMode && selectedProducts.has(product.id) ? 'row-selected' : ''}
+                            >
+                                {isSelectionMode && (
+                                    <td>
+                                        <input
+                                            type="checkbox"
+                                            className="styled-checkbox"
+                                            checked={selectedProducts.has(product.id)}
+                                            onChange={() => handleSelectProduct(product.id)}
+                                        />
+                                    </td>
+                                )}
+
                                 {visibleColumns.name && <td>{product.name}</td>}
-                                {visibleColumns.category && <td>{product.hsn}</td>}
+                                {visibleColumns.hsn && <td>{product.hsn}</td>}
                                 {visibleColumns.category && <td>{product.category}</td>}
                                 {visibleColumns.costPrice && <td>{product.costPrice != null ? `₹${Number(product.costPrice).toLocaleString()}` : '–'}</td>}
                                 {visibleColumns.price && <td>₹{product.price.toLocaleString()}</td>}
@@ -674,22 +798,34 @@ const ProductsPage = () => {
                                 {visibleColumns.actions && (
                                     <td>
                                         <div className="action-icons">
-                                                <span onClick={() => handleEditClick(product)} className="action-icon edit" title="Edit Product">
-                                                    <MdEdit size={18} />
-                                                </span>
-                                            <span onClick={() => handleDeleteProduct(product.id)} className="action-icon delete" title="Delete Product">
-                                                    <MdDelete size={18} />
-                                                </span>
+                            <span
+                                onClick={(e) => { e.stopPropagation(); handleEditClick(product); }}
+                                className="action-icon edit"
+                                title="Edit Product"
+                            >
+                                <MdEdit size={18} />
+                            </span>
+                                            <span
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    if (window.confirm("Are you sure you want to delete this product?")) {
+                                                        handleDeleteProduct(product.id).then(res => res.success && fetchProducts());
+                                                    }
+                                                }}
+                                                className="action-icon delete"
+                                                title="Delete Product"
+                                            >
+                                <MdDelete size={18} />
+                            </span>
                                         </div>
                                     </td>
                                 )}
                             </tr>
                         ))
                     ) : (
-                        <tr><td colSpan={selectedColsCount} style={{ textAlign: 'center', padding: '20px' }}>No products found.</td></tr>
+                        <tr><td colSpan={selectedColsCount + (isSelectionMode ? 1 : 0)} style={{ textAlign: 'center', padding: '20px' }}>No products found.</td></tr>
                     )}
                     </tbody>
-
                 </table>
             </div>
 

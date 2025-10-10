@@ -398,6 +398,9 @@ const CustomersPage = ({ setSelectedPage }) => {
                     </div>
                 </form>
             </Modal>
+
+
+
         </div>
     );
 };

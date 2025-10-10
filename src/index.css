@@ -38,7 +38,7 @@ body.dark-theme {
     --input-bg: #0d1117;
     --input-border: var(--border-color);
     --table-hover-bg: rgba(0, 170, 255, 0.1);
-    --tiny-text-color: #bfb6b6;
+    --tiny-text-color: #f4efef;
     --pagination-bg: #21262d;
     --pagination-border: var(--border-color);
     --pagination-disabled-bg: #161b22;
@@ -191,9 +191,10 @@ body {
 
 .btn:hover:not(:disabled) {
     transform: translateY(-2px) scale(1.02);
-    background: rgba(0, 170, 255, 0.2);
+    background: rgba(15, 165, 243, 0.65);
     box-shadow: 0 6px 18px rgba(0, 50, 100, 0.35);
-    border-color: rgba(0, 170, 255, 0.45);
+    border-color: rgba(186, 217, 232, 0.45);
+    color: white;
 }
 
 .btn:disabled {
@@ -1361,4 +1362,7 @@ body.dark-theme {
 /* Hover effect */
 .styled-checkbox:hover {
     box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
+}
+.row-selected {
+    background-color: #e0f7ff !important; /* A light blue to show selection */
 }
