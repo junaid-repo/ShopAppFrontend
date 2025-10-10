@@ -22,6 +22,7 @@ const CustomersPage = ({ setSelectedPage }) => {
     const [customers, setCustomers] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [name, setName] = useState("");
+    const [id, setSelectedId] = useState("");
     const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("");
     const [state, setState] = useState("");
@@ -32,9 +33,12 @@ const CustomersPage = ({ setSelectedPage }) => {
     const [totalPages, setTotalPages] = useState(0);
     const [customerState, setCustomerState] = useState("");
     const [shopState, setShopState] = useState("");
+    const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
     const [viewMode, setViewMode] = useState(
         () => localStorage.getItem('customerViewMode') || 'grid'
     );
+
+
     const domainToRoute = {
         products: 'products',
         sales: 'sales',
@@ -143,6 +147,26 @@ const CustomersPage = ({ setSelectedPage }) => {
         }
         setIsModalOpen(false);
     };
+    const handleUpdateCustomer = async (e) => {
+        e.preventDefault();
+        try {
+            const payload = { id, name, email, phone, city,  customerState};
+            alert(customerState);
+            const response = await fetch(`${apiUrl}/api/shop/update/customer`, {
+                method: "PUT",
+                credentials: 'include',
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            fetchCustomers(1);
+        } catch (error) {
+            console.error("Error adding customer:", error);
+            alert("Something went wrong while adding the customer.");
+        }
+        setIsModalOpen(false);
+    };
+
 
     // ✅ 3. MODIFIED: The handleDeleteCustomer function
     const handleDeleteCustomer = async (id, customerName) => {
@@ -181,6 +205,31 @@ const CustomersPage = ({ setSelectedPage }) => {
             setDeletingCustomerId(null);
             return { status: 'rejected', id, error };
         }
+    };
+
+    const handleEditClick = (customer) => {
+        setSelectedId(customer.id);
+        setName(customer.name);
+        setEmail(customer.email);
+        setPhone(customer.phone);
+        setState(customer.state);
+        setCity(customer.city || "");
+        setShopState(customer.shopState);
+        setIsUpdateModalOpen(true);
+    };
+
+    const handleCloseUpdateModal = () => {
+        setIsUpdateModalOpen(false); // This closes the modal
+        resetForm();               // This clears the form fields
+    };
+    const resetForm = () => {
+        setSelectedId("");
+        setName("");
+        setEmail("");
+        setPhone("");
+        setState("");
+        setCity("");
+        setShopState("");
     };
 
     const handleToggleSelectMode = () => {
@@ -292,11 +341,22 @@ const CustomersPage = ({ setSelectedPage }) => {
                                     >
                                         {isSelectMode && <input type="checkbox"  className="styled-checkbox" checked={isSelected} readOnly />}
                                         <h3>{customer.name}</h3>
-                                        <h4>{customer.state}</h4>
-                                        <h4>{customer.city}</h4>
+                                       <div style={{marginTop:"20px"}}>
+                                           <h4 style={{marginBottom:"10px"}}>{customer.city}, {customer.state}</h4>
                                         <p className="customer-info"><FaEnvelope className="icon" /> {customer.email}</p>
                                         <p className="customer-info spaced"><FaPhone className="icon" /> {customer.phone}</p>
+                                       </div>
                                         <p className="customer-info money"><FaMoneyBillWave className="icon" /> ₹{customer.totalSpent?.toLocaleString('en-IN')}</p>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleEditClick(customer);
+                                            }}
+                                            className="edit-btn"
+                                            title="Edit Customer"
+                                        >
+                                    <MdEdit size={18}/>
+                                </button>
                                         <button className="delete-btn" onClick={(e) =>{e.stopPropagation();  handleDeleteCustomer(customer.id, customer.name)}}>
                                             <MdDelete />
                                         </button>
@@ -340,12 +400,23 @@ const CustomersPage = ({ setSelectedPage }) => {
                                             <td>₹{customer.totalSpent?.toLocaleString('en-IN')}</td>
                                             <td>
                                                 <div className="action-icons">
+                                                     <span
+                                                         onClick={(e) => {
+                                                             e.stopPropagation();
+                                                             handleEditClick(customer);
+                                                         }}
+                                                         className="action-icon edit"
+                                                         title="Edit Product"
+                                                     >
+                                    <MdEdit size={18}/>
+                                </span>
                                                 <span   onClick={(e) => {
                                                     e.stopPropagation();
                                                     handleDeleteCustomer(customer.id, customer.name);
                                                 }} className="action-icon delete">
                                                     <MdDelete size={18} />
-                                                </span>
+                                                    </span>
+
                                                 </div>
 
                                             </td>
@@ -399,7 +470,38 @@ const CustomersPage = ({ setSelectedPage }) => {
                 </form>
             </Modal>
 
-
+            <Modal title="Edit Customer" show={isUpdateModalOpen} onClose={handleCloseUpdateModal}>
+                <form onSubmit={handleUpdateCustomer}>
+                    <div className="form-group">
+                        <label>Full Name</label>
+                        <input type="text" required value={name} onChange={(e) => setName(e.target.value)} />
+                    </div>
+                    <div className="form-group">
+                        <label>Email</label>
+                        <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+                    </div>
+                    <div className="form-group">
+                        <label>Phone Number</label>
+                        <input type="tel" required value={phone} onChange={(e) => setPhone(e.target.value)} />
+                    </div>
+                    <div className="form-group">
+                        <label>State</label>
+                        <select value={customerState} onChange={(e) => setCustomerState(e.target.value)}>
+                            <option value="">Select State</option>
+                            {statesList.map((state, i) => (
+                                <option key={i} value={state}>{state}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="form-group">
+                        <label>City</label>
+                        <input type="text" required value={city} onChange={(e) => setCity(e.target.value)} />
+                    </div>
+                    <div className="form-actions">
+                        <button  className="btn add-customer-btn">Update Customer</button>
+                    </div>
+                </form>
+            </Modal>
 
         </div>
     );

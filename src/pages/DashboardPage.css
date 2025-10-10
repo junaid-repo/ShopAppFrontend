@@ -106,7 +106,7 @@
 .delete-btn {
   position: absolute;
   right: 0.5rem;
-  bottom: 0.5rem;
+    bottom: 1.1rem;
     background-color: #ffebee;
     color: #d32f2f;
   border: none;
@@ -119,8 +119,27 @@
   justify-content: center;
 }
 
+
 .delete-btn:hover {
-    background-color: #ffcdd2;
+    background-color: #e22438;
+}
+.edit-btn {
+    position: absolute;
+    right: 2.9rem;
+    bottom: 1.1rem;
+    background-color: #e0f7fa;
+    color: #00796b;
+    border: none;
+    border-radius: 20%;
+    padding: 0.4rem;
+    cursor: pointer;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.edit-btn:hover {
+    background-color: #acd6db;
 }
 /* Card Header */
 .card-header {

@@ -553,16 +553,29 @@ const BillingPage = () => {
                             {isSearchFocused && debouncedSearchTerm && (
                                 <div className="search-results" style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100, background: 'var(--glass-bg)', border: '1px solid var(--border-color)', borderRadius: '8px', maxHeight: '300px', overflowY: 'auto', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
                                     {products.length > 0 ? products.map(p => (
-                                        <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderBottom: '1px solid var(--border-color-light)'}}>
+                                        <div
+                                            key={p.id}
+                                            className="search-result-item" // <-- ADD THIS CLASSNAME
+                                            onClick={() => handleAddProduct(p)}
+                                            style={{
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
+                                                alignItems: 'center',
+                                                padding: '8px 12px',
+                                                borderBottom: '1px solid var(--border-color-light)',
+                                                cursor: 'pointer',
+                                                transition: 'background-color 0.2s ease' // Optional: Adds a smooth transition
+                                            }}
+                                        >
                                             <div>
                                                 <strong>{p.name}</strong>
                                                 <div style={{ fontSize: '0.8em', color: '#888' }}>
                                                     Price: ₹{p.price} | Tax: {p.tax}% | Stock: {p.stock}
                                                 </div>
                                             </div>
-                                            <button className="btn small-btn" onClick={() => handleAddProduct(p)}>
+                                            {/*    <button className="btn small-btn" onClick={() => handleAddProduct(p)}>
                                                 <FaPlus /> Add
-                                            </button>
+                                            </button>*/}
                                         </div>
                                     )) : <div style={{padding: '1rem', textAlign: 'center', color: '#888'}}>No products found.</div>}
                                 </div>

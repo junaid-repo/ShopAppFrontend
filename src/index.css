@@ -1366,3 +1366,7 @@ body.dark-theme {
 .row-selected {
     background-color: #e0f7ff !important; /* A light blue to show selection */
 }
+
+.search-result-item:hover {
+    background-color: var(--primary-color-light, #e0f7ff); /* Uses your theme color or a light blue fallback */
+}

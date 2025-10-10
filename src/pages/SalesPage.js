@@ -193,6 +193,8 @@ const SalesPage = () => {
         <div className="page-container">
             <h2>Sales</h2>
             <div className="page-header" style={{marginTop: "20px"}}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', border: '1px solid var(--border-color)', borderRadius: '20px', padding: '0.2rem 1rem' }}>
+
                 <input
                     type="text"
                     placeholder="Search by Invoice ID or Customer..."
@@ -203,6 +205,7 @@ const SalesPage = () => {
                         setCurrentPage(1);
                     }}
                 />
+                </div>
             </div>
 
             <div className="glass-card" >
