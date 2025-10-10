@@ -3,8 +3,10 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useConfig } from "./ConfigProvider";
 import { formatDate } from "../utils/formatDate";
 import {useSearchKey} from "../context/SearchKeyContext";
+import { useAlert } from '../context/AlertContext';
 
 const PaymentsPage = ({setSelectedPage}) => {
+    const { showAlert } = useAlert();
   const [payments, setPayments] = useState([]);
   // initialize searchTerm and paymentMode from localStorage if present
   const [searchTerm, setSearchTerm] = useState(() => {
@@ -82,7 +84,7 @@ const PaymentsPage = ({setSelectedPage}) => {
 
         const diffDays = Math.floor((to - from) / (1000 * 60 * 60 * 24));
         if (diffDays > 31) {
-            alert("Date range cannot exceed 31 days. Adjusting the end date.");
+            showAlert("Date range cannot exceed 31 days. Adjusting the end date.");
             const newTo = new Date(from);
             newTo.setDate(newTo.getDate() + 31);
             setToDate(formatDateInput(newTo));
@@ -113,7 +115,7 @@ const PaymentsPage = ({setSelectedPage}) => {
   useEffect(() => {
 
       const query = `?fromDate=${fromDate}&toDate=${toDate}`;
-      //alert(query);
+      //showAlert(query);
 
       fetch(`${apiUrl}/api/shop/get/paymentLists${query}`, {
       method: "GET",
@@ -134,7 +136,7 @@ const PaymentsPage = ({setSelectedPage}) => {
       })
       .catch((error) => {
         console.error("Error fetching paymentLists:", error);
-        alert("Something went wrong while fetching paymentLists.");
+        showAlert("Something went wrong while fetching paymentLists.");
       });
   }, [apiUrl, fromDate, toDate]);
 

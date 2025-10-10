@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './CustomersPage.css';
 import { useConfig } from "./ConfigProvider";
 import { Line, Bar } from 'react-chartjs-2';
+import { useAlert } from '../context/AlertContext';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -35,7 +36,7 @@ const AnalyticsPage = () => {
     const [data, setData] = useState({});
     const config = useConfig();
     let apiUrl = config ? config.API_URL : "";
-
+    const { showAlert } = useAlert();
     const baseColors = {
         sales: '75, 192, 192',
         stocks: '255, 99, 132',
@@ -68,7 +69,7 @@ const AnalyticsPage = () => {
         const endDt = new Date(end);
         const diffMonths = (endDt.getFullYear() - startDt.getFullYear()) * 12 + (endDt.getMonth() - startDt.getMonth());
         if (diffMonths > 12) {
-            alert("Date range cannot exceed 12 months.");
+            showAlert("Date range cannot exceed 12 months.");
             return false;
         }
         return true;

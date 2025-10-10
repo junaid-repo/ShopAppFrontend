@@ -5,6 +5,7 @@ import { useConfig } from "./ConfigProvider";
 import {MdDownload} from "react-icons/md";
 import './SalesPage.css';
 import { formatDate } from "../utils/formatDate";
+import { useAlert } from '../context/AlertContext';
 import {
     MdPerson,
     MdEmail,
@@ -18,6 +19,7 @@ import { useLocation } from 'react-router-dom';
 import {useSearchKey} from "../context/SearchKeyContext";
 
 const SalesPage = () => {
+    const { showAlert } = useAlert();
     const [sales, setSales] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
@@ -114,7 +116,7 @@ const SalesPage = () => {
                 setTotalPages(response.data.totalPages); // ✅ Fix typo here too (was `totalePages`)
             } catch (error) {
                 console.error("Error fetching sales:", error);
-                alert("Something went wrong while fetching sales.");
+                showAlert("Something went wrong while fetching sales.");
             }
         };
 
@@ -163,7 +165,7 @@ const SalesPage = () => {
 
     } catch (error) {
         console.error("Error downloading invoice:", error);
-        alert("Failed to download the invoice. Please try again.");
+        showAlert("Failed to download the invoice. Please try again.");
     }
     };
 
@@ -184,7 +186,7 @@ const SalesPage = () => {
 
         } catch (error) {
             console.error("Error fetching order details:", error);
-            alert("Failed to fetch order details.");
+            showAlert("Failed to fetch order details.");
         }
 
     };

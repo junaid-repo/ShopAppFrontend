@@ -8,8 +8,10 @@ import { useSearchKey } from '../context/SearchKeyContext';
 import { MdEdit, MdDelete } from "react-icons/md";
 import { getIndianStates } from '../utils/statesUtil';
 import toast from 'react-hot-toast';
+import { useAlert } from '../context/AlertContext';
 
 const useDebounce = (value, delay) => {
+
     const [debouncedValue, setDebouncedValue] = useState(value);
     useEffect(() => {
         const handler = setTimeout(() => setDebouncedValue(value), delay);
@@ -19,6 +21,7 @@ const useDebounce = (value, delay) => {
 };
 
 const CustomersPage = ({ setSelectedPage }) => {
+    const { showAlert } = useAlert();
     const [customers, setCustomers] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [name, setName] = useState("");
@@ -86,7 +89,7 @@ const CustomersPage = ({ setSelectedPage }) => {
             setCurrentPage(page);
         } catch (error) {
             console.error("Error fetching customers:", error);
-            alert("Something went wrong while fetching customers.");
+            showAlert("Something went wrong while fetching customers.");
             setCustomers([]);
         } finally {
             setIsLoading(false);
@@ -132,7 +135,7 @@ const CustomersPage = ({ setSelectedPage }) => {
         e.preventDefault();
         try {
             const payload = { name, email, phone, city,  customerState};
-            alert(customerState);
+            showAlert(customerState);
             const response = await fetch(`${apiUrl}/api/shop/create/customer`, {
                 method: "POST",
                 credentials: 'include',
@@ -143,7 +146,7 @@ const CustomersPage = ({ setSelectedPage }) => {
             fetchCustomers(1);
         } catch (error) {
             console.error("Error adding customer:", error);
-            alert("Something went wrong while adding the customer.");
+            showAlert("Something went wrong while adding the customer.");
         }
         setIsModalOpen(false);
     };
@@ -151,7 +154,7 @@ const CustomersPage = ({ setSelectedPage }) => {
         e.preventDefault();
         try {
             const payload = { id, name, email, phone, city,  customerState};
-            alert(customerState);
+            showAlert(customerState);
             const response = await fetch(`${apiUrl}/api/shop/update/customer`, {
                 method: "PUT",
                 credentials: 'include',
@@ -162,7 +165,7 @@ const CustomersPage = ({ setSelectedPage }) => {
             fetchCustomers(1);
         } catch (error) {
             console.error("Error adding customer:", error);
-            alert("Something went wrong while adding the customer.");
+            showAlert("Something went wrong while adding the customer.");
         }
         setIsModalOpen(false);
     };

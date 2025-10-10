@@ -7,6 +7,7 @@ import { useLocation } from 'react-router-dom';
 import { useSearchKey } from '../context/SearchKeyContext';
 import toast, { Toaster } from 'react-hot-toast';
 import {  FaCheckDouble, FaTimes } from 'react-icons/fa';
+import { useAlert } from '../context/AlertContext';
 
 import PlaylistAddCheckIcon from '@mui/icons-material/PlaylistAddCheck';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -35,7 +36,7 @@ const useDebounce = (value, delay) => {
 
 const ProductsPage = () => {
     // --- STATE MANAGEMENT ---
-
+    const { showAlert } = useAlert();
     // Original State
     const [products, setProducts] = useState([]); // Holds data for the CURRENT page only
     const [searchTerm, setSearchTerm] = useState('');
@@ -178,7 +179,7 @@ const ProductsPage = () => {
 
         } catch (error) {
             console.error("Error fetching products:", error);
-            alert("Something went wrong while fetching products.");
+            showAlert("Something went wrong while fetching products.");
             setProducts([]);
         } finally {
             setIsLoading(false);
@@ -261,7 +262,7 @@ const ProductsPage = () => {
             resetForm();
         } catch (error) {
             console.error("Error adding product:", error);
-            alert("Something went wrong while adding the product.");
+            showAlert("Something went wrong while adding the product.");
         }
     };
 
@@ -282,7 +283,7 @@ const ProductsPage = () => {
             resetForm();
         } catch (err) {
             console.error("Error updating product:", err);
-            alert("Failed to update product");
+            showAlert("Failed to update product");
         }
     };
 
@@ -299,7 +300,7 @@ const ProductsPage = () => {
                 return { success: true, id }; // Return success for Promise.all
             } catch (error) {
                 console.error("Error deleting product:", error);
-                alert("Something went wrong while deleting the product.");
+                showAlert("Something went wrong while deleting the product.");
             }
         }
     };
@@ -392,7 +393,7 @@ const ProductsPage = () => {
    /* // UPDATED: Export should hit a dedicated backend endpoint for efficiency
    const handleExportCSV = async () => {
     if (totalProducts === 0) {
-        alert("No products to export.");
+        showAlert("No products to export.");
         return;
     }
     if (!window.confirm(`Export all ${totalProducts} filtered products to CSV?`)) return;
@@ -438,14 +439,14 @@ const ProductsPage = () => {
 
     } catch (err) {
         console.error("Error exporting CSV:", err);
-        alert("Failed to export products.");
+        showAlert("Failed to export products.");
     }
 };*/
 
 
     const handleExportCSV = () => {
         if (!products || products.length === 0) {
-            alert("No products available to export.");
+            showAlert("No products available to export.");
             return;
         }
 

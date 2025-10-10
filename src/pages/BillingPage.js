@@ -5,9 +5,11 @@ import { FaPlus, FaTrash } from 'react-icons/fa';
 import '../index.css';
 import { useConfig } from "./ConfigProvider";
 import {getIndianStates} from "../utils/statesUtil";
+import { useAlert } from '../context/AlertContext';
 
 
 const BillingPage = () => {
+    const { showAlert } = useAlert();
     const {
         selectedCustomer, setSelectedCustomer,
         cart, addProduct, removeProduct,
@@ -342,7 +344,7 @@ const BillingPage = () => {
         } catch (error) {
             // DEBUG: This will catch any failure in the try block
             console.error("❌ Error adding customer:", error);
-            alert(`Failed to add customer. Please check the console for details.`);
+            showAlert(`Failed to add customer. Please check the console for details.`);
         }
     };
 
@@ -361,7 +363,7 @@ const BillingPage = () => {
     // --- API CALL TO PROCESS THE PAYMENT ---
     const HandleProcessPayment = () => {
         if (!selectedCustomer || cart.length === 0) {
-            alert('Please select a customer and add products.');
+            showAlert('Please select a customer and add products.');
             return;
         }
         setLoading(true);
@@ -389,13 +391,13 @@ const BillingPage = () => {
             })
             .catch(err => {
                 console.error("Billing failed:", err);
-                alert("Billing failed.");
+                showAlert("Billing failed.");
             });
     };
 
     const HandleCardProcessPayment = async () => {
         if (!selectedCustomer || cart.length === 0) {
-            alert("Please select a customer and add products.");
+            showAlert("Please select a customer and add products.");
             return;
         }
         setLoading(true);
@@ -421,7 +423,7 @@ const BillingPage = () => {
         });
 
         if (!orderResponse.ok) {
-            alert("Server error. Could not create order.");
+            showAlert("Server error. Could not create order.");
             setLoading(false);
             return;
         }
@@ -453,7 +455,7 @@ const BillingPage = () => {
                 );
 
                 if (!verificationResponse.ok) {
-                    alert("Payment verification failed. Please contact support.");
+                    showAlert("Payment verification failed. Please contact support.");
                     setLoading(false);
                     return;
                 }
@@ -485,7 +487,7 @@ const BillingPage = () => {
         const rzp = new window.Razorpay(options);
 
         rzp.on("payment.failed", function (response) {
-            alert(`Payment Failed: ${response.error.description}`);
+            showAlert(`Payment Failed: ${response.error.description}`);
             setLoading(false); // ✅ stop loader on failure
         });
 
@@ -517,7 +519,7 @@ const BillingPage = () => {
 
     const handlePreview = () => {
         if (!selectedCustomer || cart.length === 0) {
-            alert('Please select a customer and add products.');
+            showAlert('Please select a customer and add products.');
             return;
         }
         setIsPreviewModalOpen(true);

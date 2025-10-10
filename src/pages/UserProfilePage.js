@@ -1,5 +1,6 @@
 // UserProfilePage.jsx
 import React, { useState, useEffect, useRef } from 'react';
+import { useAlert } from '../context/AlertContext';
 import { jwtDecode } from "jwt-decode"; // preserved as in your original file
 import { useConfig } from "./ConfigProvider";
 import './UserProfilePage.css';
@@ -36,6 +37,8 @@ const mockUser = {
 };
 
 const UserProfilePage = () => {
+
+    const { showAlert } = useAlert();
     // Tabs
     const [activeTab, setActiveTab] = useState('user');
 
@@ -150,7 +153,7 @@ const UserProfilePage = () => {
             } catch (err) {
                 console.error("Error loading profile:", err);
                 // keep user-friendly message but don't remove original behavior
-                alert("Something went wrong while loading your profile.");
+                showAlert("Something went wrong while loading your profile.");
             }
         };
 
@@ -217,11 +220,11 @@ const UserProfilePage = () => {
 
             setUser({ ...formData, profilePic: profilePicPreview });
             setIsEditing(false);
-            alert("Profile updated successfully!");
+            showAlert("Profile updated successfully!");
 
         } catch (error) {
             console.error("Error updating user:", error);
-            alert("Something went wrong while updating user details.");
+            showAlert("Something went wrong while updating user details.");
         }
     };
 
@@ -268,7 +271,7 @@ const UserProfilePage = () => {
                 });
 
                 if (!response.ok) {
-                    alert("Invalid current password. Please try again.");
+                    showAlert("Invalid current password. Please try again.");
                     return;
                 }
 
@@ -278,20 +281,20 @@ const UserProfilePage = () => {
                     console.log("Password validated successfully");
                     setPasswordStep(2); // move to next step
                 } else {
-                    alert("Password validation failed.");
+                    showAlert("Password validation failed.");
                 }
             } catch (error) {
                 console.error("Error validating password:", error);
-                alert("Something went wrong while validating password.");
+                showAlert("Something went wrong while validating password.");
             }
         } else {
             // Step 2: Update password
             if (passwordData.newPassword !== passwordData.confirmPassword) {
-                alert("New passwords do not match. Please try again.");
+                showAlert("New passwords do not match. Please try again.");
                 return;
             }
             if (passwordData.newPassword.length < 4) {
-                alert("Password must be at least 4 characters long.");
+                showAlert("Password must be at least 4 characters long.");
                 return;
             }
 
@@ -314,17 +317,17 @@ const UserProfilePage = () => {
                 });
 
                 if (!response.ok) {
-                    alert("Failed to update password.");
+                    showAlert("Failed to update password.");
                     return;
                 }
 
-                alert("Password updated successfully!");
+                showAlert("Password updated successfully!");
                 setShowPasswordModal(false);
                 setPasswordStep(1);
                 setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
             } catch (error) {
                 console.error("Error updating password:", error);
-                alert("Something went wrong while updating password.");
+                showAlert("Something went wrong while updating password.");
             }
         }
     };
@@ -350,7 +353,7 @@ const UserProfilePage = () => {
             const res = await fetch(`https://ifsc.razorpay.com/${ifsc}`);
             if (!res.ok) {
                 console.warn('IFSC lookup returned non-ok');
-                alert('IFSC code not found');
+                showAlert('IFSC code not found');
                 return;
             }
             const data = await res.json();
@@ -371,20 +374,20 @@ const UserProfilePage = () => {
             const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
             if (!res.ok) {
                 console.warn('Pincode lookup returned non-ok');
-                alert('Invalid Pincode or API error');
+                showAlert('Invalid Pincode or API error');
                 return;
             }
 
             const data = await res.json();
 
             if (!data || !Array.isArray(data) || data.length === 0 || data[0].Status !== 'Success') {
-                alert('No details found for this Pincode');
+                showAlert('No details found for this Pincode');
                 return;
             }
 
             const postOffice = data[0].PostOffice && data[0].PostOffice[0];
             if (!postOffice) {
-                alert('No post office details found for this Pincode');
+                showAlert('No post office details found for this Pincode');
                 return;
             }
 
@@ -400,7 +403,7 @@ const UserProfilePage = () => {
             }));
         } catch (err) {
             console.error('Pincode lookup failed:', err);
-            alert('Failed to fetch pincode details');
+            showAlert('Failed to fetch pincode details');
         }
     };
 
@@ -469,7 +472,7 @@ const UserProfilePage = () => {
                 });
                 if (!resp.ok) throw new Error('Failed to update basic shop details');
 
-                alert('Basic shop details updated');
+                showAlert('Basic shop details updated');
                 setSectionEdit(prev => ({ ...prev, basic: false }));
                 setUser(prev => ({ ...prev, ...basicPayload, shopLogo: shopLogoPreview }));
             }
@@ -494,7 +497,7 @@ const UserProfilePage = () => {
                 });
                 if (!resp.ok) throw new Error('Failed to update finance details');
 
-                alert('Finance details updated');
+                showAlert('Finance details updated');
                 setSectionEdit(prev => ({ ...prev, finance: false }));
                 setUser(prev => ({ ...prev, ...financePayload }));
             }
@@ -505,7 +508,7 @@ const UserProfilePage = () => {
                     terms2: formData.terms2,
                     terms3: formData.terms3
                 };
-                alert("reached here to save other");
+                showAlert("reached here to save other");
                 const resp = await fetch(`${apiUrl}/api/shop/user/edit/details/others`, {
                     method: 'PUT',
                     credentials: 'include',
@@ -514,7 +517,7 @@ const UserProfilePage = () => {
                 });
                 if (!resp.ok) throw new Error('Failed to update other details');
 
-                alert('Other details updated');
+                showAlert('Other details updated');
                 setSectionEdit(prev => ({ ...prev, others: false }));
                 setUser(prev => ({ ...prev, ...othersPayload }));
             }
@@ -522,7 +525,7 @@ const UserProfilePage = () => {
 
         } catch (err) {
             console.error('Section save failed:', err);
-            alert('Something went wrong while saving the section');
+            showAlert('Something went wrong while saving the section');
         }
     };
 

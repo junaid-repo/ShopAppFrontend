@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { useConfig } from "./ConfigProvider";
-
+import { useAlert } from '../context/AlertContext';
 // --- Report options ---
 const REPORT_TYPES = [
   'Sales Report',
@@ -109,6 +109,8 @@ function mockGenerateReport(payload) {
 
 // --- Component ---
 const ReportsPage = () => {
+
+    const { showAlert } = useAlert();
   // Set default dates: fromDate = today - 30 days, toDate = today
   function getTodayISO() {
     const d = new Date();
@@ -152,7 +154,7 @@ const ReportsPage = () => {
         if (mounted && res.success) setRecentReports(res.reports);
       })
       .catch(() => {
-        alert('Failed to fetch recent reports (mock).');
+        showAlert('Failed to fetch recent reports (mock).');
       })
       .finally(() => {
         if (mounted) setLoadingRecent(false);
@@ -181,7 +183,7 @@ const ReportsPage = () => {
     try {
       const payload = { reportType, fromDate, toDate };
       console.log("Generate Report - Payload:", payload);
-   // alert(token);
+   // showAlert(token);
       // POST to backend and expect an Excel binary
       const response = await fetch(apiUrl+"/api/shop/report", {
         method: "POST",
@@ -258,7 +260,7 @@ const ReportsPage = () => {
       window.URL.revokeObjectURL(url);
     } catch (err) {
       console.error(err);
-      alert("Something went wrong while generating the report.");
+      showAlert("Something went wrong while generating the report.");
     } finally {
       setIsGenerating(false);
     }

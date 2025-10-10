@@ -20,6 +20,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useConfig } from "./pages/ConfigProvider";
 import {useSearchKey} from "./context/SearchKeyContext";
 import { Toaster } from 'react-hot-toast';
+import { AlertProvider } from './context/AlertContext';
+import AlertDialog from './components/AlertDialog';
 const queryClient = new QueryClient();
 
 function App() {
@@ -177,6 +179,8 @@ function App() {
 
     return (
         <QueryClientProvider client={queryClient}>
+            <AlertProvider>
+                <AlertDialog />
             <Router>
                 <Routes>
                     <Route
@@ -214,6 +218,7 @@ function App() {
                     },
                 }}
             />
+            </AlertProvider>
         </QueryClientProvider>
     );
 }

@@ -5,9 +5,11 @@ import { FaPlus, FaTrash, FaSearch } from 'react-icons/fa';
 import '../index.css';
 import { useConfig } from "./ConfigProvider";
 import { getIndianStates } from "../utils/statesUtil";
+import { useAlert } from '../context/AlertContext';
 
 // A simple debounce hook to prevent API calls on every keystroke
 const useDebounce = (value, delay) => {
+
     const [debouncedValue, setDebouncedValue] = useState(value);
     useEffect(() => {
         const handler = setTimeout(() => {
@@ -21,6 +23,7 @@ const useDebounce = (value, delay) => {
 };
 
 const BillingPage = () => {
+    const { showAlert } = useAlert();
     const {
         selectedCustomer, setSelectedCustomer,
         cart, addProduct, removeProduct,
@@ -179,7 +182,7 @@ const BillingPage = () => {
     // Replace your existing handlePrintInvoice function with this one
     const handlePrintInvoice = async (invoiceNumber) => {
         if (!invoiceNumber) {
-            alert("Order Reference number is not available.");
+            showAlert("Order Reference number is not available.");
             return;
         }
         setIsPrinting(true);
@@ -211,17 +214,17 @@ const BillingPage = () => {
                         printWindow.print();
                     } catch (error) {
                         console.error("Could not trigger print dialog automatically:", error);
-                        alert("Your invoice is open in a new tab. You can print it from there.");
+                        showAlert("Your invoice is open in a new tab. You can print it from there.");
                     }
                     // The URL will be automatically revoked by the browser when the new tab is closed.
                 }, 500); // 500ms delay
             } else {
-                alert("Please allow pop-ups for this site to print the invoice automatically.");
+                showAlert("Please allow pop-ups for this site to print the invoice automatically.");
             }
 
         } catch (error) {
             console.error("Error printing invoice:", error);
-            alert("Could not retrieve the invoice. Please try again.");
+            showAlert("Could not retrieve the invoice. Please try again.");
         } finally {
             setIsPrinting(false);
         }
@@ -289,7 +292,7 @@ const BillingPage = () => {
         const currentQuantity = itemInCart ? itemInCart.quantity : 0;
 
         if (currentQuantity >= productToAdd.stock) {
-            alert("Cannot add more items than available in stock.");
+            showAlert("Cannot add more items than available in stock.");
             return;
         }
 
@@ -342,7 +345,7 @@ const BillingPage = () => {
             setIsNewCusModalOpen(false);
         } catch (error) {
             console.error("❌ Error adding customer:", error);
-            alert(`Failed to add customer. Please check the console for details.`);
+            showAlert(`Failed to add customer. Please check the console for details.`);
         }
     };
 
@@ -353,7 +356,7 @@ const BillingPage = () => {
 
     const handlePreview = () => {
         if (!selectedCustomer || cart.length === 0) {
-            alert('Please select a customer and add products.');
+            showAlert('Please select a customer and add products.');
             return;
         }
         setIsPreviewModalOpen(true);
@@ -362,7 +365,7 @@ const BillingPage = () => {
     // --- Payment Processing ---
     const processPayment = async (paymentProviderPayload = {}) => {
         if (!selectedCustomer || cart.length === 0) {
-            alert('Please select a customer and add products.');
+            showAlert('Please select a customer and add products.');
             return;
         }
         setLoading(true);
@@ -400,7 +403,7 @@ const BillingPage = () => {
             handleNewBilling();
         } catch (err) {
             console.error("Billing failed:", err);
-            alert("Billing failed.");
+            showAlert("Billing failed.");
         } finally {
             setLoading(false);
             setIsPreviewModalOpen(false);
@@ -417,7 +420,7 @@ const BillingPage = () => {
         });
 
         if (!orderResponse.ok) {
-            alert("Server error. Could not create Razorpay order.");
+            showAlert("Server error. Could not create Razorpay order.");
             setLoading(false);
             return;
         }
@@ -445,7 +448,7 @@ const BillingPage = () => {
 
         const rzp = new window.Razorpay(options);
         rzp.on("payment.failed", (response) => {
-            alert(`Payment Failed: ${response.error.description}`);
+            showAlert(`Payment Failed: ${response.error.description}`);
             setLoading(false);
         });
         rzp.open();

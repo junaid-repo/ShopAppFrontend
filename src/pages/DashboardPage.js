@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { useConfig } from "./ConfigProvider";
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import { useNumberFormat } from "../context/NumberFormatContext";
+import { useAlert } from '../context/AlertContext';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -68,6 +69,7 @@ const mockPaymentBreakdown = {
 };
 
 const DashboardPage = ({ setSelectedPage }) => {
+    const { showAlert } = useAlert();
     const [dashboardData, setDashboardData] = useState({});
     const [sales, setSales] = useState([]);
 
@@ -450,10 +452,10 @@ const DashboardPage = ({ setSelectedPage }) => {
             });
 
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            alert("Customer added successfully!");
+            showAlert("Customer added successfully!");
         } catch (error) {
             console.error("Error adding customer:", error);
-            alert("Something went wrong while adding the customer.");
+            showAlert("Something went wrong while adding the customer.");
         }
         setIsNewCusModalOpen(false);
         setName("");
@@ -481,11 +483,11 @@ const DashboardPage = ({ setSelectedPage }) => {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
-            alert("New product added!");
+            showAlert("New product added!");
             setIsAddProdModalOpen(false);
         } catch (error) {
             console.error("Error adding product:", error);
-            alert("Something went wrong while adding the product.");
+            showAlert("Something went wrong while adding the product.");
         }
     };
 
