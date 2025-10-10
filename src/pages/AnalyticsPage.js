@@ -124,7 +124,7 @@ const AnalyticsPage = () => {
         };
     };
 
-    const metrics = ['sales', 'stocks', 'taxes', 'customers', 'profits', 'onlinePayments'];
+    const metrics = ['sales', 'revenues', 'profits' , 'stocks', 'taxes', 'customers'];
 
     const renderChartComponent = (chartProps) =>
         chartType === 'line' ? <Line {...chartProps} /> : <Bar {...chartProps} />;
@@ -145,7 +145,7 @@ const AnalyticsPage = () => {
                     {metrics.map(metric => (
                         <div className="glass-card" key={metric} style={{ width: '100%' }}>
                             <h3 style={{ textTransform: 'capitalize', textAlign: 'center' }}>
-                                {metric === 'onlinePayments' ? 'Online Payment Count' : metric}
+                                {metric === 'onlinePaymentss' ? 'Online Payment Count' : metric}
                             </h3>
                             {renderChartComponent({ data: chartData(metric, data[metric] || []) })}
                         </div>
@@ -156,7 +156,7 @@ const AnalyticsPage = () => {
             return (
                 <div className="glass-card" style={{ maxWidth: '800px', margin: '40px auto' }}>
                     <h3 style={{ textTransform: 'capitalize', textAlign: 'center' }}>
-                        {selectedMetric === 'onlinePayments' ? 'Online Payment Count' : selectedMetric}
+                        {selectedMetric === 'onlinePaymentss' ? 'Online Payment Count' : selectedMetric}
                     </h3>
                     {renderChartComponent({ data: chartData(selectedMetric, data[selectedMetric] || []) })}
                 </div>
@@ -198,7 +198,7 @@ const AnalyticsPage = () => {
                     <option value="everything">Everything</option>
                     {metrics.map(m => (
                         <option key={m} value={m}>
-                            {m === 'onlinePayments' ? 'Online Payment Count' : m.charAt(0).toUpperCase() + m.slice(1)}
+                            {m === 'onlinePaymentss' ? 'Online Payment Count' : m.charAt(0).toUpperCase() + m.slice(1)}
                         </option>
                     ))}
                 </select>
