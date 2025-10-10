@@ -287,21 +287,58 @@ const BillingPage = () => {
     // Replace your existing handleAddProduct function
     // Replace your existing handleAddProduct function with this version
 
-    const handleAddProduct = (productToAdd) => {
-        const itemInCart = cart.find(item => item.id === productToAdd.id);
-        const currentQuantity = itemInCart ? itemInCart.quantity : 0;
+    const handleAddProduct = (p) => {
+        addProduct({
+            ...p,
+            listPrice: p.price, // This is the original price from the backend
+            sellingPrice: p.price, // Initially, selling price is the same
+            costPrice: p.costPrice,
+            discountPercentage: '' // Default discount is 0
+        });
+    };
 
-        if (currentQuantity >= productToAdd.stock) {
-            showAlert("Cannot add more items than available in stock.");
+    const handleDiscountChange = (itemId, percentage) => {
+        const item = cart.find(i => i.id === itemId);
+        if (!item) return;
+
+        // If the input is empty, treat the discount as 0 for calculation.
+        if (percentage === '') {
+            updateCartItem(itemId, { discountPercentage: '', sellingPrice: item.listPrice });
             return;
         }
 
-        addProduct({ ...productToAdd, sellingPrice: productToAdd.price });
+        const discount = parseFloat(percentage);
 
-        // The following two lines are now removed to keep the search results visible:
-        // setProductSearchTerm('');
-        // setIsSearchFocused(false);
+        // If the input isn't a valid number or is out of range,
+        // just update the input's text without breaking the calculations.
+        if (isNaN(discount) || discount < 0 || discount > 100) {
+            updateCartItem(itemId, { discountPercentage: percentage }); // Update only the display value
+            return;
+        }
+
+        const newSellingPrice = item.listPrice * (1 - discount / 100);
+        updateCartItem(itemId, { discountPercentage: discount, sellingPrice: newSellingPrice });
     };
+    const handleDecrementQty = (item) => {
+        if (item.quantity <= 1) {
+            return; // Don't allow quantity to go below 1
+        }
+        updateCartItem(item.id, { quantity: item.quantity - 1 });
+    };
+
+    // --- MODIFICATION 3 ---
+    // Add this new handler to increment quantity with a stock check.
+    const handleIncrementQty = (item) => {
+        if (item.quantity >= item.stock) {
+            showAlert('Cannot add more than available stock.');
+            return;
+        }
+        updateCartItem(item.id, { quantity: item.quantity + 1 });
+    };
+
+
+
+
 
     // NEW: Handle changing the selling price directly in the cart
     const handleSellingPriceChange = (itemId, newPrice) => {
@@ -463,7 +500,7 @@ const BillingPage = () => {
     };
 
     // --- Calculations ---
-    const actualSubtotal = cart.reduce((total, item) => total + item.price * item.quantity, 0);
+    const actualSubtotal = cart.reduce((total, item) => total + (item.listPrice || item.price) * item.quantity, 0);
     const sellingSubtotal = cart.reduce((total, item) => total + (item.sellingPrice * item.quantity), 0);
     const tax = cart.reduce((total, item) => {
         const totalSellingPrice = item.sellingPrice * item.quantity;
@@ -511,7 +548,7 @@ const BillingPage = () => {
             <div className="billing-layout-new" style={{ display: 'flex', gap: '20px' }}>
 
                 {/* --- 2. Main Content Area (3/4 width) --- */}
-                <div className="current-bill-section" style={{ flex: 3 }}>
+                <div className="current-bill-section" style={{ flex: 4 }}>
                     <div className="glass-card" style={{ padding: '1rem' }}>
 
                         {/* --- NEW HEADER with Buttons Moved to the Right --- */}
@@ -596,10 +633,12 @@ const BillingPage = () => {
                                         <tr>
                                             <th>Item</th>
                                             <th>HSN</th>
+                                            <th>List Price </th>
                                             <th>Qty</th>
-                                            <th>Base Price (₹)</th>
-                                            <th>Tax (₹)</th>
-                                            <th>Selling (₹)</th>
+                                            <th>Discount%</th>
+                                            <th>Base Price </th>
+                                            <th>Tax </th>
+                                            <th>Selling </th>
                                             <th>Details</th>
                                             <th>Action</th>
                                         </tr>
@@ -609,61 +648,82 @@ const BillingPage = () => {
                                             const taxRate = item.tax / 100;
                                             const basePrice = item.sellingPrice / (1 + taxRate);
                                             const totalTaxAmount = (item.sellingPrice - basePrice) * item.quantity;
-                                            // Calculate totals by multiplying with quantity
                                             const totalBasePrice = basePrice * item.quantity;
                                             const totalSellingPrice = item.sellingPrice * item.quantity;
+                                            const totalListPrice = (item.listPrice || item.price) * item.quantity;
+
+                                            // --- MODIFICATION: Define the conditional style for the selling price cell ---
+                                            const sellingPriceCellStyle = {
+                                                verticalAlign: 'middle',
+                                                transition: 'background-color 0.3s ease' // Optional: for a smooth color change
+                                            };
+
+                                            // If the selling price per item is less than its cost, add a faint red background.
+                                            if (item.sellingPrice < item.costPrice) {
+                                                sellingPriceCellStyle.backgroundColor = '#e8a2ad'; // A faint red color
+                                            }
 
                                             return (
                                                 <tr key={item.id}>
-                                                    <td style={{ verticalAlign: 'top' }}>{item.name}</td>
-                                                    <td style={{ verticalAlign: 'top' }}>{item.hsn}</td>
-                                                    <td style={{ verticalAlign: 'top' }}>{item.quantity}</td>
-                                                    <td style={{ verticalAlign: 'top' }}>
+                                                    <td style={{ verticalAlign: 'middle' }}>{item.name}</td>
+                                                    <td style={{ verticalAlign: 'middle' }}>{item.hsn}</td>
+                                                    <td style={{ verticalAlign: 'middle' }}>
+                                                        {totalListPrice.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                                                    </td>
+                                                    <td style={{ verticalAlign: 'middle' }}>
+                                                        <div className="qty-control">
+                                                            <span>{item.quantity}</span>
+                                                            <div className="qty-arrows">
+                                                                <button onClick={() => handleIncrementQty(item)} className="qty-arrow-btn">▲</button>
+                                                                <button onClick={() => handleDecrementQty(item)} className="qty-arrow-btn">▼</button>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td style={{ verticalAlign: 'middle', width: '90px' }}>
+                                                        <input
+                                                            type="text"
+                                                            value={item.discountPercentage}
+                                                            onChange={(e) => handleDiscountChange(item.id, e.target.value)}
+                                                            placeholder="0"
+                                                            style={{ width: '100%', padding: '5px', textAlign: 'center', borderRadius: '8px', border: '1px solid var(--border-color)' }}
+                                                        />
+                                                    </td>
+                                                    <td style={{ verticalAlign: 'middle' }}>
                                                         {totalBasePrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                     </td>
-
-
-
-                                                    {/* --- UPDATED TAX CELL --- */}
-                                                    <td style={{ verticalAlign: 'top' }}>
+                                                    <td style={{ verticalAlign: 'middle' }}>
                                                         <span>{totalTaxAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-
                                                         {(() => {
                                                             const labelStyle = { fontSize: '0.8em', color: "var(--tiny-text-color)", fontStyle: "italic", display: 'block', marginTop: '2px', marginLeft: '10px' };
-
-                                                            // Check if customer and shop state are available
                                                             if (selectedCustomer && shopState) {
-                                                                // Same State: Display CGST & SGST
                                                                 if (selectedCustomer.state === shopState) {
                                                                     const halfTax = totalTaxAmount / 2;
                                                                     const halfPercent = item.tax / 2;
-                                                                    return (
-                                                                        <>
-                                                                            <span style={labelStyle}>CGST@{halfPercent}%: {halfTax.toFixed(2)}</span>
-                                                                            <span style={labelStyle}>SGST@{halfPercent}%: {halfTax.toFixed(2)}</span>
-                                                                        </>
-                                                                    );
+                                                                    return (<>
+                                                                        <span style={labelStyle}>CGST@{halfPercent}%: {halfTax.toFixed(2)}</span>
+                                                                        <span style={labelStyle}>SGST@{halfPercent}%: {halfTax.toFixed(2)}</span>
+                                                                    </>);
                                                                 } else {
-                                                                    // Different State: Display IGST
-                                                                    return (
-                                                                        <span style={labelStyle}>IGST@{item.tax}%: {totalTaxAmount.toFixed(2)}</span>
-                                                                    );
+                                                                    return <span style={labelStyle}>IGST@{item.tax}%: {totalTaxAmount.toFixed(2)}</span>;
                                                                 }
                                                             }
                                                         })()}
                                                     </td>
-                                                    <td style={{ verticalAlign: 'top' }}>
+
+                                                    {/* --- MODIFICATION: The style object is applied here --- */}
+                                                    <td style={sellingPriceCellStyle}>
                                                         {totalSellingPrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                     </td>
-                                                    <td>
-                                                    <textarea
-                                                        value={item.details || ''}
-                                                        onChange={(e) => updateCartItem(item.id, { details: e.target.value })}
-                                                        placeholder="Add details..."
-                                                        style={{ width: '100%', minHeight: '40px', border: '1px solid var(--border-color)', borderRadius: '8px' }}
-                                                    />
+
+                                                    <td style={{ verticalAlign: 'middle' }}>
+                    <textarea
+                        value={item.details || ''}
+                        onChange={(e) => updateCartItem(item.id, { details: e.target.value })}
+                        placeholder="Add details..."
+                        style={{ width: '100%', minHeight: '40px', border: '1px solid var(--border-color)', borderRadius: '8px' }}
+                    />
                                                     </td>
-                                                    <td style={{ verticalAlign: 'top' }}>
+                                                    <td style={{ verticalAlign: 'middle' }}>
                                                         <button className="remove-btn" onClick={() => removeProduct(item.id)}>
                                                             <FaTrash />
                                                         </button>

@@ -671,7 +671,7 @@ body.dark-theme .time-range-selector select:focus {
 /* table cells */
 .beautiful-table th,
 .beautiful-table td {
-    padding: 0.75rem;
+    padding: 8px 5px;
     border: 1px solid var(--bp-border);
     text-align: left;
     color: var(--bp-text);
@@ -679,7 +679,7 @@ body.dark-theme .time-range-selector select:focus {
 
 /* header row */
 .beautiful-table thead {
-    background-color: var(--bp-table-header);
+    background-color: var(--primary-color-light);
 }
 
 /* alternate rows */
@@ -1370,3 +1370,10 @@ body.dark-theme {
 .search-result-item:hover {
     background-color: var(--primary-color-light, #e0f7ff); /* Uses your theme color or a light blue fallback */
 }
+.qty-control { display: flex; align-items: center; gap: 8px; justify-content: center; }
+.qty-arrows { display: flex; flex-direction: column; }
+.qty-arrow-btn {
+    border: none; background: transparent; cursor: pointer; color: var(--text-color);
+    line-height: 0.5; font-size: 10px; padding: 2px 4px; border-radius: 4px;
+}
+.qty-arrow-btn:hover { background-color: var(--border-color); }
