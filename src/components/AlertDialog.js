@@ -5,12 +5,10 @@ import { useAlert } from '../context/AlertContext';
 const AlertDialog = () => {
     const { alert, hideAlert } = useAlert();
 
-    // If there's no alert message, render nothing
     if (!alert) {
         return null;
     }
 
-    // Basic inline styles for the dialog
     const styles = {
         overlay: {
             position: 'fixed',
@@ -18,7 +16,7 @@ const AlertDialog = () => {
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: 'rgba(250,246,246,0.17)',
+            backgroundColor: 'rgba(137,137,137,0.64)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -31,26 +29,15 @@ const AlertDialog = () => {
             boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
             maxWidth: '400px',
             textAlign: 'center',
-        },
-        button: {
-            marginTop: '20px',
-            padding: '10px 25px',
-            border: 'none',
-            borderRadius: '50px',
-            backgroundColor: '#007bff',
-            color: 'white',
-            cursor: 'pointer',
-            fontSize: '16px',
-
-
-
         }
     };
 
     return (
         <div style={styles.overlay} onClick={hideAlert}>
             <div style={styles.dialog} onClick={(e) => e.stopPropagation()}>
-                <p>{alert.message}</p>
+                {/* --- Style added here --- */}
+                <p style={{ marginBottom: '20px' }}>{alert.message}</p>
+
                 <button className="btn" onClick={hideAlert}>
                     OK
                 </button>

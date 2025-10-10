@@ -40,12 +40,38 @@ const CustomersPage = ({ setSelectedPage }) => {
     const [viewMode, setViewMode] = useState(
         () => localStorage.getItem('customerViewMode') || 'grid'
     );
+    const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
 
 
     const domainToRoute = {
         products: 'products',
         sales: 'sales',
         customers: 'customers',
+    };
+    const formatDate = (dateString) => {
+        if (!dateString) return 'N/A'; // Handle cases where date is not available
+        try {
+            const date = new Date(dateString);
+            // Add a check for invalid dates
+            if (isNaN(date.getTime())) return 'Invalid Date';
+
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed
+            const year = date.getFullYear();
+            return `${day}-${month}-${year}`;
+        } catch (error) {
+            return 'Invalid Date';
+        }
+    };
+    const handleSort = (key) => {
+        let direction = 'asc';
+        // If clicking the same column, toggle the direction
+        if (sortConfig.key === key && sortConfig.direction === 'asc') {
+            direction = 'desc';
+        }
+        setSortConfig({ key, direction });
+        // Go back to the first page whenever the sort order changes
+        setCurrentPage(1);
     };
     const [isSelectMode, setIsSelectMode] = useState(false);
     const [selectedCustomers, setSelectedCustomers] = useState(new Set());
@@ -70,6 +96,8 @@ const CustomersPage = ({ setSelectedPage }) => {
         return () => setSearchKey('');
     }, [setSearchKey]);
 
+    // --- MODIFICATION 3: Update the API call to include sorting ---
+
     const fetchCustomers = useCallback(async (page = 1) => {
         if (!apiUrl) return;
 
@@ -79,6 +107,10 @@ const CustomersPage = ({ setSelectedPage }) => {
             url.searchParams.append('page', page);
             url.searchParams.append('limit', ITEMS_PER_PAGE);
             if (debouncedSearchTerm) url.searchParams.append('search', debouncedSearchTerm);
+
+            // Add sorting parameters to the request
+            url.searchParams.append('sort', sortConfig.key);
+            url.searchParams.append('dir', sortConfig.direction);
 
             const response = await fetch(url, { method: "GET", credentials: 'include' });
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -94,7 +126,8 @@ const CustomersPage = ({ setSelectedPage }) => {
         } finally {
             setIsLoading(false);
         }
-    }, [apiUrl, debouncedSearchTerm]);
+// Add sortConfig to the dependency array so the data re-fetches when it changes
+    }, [apiUrl, debouncedSearchTerm, sortConfig]);
 
     useEffect(() => {
         fetchCustomers(currentPage);
@@ -167,13 +200,14 @@ const CustomersPage = ({ setSelectedPage }) => {
             console.error("Error adding customer:", error);
             showAlert("Something went wrong while adding the customer.");
         }
-        setIsModalOpen(false);
+        handleCloseUpdateModal();
     };
 
 
     // ✅ 3. MODIFIED: The handleDeleteCustomer function
     const handleDeleteCustomer = async (id, customerName) => {
-        // Find the customer to get their name for the toast message
+        if (!window.confirm("Do your really want to delete customer:"+ customerName)) return;
+
         const customerToDelete = customers.find(c => c.id === id);
         if (!customerToDelete) return;
 
@@ -374,13 +408,30 @@ const CustomersPage = ({ setSelectedPage }) => {
                             <table className="data-table">
                                 <thead>
                                 <tr>
-                                    {isSelectMode && <th><input type="checkbox"  disabled /></th>}
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th>Phone</th>
-                                    <th>State</th>
-                                    <th>City</th>
-                                    <th>Total Spent</th>
+                                    {isSelectMode && <th><input type="checkbox" disabled /></th>}
+                                    {/* --- MODIFICATION 4: Make headers clickable and add sort icons --- */}
+                                    <th className="sortable-header" onClick={() => handleSort('name')}>
+                                        Name {sortConfig.key === 'name' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                                    </th>
+                                    <th className="sortable-header" onClick={() => handleSort('email')}>
+                                        Email {sortConfig.key === 'email' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                                    </th>
+                                    <th className="sortable-header" onClick={() => handleSort('phone')}>
+                                        Phone {sortConfig.key === 'phone' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                                    </th>
+                                    <th className="sortable-header" onClick={() => handleSort('state')}>
+                                        State {sortConfig.key === 'state' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                                    </th>
+                                    <th className="sortable-header" onClick={() => handleSort('city')}>
+                                        City {sortConfig.key === 'city' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                                    </th>
+                                    <th className="sortable-header" onClick={() => handleSort('totalSpent')}>
+                                        Total Spent {sortConfig.key === 'totalSpent' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                                    </th>
+                                    {/* --- MODIFICATION 5: Add the new Created Date column --- */}
+                                    <th className="sortable-header" onClick={() => handleSort('createdDate')}>
+                                        Created Date {sortConfig.key === 'createdDate' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                                    </th>
                                     <th>Action</th>
                                 </tr>
                                 </thead>
@@ -388,7 +439,6 @@ const CustomersPage = ({ setSelectedPage }) => {
                                 {customers.map(customer => {
                                     const isSelected = selectedCustomers.has(customer.id);
                                     return (
-                                        // ✅ 5. Add the 'deleting' class conditionally
                                         <tr
                                             key={customer.id}
                                             className={`${isSelected ? 'selected' : ''} ${deletingCustomerId === customer.id ? 'deleting' : ''}`}
@@ -401,31 +451,27 @@ const CustomersPage = ({ setSelectedPage }) => {
                                             <td>{customer.state}</td>
                                             <td>{customer.city}</td>
                                             <td>₹{customer.totalSpent?.toLocaleString('en-IN')}</td>
+                                            {/* --- MODIFICATION 6: Render the formatted createdDate --- */}
+                                            <td>{formatDate(customer.createdDate)}</td>
                                             <td>
                                                 <div className="action-icons">
-                                                     <span
-                                                         onClick={(e) => {
-                                                             e.stopPropagation();
-                                                             handleEditClick(customer);
-                                                         }}
-                                                         className="action-icon edit"
-                                                         title="Edit Product"
-                                                     >
-                                    <MdEdit size={18}/>
-                                </span>
-                                                <span   onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleDeleteCustomer(customer.id, customer.name);
-                                                }} className="action-icon delete">
-                                                    <MdDelete size={18} />
-                                                    </span>
-
+                            <span
+                                onClick={(e) => { e.stopPropagation(); handleEditClick(customer); }}
+                                className="action-icon edit"
+                                title="Edit Customer"
+                            >
+                                <MdEdit size={18} />
+                            </span>
+                                                    <span
+                                                        onClick={(e) => { e.stopPropagation(); handleDeleteCustomer(customer.id, customer.name); }}
+                                                        className="action-icon delete"
+                                                        title="Delete Customer"
+                                                    >
+                                <MdDelete size={18} />
+                            </span>
                                                 </div>
-
                                             </td>
                                         </tr>
-
-
                                     );
                                 })}
                                 </tbody>

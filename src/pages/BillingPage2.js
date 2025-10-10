@@ -407,14 +407,27 @@ const BillingPage = () => {
         }
         setLoading(true);
 
-        const cartWithDiscounts = cart.map(item => ({
-            ...item,
-            discountPercentage: item.price > 0 ? (((item.price - item.sellingPrice) / item.price) * 100).toFixed(2) : 0
-        }));
+        // --- FIX: Create a new cart object for the backend with the final calculated price ---
+        const cartForBackend = cart.map(item => {
+            // --- FIX: Default null discountPercentage to 0 ---
+            const discountPercentage = item.discountPercentage || 0;
+
+            // Calculate the final price per unit based on the corrected percentage
+            const listPrice = item.price; // The original price
+            const discountAmount = listPrice * (discountPercentage / 100);
+            const finalPricePerUnit = listPrice - discountAmount;
+
+            // Return a new object for the payload
+            return {
+                ...item,
+                sellingPrice: finalPricePerUnit, // Overwrite sellingPrice with the final calculated price
+                discountPercentage: discountPercentage, // Ensure the backend receives 0 instead of null
+            };
+        });
 
         const payload = {
             selectedCustomer,
-            cart: cartWithDiscounts,
+            cart: cartForBackend, // <-- Use the newly created cart object
             sellingSubtotal,
             discountPercentage,
             tax,
@@ -423,7 +436,7 @@ const BillingPage = () => {
             ...paymentProviderPayload // Include Razorpay IDs if any
         };
 
-        const endpoint = paymentMethod === 'CARD' ? '/api/razorpay/verify-payment' : '/api/shop/do/billing';
+        const endpoint = paymentMethod === 'CARD' ? '/api/razoray/verify-payment' : '/api/shop/do/billing';
         const body = paymentMethod === 'CARD' ? JSON.stringify({ billingDetails: payload, ...paymentProviderPayload }) : JSON.stringify(payload);
 
         try {
@@ -650,7 +663,7 @@ const BillingPage = () => {
                                             const totalTaxAmount = (item.sellingPrice - basePrice) * item.quantity;
                                             const totalBasePrice = basePrice * item.quantity;
                                             const totalSellingPrice = item.sellingPrice * item.quantity;
-                                            const totalListPrice = (item.listPrice || item.price) * item.quantity;
+                                            const totalListPrice = (item.listPrice || item.price);
 
                                             // --- MODIFICATION: Define the conditional style for the selling price cell ---
                                             const sellingPriceCellStyle = {
@@ -685,7 +698,7 @@ const BillingPage = () => {
                                                             value={item.discountPercentage}
                                                             onChange={(e) => handleDiscountChange(item.id, e.target.value)}
                                                             placeholder="0"
-                                                            style={{ width: '100%', padding: '5px', textAlign: 'center', borderRadius: '8px', border: '1px solid var(--border-color)' }}
+                                                            style={{ width: '100%', padding: '5px', textAlign: 'center', borderRadius: '8px', color: 'var(--text-color)', border: '1px solid var(--border-color)', backgroundColor: 'var(--glass-card)' }}
                                                         />
                                                     </td>
                                                     <td style={{ verticalAlign: 'middle' }}>
@@ -720,7 +733,7 @@ const BillingPage = () => {
                         value={item.details || ''}
                         onChange={(e) => updateCartItem(item.id, { details: e.target.value })}
                         placeholder="Add details..."
-                        style={{ width: '100%', minHeight: '40px', border: '1px solid var(--border-color)', borderRadius: '8px' }}
+                        style={{ width: '100%', minHeight: '40px', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-color)',  backgroundColor: 'var(--glass-card)' }}
                     />
                                                     </td>
                                                     <td style={{ verticalAlign: 'middle' }}>

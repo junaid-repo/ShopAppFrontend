@@ -780,7 +780,7 @@ const BillingPage = () => {
                                                         value={item.details || ''}
                                                         onChange={(e) => updateCartItem(item.id, { details: e.target.value })}
                                                         placeholder="Enter item details..."
-                                                        style={{ width: '100%', minHeight: '48px', padding: '6px', borderRadius: '8px', border: '1px solid var(--bp-border)', resize: 'vertical', background: 'var(--bp-glass)', color: 'var(--bp-text)' }}
+                                                        style={{ width: '100%', minHeight: '48px', padding: '6px', borderRadius: '8px', border: '1px solid var(--bp-border)', resize: 'vertical', background: 'var(--glass-card)', color: 'var(--bp-text)' }}
                                                     />
                                                 </td>
                                                 <td style={{verticalAlign: 'top'}}>
