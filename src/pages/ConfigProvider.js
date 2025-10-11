@@ -6,11 +6,11 @@ export const ConfigProvider = ({ children }) => {
   const [config, setConfig] = useState(null);
 
   useEffect(() => {
-    fetch("/config.json")
+    fetch("/config-prod.json")
       .then((res) => res.json())
       .then((data) => setConfig(data))
       .catch((err) => {
-        console.error("❌ Failed to load config.json", err);
+        console.error("❌ Failed  to load config.json", err);
       });
   }, []);
 
