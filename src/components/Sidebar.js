@@ -149,6 +149,8 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar, selectedPage, setSelected
                     <span className="nav-text">Analytics</span>
                 </button>
 
+
+
             </nav>
         </aside>
     );

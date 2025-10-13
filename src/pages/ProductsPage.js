@@ -382,6 +382,8 @@ const ProductsPage = () => {
             }
 
             setIsCsvModalOpen(false);
+            fetchProducts();
+            toast.success('Products added/updated successfully!');
             setCsvFile(null);
         } catch (err) {
             setUploadError(err?.message || 'Upload failed. Please try again.');
@@ -456,11 +458,12 @@ const ProductsPage = () => {
             return;
         }
 
-        const headers = ["selectedProductId", "name", "category", "costPrice", "price", "stock", "tax"];
+        const headers = ["selectedProductId", "name", "hsn", "category", "costPrice", "price", "stock", "tax"];
 
         const rows = products.map(p => [
             p.id,
             `"${p.name}"`,
+            p.hsn,
             `"${p.category}"`,
             p.costPrice !== undefined && p.costPrice !== null ? p.costPrice : "",
             p.price,
@@ -869,12 +872,12 @@ const ProductsPage = () => {
                         <input type="file" accept=".csv,text/csv" onChange={handleCsvChange} required />
                         {csvFile && (<small>Selected: {csvFile.name} ({Math.round(csvFile.size / 1024)} KB)</small>)}
                         {uploadError && (<div className="error">{uploadError}</div>)}
-                        <div className="help-text" style={{marginTop: "10px", fontWeight: "bold"}}>Header required: name, category, price, costPrice, stock, tax.</div>
+                        <div className="help-text" style={{marginTop: "10px", fontWeight: "bold"}}>Header required: name, hsn, category, price, costPrice, stock, tax.</div>
                     </div>
                     <div className="form-actions" style={{ display: "flex", gap: "10px" }}>
                         <button
                             type="button"
-                            className="btn btn-link"
+                            className="btn btn-danger"
                             onClick={() => setIsCsvModalOpen(false)}
                         >
                             Cancel

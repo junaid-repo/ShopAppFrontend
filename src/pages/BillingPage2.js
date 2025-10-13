@@ -893,6 +893,7 @@ const BillingPage = () => {
                     {filteredCustomers.length > 0 ? filteredCustomers.map(c => (
                         <li key={c.id} onClick={() => { setSelectedCustomer(c); setIsModalOpen(false); setSearchTerm(''); }}>
                             <span>{c.name}</span>
+                            <span>{c.state}</span>
                             <span style={{ color: '#555', fontSize: '0.9em' }}>{c.phone}</span>
                         </li>
                     )) : (
@@ -910,9 +911,20 @@ const BillingPage = () => {
                         <label>Email</label>
                         <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
                     </div>
+
+
                     <div className="form-group">
                         <label>Phone Number</label>
-                        <input type="tel" required value={phone} onChange={(e) => setPhone(e.target.value)} />
+                        <input
+                            type="tel"
+                            required
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                            // --- Validation Attributes Added Below ---
+                            maxLength="10"
+                            pattern="[5-9][0-9]{9}"
+                            title="Phone number must be 10 digits and start with 5, 6, 7, 8, or 9"
+                        />
                     </div>
                     <div className="form-group">
                         <label>State</label>

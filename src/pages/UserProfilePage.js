@@ -10,30 +10,7 @@ import { Gauge, UsersFour, Invoice , Archive, ChartLineUp, MicrosoftExcelLogo, S
 
 // Mock data (used as initial fallback while API loads)
 const mockUser = {
-    profilePic: 'https://placehold.co/150x150/00aaff/FFFFFF?text=JD',
-    shopLogo: 'https://placehold.co/100x100/ffcc00/000000?text=Shop',
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    phone: '+91 9876543210',
-    address: '123 Tech Park, Bangalore, India',
-    shopOwner: 'John Doe',
-    shopLocation: 'Main Street, Bangalore',
-    gstNumber: '29ABCDE1234F1Z5',
-    shopName: 'The Shop',
-    shopEmail: 'shop@example.com',
-    shopPhone: '9988776655',
-    gstin: '29ABCDE1234F1Z5',
-    pan: 'ABCDE1234F',
-    upi: 'john@upi',
-    bankHolder: 'John Doe',
-    bankAccount: '1234567890',
-    bankIfsc: 'HDFC0001234',
-    bankName: 'HDFC Bank',
-    bankAddress: 'MG Road, Bangalore',
-    terms1: 'All items once sold are not returnable.',
-    terms2: 'Taxes applicable as per government norms.',
-    terms3: 'Payment must be completed before dispatch.',
-    userSource: 'email'
+   
 };
 
 const UserProfilePage = () => {

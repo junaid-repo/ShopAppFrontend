@@ -1055,7 +1055,10 @@ const DashboardPage = ({ setSelectedPage }) => {
                         </div>
                         <div className="form-group">
                             <label>Phone Number</label>
-                            <input type="tel" required value={phone} onChange={(e) => setPhone(e.target.value)} />
+                            <input type="tel" required value={phone} onChange={(e) => setPhone(e.target.value)}
+                                   maxLength="10"
+                                   pattern="[5-9][0-9]{9}"
+                                   title="Phone number must be 10 digits and start with 5, 6, 7, 8, or 9"/>
                         </div>
                         <div className="form-actions">
                             <button type="submit" className="btn">Add Customer</button>

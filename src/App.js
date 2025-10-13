@@ -16,12 +16,14 @@ import TermsPage from './pages/TermsPage';
 import PrivacyPage from './pages/PrivacyPage';
 import HelpPage from './pages/HelpPage';
 import Notification from './pages/Notification';
+import Settings from './pages/SettingsPage';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useConfig } from "./pages/ConfigProvider";
 import {useSearchKey} from "./context/SearchKeyContext";
 import { Toaster } from 'react-hot-toast';
 import { AlertProvider } from './context/AlertContext';
 import AlertDialog from './components/AlertDialog';
+import SettingsPage from "./pages/SettingsPage";
 const queryClient = new QueryClient();
 
 function App() {
@@ -175,6 +177,7 @@ function App() {
         privacy: <PrivacyPage setSelectedPage={setSelectedPage} />,
         help: <HelpPage setSelectedPage={setSelectedPage} />,
         notifications: <Notification  setSelectedPage={setSelectedPage} />,
+        settings: <SettingsPage  setSelectedPage={setSelectedPage} />,
     };
 
     return (
@@ -208,16 +211,23 @@ function App() {
                     />
                 </Routes>
             </Router>
-            <Toaster
-                position="top-center"
-                toastOptions={{
-                    duration: 9000,
-                    style: {
-                        background: 'var(--primary-color-light)',
-                        color: 'var(--text-color)',
-                    },
-                }}
-            />
+                <Toaster
+                    position="top-center"
+                    toastOptions={{
+                        duration: 80000,
+                        style: {
+                            // Existing styles
+                            background: 'lightgreen',
+                            color: 'var(--text-color)',
+                            borderRadius: '25px',
+
+                            // --- New styles to increase size ---
+                            padding: '12px',      // Increases space inside, making it taller and wider
+                            minWidth: '3500px',    // Ensures the toast isn't too narrow
+                            fontSize: '16px',     // Makes the text a bit larger to match
+                        },
+                    }}
+                />
             </AlertProvider>
         </QueryClientProvider>
     );
