@@ -66,20 +66,51 @@ const BillingPage = () => {
     const config = useConfig();
     const apiUrl = config ? config.API_URL : "";
 
+    const [customerSearchTerm, setCustomerSearchTerm] = useState('');
+    const debouncedCustomerSearchTerm = useDebounce(customerSearchTerm, 500);
+    const [customerSearchResults, setCustomerSearchResults] = useState([]);
+    const [isCustomerLoading, setIsCustomerLoading] = useState(false);
+
     // --- API Calls and Data Fetching ---
 
     // Fetch customers list on initial load
-    useEffect(() => {
+// NEW: Fetch customers dynamically for the search modal
+    const fetchCustomersForModal = useCallback(async (searchTerm = '') => {
         if (!apiUrl) return;
-        fetch(`${apiUrl}/api/shop/get/customersList`, {
-            method: "GET",
-            credentials: 'include',
-            headers: { "Content-Type": "application/json" }
-        })
-            .then(res => res.json())
-            .then(setCustomersList)
-            .catch(err => console.error("Error fetching customers:", err));
+        setIsCustomerLoading(true);
+        try {
+            const url = new URL(`${apiUrl}/api/shop/get/cacheable/customersList`);
+            // If there's a search term, use it. Otherwise, fetch top 15.
+            if (searchTerm) {
+                url.searchParams.append('search', searchTerm);
+
+                url.searchParams.append('page', 1);
+            } else {
+                url.searchParams.append('limit', 15);
+                url.searchParams.append('page', 1);
+            }
+
+            const response = await fetch(url, { method: "GET", credentials: 'include' });
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+            const result = await response.json();
+            // The API returns data in a 'data' property
+            setCustomerSearchResults(result.data || []);
+        } catch (error) {
+            console.error("Error fetching customers for billing:", error);
+            setCustomerSearchResults([]);
+        } finally {
+            setIsCustomerLoading(false);
+        }
     }, [apiUrl]);
+
+// NEW: useEffect to trigger the customer fetch when modal is open or search term changes
+    useEffect(() => {
+        // Only fetch if the modal is open
+        if (isModalOpen) {
+            fetchCustomersForModal(debouncedCustomerSearchTerm);
+        }
+    }, [isModalOpen, debouncedCustomerSearchTerm, fetchCustomersForModal]);
 
     // Fetch available payment methods
     useEffect(() => {
@@ -522,9 +553,6 @@ const BillingPage = () => {
     }, 0);
     const total = sellingSubtotal - tax;
     const discountPercentage = actualSubtotal > 0 ? (((actualSubtotal - sellingSubtotal) / actualSubtotal) * 100).toFixed(2) : 0;
-    const filteredCustomers = customersList.filter(c =>
-        c.name?.toLowerCase().includes(searchTerm.toLowerCase()) || c.phone?.includes(searchTerm)
-    );
 
     // --- Render ---
     return (
@@ -885,19 +913,30 @@ const BillingPage = () => {
                 <input
                     type="text"
                     placeholder="Search by name or phone..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    style={{ width: '100%', padding: '8px', marginBottom: '15px' }}
+                    value={customerSearchTerm}
+                    onChange={(e) => setCustomerSearchTerm(e.target.value)}
+                    style={{ width: '100%', padding: '10px', marginBottom: '15px', borderRadius: '20px', border: '1px solid var(--border-color)', background: 'var(--input-bg)', color: 'var(--text-color)' }}
                 />
                 <ul className="customer-modal-list">
-                    {filteredCustomers.length > 0 ? filteredCustomers.map(c => (
-                        <li key={c.id} onClick={() => { setSelectedCustomer(c); setIsModalOpen(false); setSearchTerm(''); }}>
-                            <span>{c.name}</span>
-                            <span>{c.state}</span>
-                            <span style={{ color: '#555', fontSize: '0.9em' }}>{c.phone}</span>
-                        </li>
-                    )) : (
-                        <li>No customers found.</li>
+                    {isCustomerLoading ? (
+                        <li style={{ textAlign: 'center' }}>Loading...</li>
+                    ) : customerSearchResults.length > 0 ? (
+                        customerSearchResults.map(c => (
+                            <li
+                                key={c.id}
+                                onClick={() => {
+                                    setSelectedCustomer(c);
+                                    setIsModalOpen(false);
+                                    setCustomerSearchTerm(''); // Reset search after selection
+                                }}
+                            >
+                                <span>{c.name}</span>
+                                <span>{c.state}</span>
+                                <span style={{ color: '#555', fontSize: '0.9em' }}>{c.phone}</span>
+                            </li>
+                        ))
+                    ) : (
+                        <li>No customers found. Try searching for another name or number.</li>
                     )}
                 </ul>
             </Modal>

@@ -904,7 +904,7 @@ const DashboardPage = ({ setSelectedPage }) => {
                         </div>
                     </div>
 
-                    {/* === Row 2: Top Products | Sales Performance | Recent Orders === */}
+                    {/* === Row 2: Top Products |  | Recent Orders === */}
                     <div
                         className="dashboard-row"
                         style={{

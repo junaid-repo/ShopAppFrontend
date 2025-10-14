@@ -7,7 +7,7 @@
     import { useSearchKey } from '../context/SearchKeyContext';
     import { MdEdit, MdDelete } from "react-icons/md";
     import { getIndianStates } from '../utils/statesUtil';
-    import toast from 'react-hot-toast';
+    import toast, {Toaster} from 'react-hot-toast';
     import { useAlert } from '../context/AlertContext';
     
     const useDebounce = (value, delay) => {
@@ -195,8 +195,10 @@
                     body: JSON.stringify(payload),
                 });
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                toast.success("Customer has been updated.");
+                console.log("Customer has been updated.");
                 fetchCustomers(1);
-                toast.success(`${name || 'Customer'} has been updated.`);
+
             } catch (error) {
                 console.error("Error adding customer:", error);
                 toast.error("Something went wrong while adding the customer.");
@@ -320,6 +322,7 @@
     
         return (
             <div className="page-container">
+                <Toaster position="top-center" reverseOrder={false} />
                 <h2>Customers</h2>
                 <div className="page-header">
                     <div className="header-actions">
