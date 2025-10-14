@@ -668,7 +668,11 @@ const LoginPage = ({ onLogin }) => {
                             </div>
                             <div className="form-group"><input type="text" placeholder="Full Name" value={registerData.fullName} onChange={(e) => setRegisterData({ ...registerData, fullName: e.target.value })}/></div>
                             <div className="form-group"><input type="email" placeholder="Email" value={registerData.email} onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })} /></div>
-                            <div className="form-group"><input type="text" placeholder="Phone" value={registerData.phone} onChange={(e) => setRegisterData({ ...registerData, phone: e.target.value })} /></div>
+                            <div className="form-group"><input type="tel" placeholder="Phone"
+                                                               maxLength="10"
+                                                               pattern="[5-9][0-9]{9}"
+                                                               title="Phone number must be 10 digits and start with 5, 6, 7, 8, or 9"
+                                                               value={registerData.phone} onChange={(e) => setRegisterData({ ...registerData, phone: e.target.value })} /></div>
                             <div className="form-group"><input type="password" placeholder="Password" value={registerData.password} onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })} /></div>
                             <div className="form-group"><input type="password" placeholder="Confirm Password" value={registerData.confirmPassword} onChange={(e) => setRegisterData({ ...registerData, confirmPassword: e.target.value })} /></div>
                             <div className="form-group" style={{ display: "flex", alignItems: "center", gap: "8px" }} >

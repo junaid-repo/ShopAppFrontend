@@ -148,7 +148,10 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar, selectedPage, setSelected
                     <ChartLineUp  weight="duotone" style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'analytics' ? 'var(--text-color)' : collapsedIconColor) : iconColors.analytics) }} />
                     <span className="nav-text">Analytics</span>
                 </button>
-
+                <button type="button" onClick={makeClickHandler('chat')} className={`nav-link ${selectedPage === 'chat' ? 'active' : ''}`} title="Analytics" style={buttonStyleFor('chat')}>
+                    <ChartLineUp  weight="duotone" style={{ color: isDark ? '#ffffff' : (isCollapsed ? (selectedPage === 'chat' ? 'var(--text-color)' : collapsedIconColor) : iconColors.analytics) }} />
+                    <span className="nav-text">Chat</span>
+                </button>
 
 
             </nav>
