@@ -23,9 +23,53 @@ const AdminChatPage = ({ adminUsername }) => {
     useEffect(() => {
         if (!apiUrl) return;
 
+        const fetchOpenTickets = async () => {
+            try {
+                const response = await fetch(`${apiUrl}/api/tickets/open`, {
+                    method: 'GET',
+                    credentials: 'include',
+                });
+                if (response.ok) {
+                    const missedTickets = await response.json();
+
+                    console.log("The missed tickets are ",missedTickets);
+
+                    // Use the fetched tickets to populate the initial chat list
+                    setActiveChats(prevChats => {
+                        const newChats = new Map(prevChats);
+                        missedTickets.forEach(ticket => {
+                            if (!newChats.has(ticket.ticketNumber)) {
+                                newChats.set(ticket.ticketNumber, {
+                                    chatId: ticket.ticketNumber,
+                                    sender: ticket.createdBy, // Assuming your ticket has this info
+                                    content: `Topic: ${ticket.topic}`,
+                                    messages: [],
+                                    unread: true,
+                                });
+                            }
+                        });
+                        return newChats;
+                    });
+
+                    // Also, immediately subscribe to each of these missed tickets
+                    missedTickets.forEach(ticket => {
+                        if (stompClientRef.current?.active && !subscriptionsRef.current.has(ticket.ticketNumber)) {
+                            const sub = stompClientRef.current.subscribe(`/topic/chat/${ticket.ticketNumber}`, onMessageReceived);
+                            subscriptionsRef.current.set(ticket.ticketNumber, sub);
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error("Failed to fetch open tickets:", error);
+            }
+        };
+
+
         const onConnect = () => {
             console.log('Admin connected to WebSocket');
             setIsConnected(true);
+            // --- UPDATED: Call the catch-up function upon connection ---
+            fetchOpenTickets();
             stompClientRef.current.subscribe('/topic/admin/new-chats', onNewChatNotification);
         };
 
@@ -151,8 +195,8 @@ const AdminChatPage = ({ adminUsername }) => {
 
     return (
         <div className="admin-chat-dashboard">
-            <div className="sidebar">
-                <div className="sidebar-header">
+            <div className="adminChat">
+                <div className="adminChat-header">
                     <h3>Active Chats {!isConnected && '(Offline)'}</h3>
                 </div>
                 <div className="chat-list">

@@ -18,6 +18,7 @@ import HelpPage from './pages/HelpPage';
 import Notification from './pages/Notification';
 import SettingsPage from './pages/SettingsPage';
 import ChatPage from './pages/ChatPage';
+import AdminChatPage from './pages/AdminChatPage';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useConfig } from "./pages/ConfigProvider";
 import { useSearchKey } from "./context/SearchKeyContext";
@@ -30,14 +31,20 @@ const queryClient = new QueryClient();
 function App() {
     const [user, setUser] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [initialPageSet, setInitialPageSet] = useState(false);
     const [warning, setWarning] = useState(false);
     const [countdown, setCountdown] = useState(60);
     const countdownRef = useRef(null);
     const inactivityTimerRef = useRef(null);
     const config = useConfig();
-    let apiUrl = config ? config.API_URL : "";
-    const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
+    let apiUrl = "";
+    if (config) {
+        apiUrl = config.API_URL;
+    }
+
+    const [theme, setTheme] = useState(() => {
+        const savedTheme = localStorage.getItem('theme');
+        return savedTheme || 'light';
+    });
 
     useEffect(() => {
         document.body.classList.remove('dark-theme');
@@ -51,7 +58,9 @@ function App() {
         }
     }, [theme]);
 
-    const toggleTheme = () => setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
+    const toggleTheme = () => {
+        setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
+    };
 
     Number.prototype.toLocaleString = function (locales, options) {
         return new Intl.NumberFormat("en-IN", options).format(this.valueOf());
@@ -63,7 +72,13 @@ function App() {
                 method: 'GET',
                 credentials: 'include',
             });
-            setUser(response.ok ? await response.json() : null);
+            if (response.ok) {
+                const data = await response.json();
+                setUser(data);
+                resetInactivityTimer();
+            } else {
+                setUser(null);
+            }
         } catch (error) {
             console.error('Error checking session:', error);
             setUser(null);
@@ -72,18 +87,20 @@ function App() {
         }
     };
 
-    const handleLogin = () => { setIsLoading(true); checkSession(); };
+    const handleLogin = () => {
+        setIsLoading(true);
+        checkSession();
+    };
 
     const handleLogout = async () => {
         try {
             await fetch(`${apiUrl}/auth/logout`, { method: 'POST', credentials: 'include' });
         } catch (e) { console.error('Logout failed', e); }
         setUser(null);
-        setInitialPageSet(false);
+        // When logging out, reset selectedPage to the default
+        setSelectedPage('dashboard');
         clearTimers();
     };
-
-    const clearTimers = () => { clearTimeout(inactivityTimerRef.current); clearInterval(countdownRef.current); };
 
     const resetInactivityTimer = () => {
         clearTimers();
@@ -95,34 +112,47 @@ function App() {
                 timeLeft -= 1;
                 setCountdown(timeLeft);
                 if (timeLeft <= 0) {
+                    clearTimers();
+                    alert("You have been logged out due to inactivity.");
                     handleLogout();
-                    alert("Logged out due to inactivity.");
                 }
             }, 1000);
         }, 14 * 60 * 1000);
     };
 
+    const clearTimers = () => {
+        if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
+        if (countdownRef.current) clearInterval(countdownRef.current);
+    };
+
     const { setSearchKey } = useSearchKey();
 
     useEffect(() => {
+        const resetEvents = ['mousemove', 'keydown', 'click'];
         const resetHandler = () => { if (user) resetInactivityTimer(); };
-        window.addEventListener('mousemove', resetHandler);
+        resetEvents.forEach(evt => window.addEventListener(evt, resetHandler));
         checkSession();
-        return () => window.removeEventListener('mousemove', resetHandler);
+        return () => resetEvents.forEach(evt => window.removeEventListener(evt, resetHandler));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const [selectedPage, setSelectedPage] = useState('dashboard');
-    useEffect(() => { if (selectedPage !== 'customers') setSearchKey(''); }, [selectedPage, setSearchKey]);
 
     useEffect(() => {
-        if (user && !initialPageSet) {
-            const isAdmin = user.roles?.includes('ADMIN');
-            setSelectedPage(isAdmin ? 'chat' : 'dashboard');
-            setInitialPageSet(true);
+        if (selectedPage !== 'customers') {
+            setSearchKey('');
         }
-    }, [user, initialPageSet]);
+    }, [selectedPage, setSearchKey]);
 
-    // --- THIS IS THE CRITICAL FIX ---
+    const isAdmin = user?.roles?.includes('ADMIN') ?? false;
+
+    // This is the definitive logic for setting the page.
+    // It runs on every render but only changes the page if the admin is on the default 'dashboard' state.
+    let effectivePage = selectedPage;
+    if (isAdmin && selectedPage === 'chat') {
+        effectivePage = 'adminChat';
+    }
+
     const pages = {
         dashboard: <DashboardPage setSelectedPage={setSelectedPage} />,
         products: <ProductsPage setSelectedPage={setSelectedPage} />,
@@ -139,11 +169,13 @@ function App() {
         help: <HelpPage setSelectedPage={setSelectedPage} />,
         notifications: <Notification setSelectedPage={setSelectedPage} />,
         settings: <SettingsPage setSelectedPage={setSelectedPage} />,
-        // The `user` object is now correctly passed as a prop
-        chat: <ChatPage user={user} />,
+        chat: <ChatPage setSelectedPage={setSelectedPage} />,
+        adminChat: <AdminChatPage adminUsername={user?.username} />
     };
 
-    if (isLoading) { return <div>Loading Application...</div>; }
+    if (isLoading) {
+        return <div>Loading Application...</div>;
+    }
 
     return (
         <QueryClientProvider client={queryClient}>
@@ -151,19 +183,28 @@ function App() {
                 <AlertDialog />
                 <Router>
                     <Routes>
-                        <Route path="/login" element={!user ? <LoginPage onLogin={handleLogin} /> : <Navigate to="/" replace />} />
-                        <Route path="/*" element={ user ? (
-                            <MainLayout
-                                onLogout={handleLogout}
-                                theme={theme}
-                                toggleTheme={toggleTheme}
-                                selectedPage={selectedPage}
-                                setSelectedPage={setSelectedPage}
-                                pages={pages}
-                                isAdmin={user.roles?.includes('ADMIN') ?? false}
-                            />
-                        ) : ( <Navigate to="/login" replace /> )
-                        }
+                        <Route
+                            path="/login"
+                            element={!user ? <LoginPage onLogin={handleLogin} /> : <Navigate to="/" replace />}
+                        />
+                        <Route
+                            path="/*"
+                            element={
+                                user ? (
+                                    <MainLayout
+                                        onLogout={handleLogout}
+                                        theme={theme}
+                                        toggleTheme={toggleTheme}
+                                        // Pass the calculated `effectivePage` down.
+                                        selectedPage={effectivePage}
+                                        setSelectedPage={setSelectedPage}
+                                        pages={pages}
+                                        isAdmin={isAdmin}
+                                    />
+                                ) : (
+                                    <Navigate to="/login" replace />
+                                )
+                            }
                         />
                     </Routes>
                 </Router>
