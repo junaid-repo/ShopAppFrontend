@@ -253,7 +253,7 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar, selectedPage, setSelected
                     title="Chat Support"
                 >
                     <Headset size={20} weight="duotone" style={{ marginRight: '8px' }} />
-                    <span className="chat-text">Chat Support</span>
+                    <span className="chat-text">Support</span>
                 </button>
             </div>
         </aside>

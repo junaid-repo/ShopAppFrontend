@@ -55,24 +55,6 @@ const ChatPage = ({ setSelectedPage }) => {
         } finally {
             setIsLoading(false);
         }
-        /*
-        // EXPECTED SUCCESS RESPONSE for /api/tickets/my-latest
-        [
-            {
-                "ticketNumber": "TKT-78902",
-                "creationDate": "2023-10-27T11:30:00Z",
-                "topic": "Product",
-                "summary": "Cannot find the new feature...",
-                "status": "Open",
-                "closingRemarks": "",
-                "chatHistory": [  // <-- This array should be included
-                    { "sender": "User_123", "content": "Ticket Summary: Cannot find..." },
-                    { "sender": "Admin_Support", "content": "Hi there, which feature are you looking for?" }
-                ]
-            },
-            // ... more tickets
-        ]
-        */
     };
 
     // 2. Create a New Ticket
@@ -133,7 +115,6 @@ const ChatPage = ({ setSelectedPage }) => {
                 body: JSON.stringify({ sender: username, chatId: chatId, content: `Topic: ${ticket.topic}`, type: 'JOIN' })
             });
 
-            // Only send the initial summary if it's a brand new ticket
             if (isNewTicket) {
                 stompClientRef.current.publish({
                     destination: '/app/chat.sendMessage',
@@ -168,51 +149,33 @@ const ChatPage = ({ setSelectedPage }) => {
         const newTicket = await createTicket();
         if (newTicket) {
             setActiveTicket(newTicket);
-            // For a new ticket, the history is just the initial summary message
-            setMessages([{
-                sender: username,
-                content: `Ticket Summary: ${newTicket.summary}`,
-                type: 'CHAT'
-            }]);
+            setMessages([{ sender: username, content: `Ticket Summary: ${newTicket.summary}`, type: 'CHAT' }]);
             setView('chat');
-            connectToChat(newTicket, true); // 'true' because it's a new ticket
+            connectToChat(newTicket, true);
         }
     };
 
-    // NEW: Handler to continue chat using existing data
     const handleContinueChat = async (ticket) => {
         setActiveTicket(ticket);
-        // Use the chat history that was already fetched from the API
-        //setMessages(ticket.chatHistory || []);
         setView('chat');
-        console.log("reacher here with", ticket.ticketNumber);
         try {
             const response = await fetch(`${apiUrl}/api/chat-history/${ticket.ticketNumber}`, {
                 method: 'GET',
                 credentials: 'include',
             });
-            if (response.ok) {
-                const history = await response.json();
-                setMessages(history); // Populate the chat window with the history
-            } else {
-                // If fetching fails, start with an empty chat
-                setMessages([]);
-            }
+            setMessages(response.ok ? await response.json() : []);
         } catch (error) {
             console.error("Error fetching chat history:", error);
             setMessages([]);
         }
-        connectToChat(ticket, false); // False flag indicates it's an existing ticket
+        connectToChat(ticket, false);
     };
 
-    // NEW: Handler to set the active ticket and open the close modal
     const handleOpenCloseModal = (ticket) => {
         setActiveTicket(ticket);
         setIsCloseModalOpen(true);
     };
 
-
-    // UPDATED: Handler for submitting the close ticket form
     const handleCloseTicketSubmit = async () => {
         if (!closingRemarks) {
             alert("Please provide closing remarks.");
@@ -222,13 +185,10 @@ const ChatPage = ({ setSelectedPage }) => {
         if (success) {
             setIsCloseModalOpen(false);
             setClosingRemarks('');
-
             if (view === 'chat') {
-                // If in chat view, disconnect and navigate away
                 if (stompClientRef.current?.active) stompClientRef.current.deactivate();
                 setSelectedPage('dashboard');
             } else {
-                // If in list view, just refresh the list to show the "Closed" status
                 fetchInitialData();
             }
         }
@@ -247,50 +207,102 @@ const ChatPage = ({ setSelectedPage }) => {
         return () => { if (stompClientRef.current?.active) stompClientRef.current.deactivate(); };
     }, []);
 
-    // --- Render Logic ---
-    if (view === 'chat') {
-        return (
-            <div className="chat-window-page">
-                <div className="chat-header">
-                    <span>Ticket: {activeTicket.ticketNumber} ({activeTicket.topic})</span>
-                    <div className="chat-header-actions">
-                        <button className="back-link-button" onClick={() => { setView('list'); if (stompClientRef.current?.active) stompClientRef.current.deactivate(); }}>
-                            <FaArrowLeft /> Back to Tickets
-                        </button>
-                        <button className="close-btn-link" onClick={() => handleOpenCloseModal(activeTicket)}>Close Ticket</button>
-                    </div>
-                </div>
-                <div className="messages-list">
-                    {messages.map((msg, index) => (
-                        <div key={index} className={`message-item ${msg.sender === username ? 'user' : 'admin'}`}>
-                            {msg.content}
+    // --- Helper function to render the correct view ---
+    const renderContent = () => {
+        if (view === 'chat') {
+            return (
+                <div className="chat-window-page">
+                    <div className="chat-header">
+                        <span>Ticket: {activeTicket.ticketNumber} ({activeTicket.topic})</span>
+                        <div className="chat-header-actions">
+                            <button className="back-link-button" onClick={() => { setView('list'); if (stompClientRef.current?.active) stompClientRef.current.deactivate(); }}>
+                                <FaArrowLeft /> Back to Tickets
+                            </button>
+                            <button className="close-btn-link" onClick={() => handleOpenCloseModal(activeTicket)}>Close Ticket</button>
                         </div>
-                    ))}
-                    <div ref={messagesEndRef} />
+                    </div>
+                    <div className="messages-list">
+                        {messages.map((msg, index) => (
+                            <div key={index} className={`message-item ${msg.sender === username ? 'user' : 'admin'}`}>
+                                {msg.content}
+                            </div>
+                        ))}
+                        <div ref={messagesEndRef} />
+                    </div>
+                    <form className="message-input-form" onSubmit={sendMessage}>
+                        <input type="text" placeholder={isConnected ? "Type a message..." : "Connecting..."} value={inputValue} onChange={(e) => setInputValue(e.target.value)} disabled={!isConnected} autoFocus />
+                        <button type="submit" disabled={!isConnected}><FaPaperPlane /></button>
+                    </form>
                 </div>
-                <form className="message-input-form" onSubmit={sendMessage}>
-                    <input type="text" placeholder={isConnected ? "Type a message..." : "Connecting..."} value={inputValue} onChange={(e) => setInputValue(e.target.value)} disabled={!isConnected} autoFocus />
-                    <button type="submit" disabled={!isConnected}><FaPaperPlane /></button>
-                </form>
+            );
+        }
+
+        if (view === 'create') {
+            return (
+                <div className="topic-selection-container glass-card">
+                    <button className="back-link-button" onClick={() => setView('list')}><FaArrowLeft /> Back to Tickets</button>
+                    <h2>Create New Support Ticket</h2>
+                    <div className="form-group"><label>Topic</label><select value={newTicketTopic} onChange={(e) => setNewTicketTopic(e.target.value)}><option value="">-- Select a Topic --</option><option value="Product">Product</option><option value="Customers">Customers</option><option value="Sales">Sales</option><option value="Billings">Billings</option></select></div>
+                    <div className="form-group"><label>Summary</label><textarea placeholder="Briefly describe your issue..." value={newTicketSummary} onChange={(e) => setNewTicketSummary(e.target.value)} /></div>
+                    <div className="form-actions"><button className="process-payment-btn" onClick={handleCreateTicket}>Save & Start Chat</button></div>
+                </div>
+            );
+        }
+
+        // Default view: 'list'
+        return (
+            <div className="ticket-list-container">
+                <div className="ticket-list-header">
+                    <h2>My Support Tickets</h2>
+                    <button className="btn" onClick={() => setView('create')}><FaPlus /> Create New Ticket</button>
+                </div>
+                {isLoading ? <p>Loading tickets...</p> : (
+                    <div className="tickets-table-wrapper">
+                        <table className="beautiful-table tickets-table">
+                            <thead>
+                            <tr>
+                                <th>Ticket #</th>
+                                <th>Created On</th>
+                                <th>Topic</th>
+                                <th>Summary</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {tickets.map(ticket => (
+                                <tr key={ticket.ticketNumber}>
+                                    <td>{ticket.ticketNumber}</td>
+                                    <td>{new Date(ticket.creationDate).toLocaleDateString()}</td>
+                                    <td>{ticket.topic}</td>
+                                    <td>{ticket.summary}</td>
+                                    <td><span className={`status-badge status-${ticket.status.toLowerCase()}`}>{ticket.status}</span></td>
+                                    <td>
+                                        {ticket.status && ticket.status.toLowerCase() === 'open' && (
+                                            <div className="ticket-actions">
+                                                <button className="action-btn continue" title="Continue Chat" onClick={() => handleContinueChat(ticket)}>
+                                                    <FaComment /> Chat
+                                                </button>
+                                                <button className="action-btn close" title="Close Ticket" onClick={() => handleOpenCloseModal(ticket)}>
+                                                    <FaTimesCircle /> Close
+                                                </button>
+                                            </div>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
             </div>
         );
     }
 
-    if (view === 'create') {
-        return (
-            <div className="topic-selection-container glass-card">
-                <button className="back-link-button" onClick={() => setView('list')}><FaArrowLeft /> Back to Tickets</button>
-                <h2>Create New Support Ticket</h2>
-                <div className="form-group"><label>Topic</label><select value={newTicketTopic} onChange={(e) => setNewTicketTopic(e.target.value)}><option value="">-- Select a Topic --</option><option value="Product">Product</option><option value="Customers">Customers</option><option value="Sales">Sales</option><option value="Billings">Billings</option></select></div>
-                <div className="form-group"><label>Summary</label><textarea placeholder="Briefly describe your issue..." value={newTicketSummary} onChange={(e) => setNewTicketSummary(e.target.value)} /></div>
-                <div className="form-actions"><button className="btn" onClick={handleCreateTicket}>Save & Start Chat</button></div>
-            </div>
-        )
-    }
-
-    // Default view: 'list' with actionable rows
+    // --- Main Component Return ---
     return (
-        <div className="ticket-list-container">
+        <>
+            {/* The modal is now rendered at the top level, so it's always available */}
             {isCloseModalOpen && (
                 <div className="modal-overlay">
                     <div className="modal-content">
@@ -304,50 +316,10 @@ const ChatPage = ({ setSelectedPage }) => {
                     </div>
                 </div>
             )}
-            <div className="ticket-list-header">
-                <h2>My Support Tickets</h2>
-                <button className="btn" onClick={() => setView('create')}><FaPlus /> Create New Ticket</button>
-            </div>
-            {isLoading ? <p>Loading tickets...</p> : (
-                <div className="tickets-table-wrapper">
-                    <table className="data-table">
-                        <thead>
-                        <tr>
-                            <th>Ticket #</th>
-                            <th>Created On</th>
-                            <th>Topic</th>
-                            <th>Summary</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {tickets.map(ticket => (
-                            <tr key={ticket.ticketNumber}>
-                                <td>{ticket.ticketNumber}</td>
-                                <td>{new Date(ticket.creationDate).toLocaleDateString()}</td>
-                                <td>{ticket.topic}</td>
-                                <td>{ticket.summary}</td>
-                                <td><span className={`status-badge status-${ticket.status.toLowerCase()}`}>{ticket.status}</span></td>
-                                <td>
-                                    {ticket.status === 'open' && (
-                                        <div className="ticket-actions">
-                                            <button className="action-btn continue" title="Continue Chat" onClick={() => handleContinueChat(ticket)}>
-                                                <FaComment /> Chat
-                                            </button>
-                                            <button className="action-btn close" title="Close Ticket" onClick={() => handleOpenCloseModal(ticket)}>
-                                                <FaTimesCircle /> Close
-                                            </button>
-                                        </div>
-                                    )}
-                                </td>
-                            </tr>
-                        ))}
-                        </tbody>
-                    </table>
-                </div>
-            )}
-        </div>
+
+            {/* The renderContent function displays the correct view */}
+            {renderContent()}
+        </>
     );
 };
 
