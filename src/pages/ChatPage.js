@@ -6,8 +6,10 @@ import SockJS from 'sockjs-client';
 import { useConfig } from "./ConfigProvider";
 import './ChatPage.css'; // Your existing CSS
 import './TicketSystem.css'; // New CSS for the ticketing components
+import { useAlert } from '../context/AlertContext';
 
 const ChatPage = ({ setSelectedPage }) => {
+    const { showAlert } = useAlert();
     // --- State Management ---
     const [tickets, setTickets] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -71,7 +73,23 @@ const ChatPage = ({ setSelectedPage }) => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
             });
-            if (!response.ok) throw new Error("Failed to create ticket");
+
+            if (!response.ok) {
+                // Specifically check if the status is 400 (Bad Request)
+                if (response.status === 400) {
+                    // We expect a JSON body with validation details
+                    const errorData = await response.json();
+                    // Show the specific validation summary in an alert
+                    showAlert(errorData.summary);
+                    // Throw an error to stop execution
+                    throw new Error(errorData.summary || 'Bad Request');
+                } else {
+                    // For any other error (e.g., 500, 404, 403), throw a more generic error
+                    throw new Error(`An unexpected error occurred: ${response.statusText}`);
+                }
+            }
+
+
             return await response.json();
         } catch (error) {
             console.error("Error creating ticket:", error);
