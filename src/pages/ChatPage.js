@@ -276,7 +276,7 @@ const ChatPage = ({ setSelectedPage }) => {
                 </div>
                 {isLoading ? <p>Loading tickets...</p> : (
                     <div className="tickets-table-wrapper">
-                        <table className="beautiful-table tickets-table">
+                        <table className="data-table">
                             <thead>
                             <tr>
                                 <th>Ticket #</th>
@@ -291,7 +291,7 @@ const ChatPage = ({ setSelectedPage }) => {
                             {tickets.map(ticket => (
                                 <tr key={ticket.ticketNumber}>
                                     <td>{ticket.ticketNumber}</td>
-                                    <td>{new Date(ticket.creationDate).toLocaleDateString()}</td>
+                                    <td>{new Date(ticket.createdDate).toLocaleDateString()}</td>
                                     <td>{ticket.topic}</td>
                                     <td>{ticket.summary}</td>
                                     <td><span className={`status-badge status-${ticket.status.toLowerCase()}`}>{ticket.status}</span></td>

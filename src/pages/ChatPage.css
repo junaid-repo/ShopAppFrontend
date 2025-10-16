@@ -1,22 +1,4 @@
-.main-content {
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1; /* Ensures it takes up all available space */
-    overflow-y: auto; /* Allows content to scroll if it's too tall */
-}
 
-/* This is the most important part */
-/* In your main stylesheet (e.g., index.css) */
-
-.main-content main {
-    flex-grow: 1;
-    display: flex;
-    justify-content: center;  /* Horizontally center everything */
-
-    /* FIX: Change align-items from 'center' to 'flex-start' */
-    /* This makes all pages align to the top by default. */
-    align-items: flex-start;
-}
 
 .chat-page-container {
     display: flex;
@@ -79,6 +61,7 @@
 .chat-window-page {
     width: 100%;
     max-width: 800px;
+    margin-left: 600px;
     height: 80vh;
     max-height: 800px;
     background-color: var(--glass-bg);
