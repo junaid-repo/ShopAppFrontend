@@ -130,3 +130,38 @@
     gap: 1rem;
     margin-top: 1.5rem;
 }
+
+/* Add to src/pages/TicketSystem.css */
+
+.ticket-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
+    font-size: 0.8em;
+    border-radius: 15px;
+    border: none;
+    cursor: pointer;
+    color: white;
+    font-weight: 500;
+}
+
+.action-btn.continue {
+    background-color: var(--primary-color);
+}
+
+.action-btn.close {
+    background-color: #dc3545; /* Red */
+}
+
+.chat-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}

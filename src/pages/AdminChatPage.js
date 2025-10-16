@@ -65,6 +65,8 @@ const AdminChatPage = ({ adminUsername }) => {
         };
 
 
+
+
         const onConnect = () => {
             console.log('Admin connected to WebSocket');
             setIsConnected(true);
@@ -163,14 +165,28 @@ const AdminChatPage = ({ adminUsername }) => {
 
     // This function is now simpler. It just sets the ID and marks the chat as read.
     const selectChat = (chatId) => {
+        // Set the active chat ID to highlight it in the list
         setSelectedChatId(chatId);
 
         const chat = activeChats.get(chatId);
-        if (chat && chat.unread) {
-            const updatedChat = { ...chat, unread: false };
-            const newActiveChats = new Map(activeChats);
-            newActiveChats.set(chatId, updatedChat);
-            setActiveChats(newActiveChats);
+        if (!chat) return;
+
+        // Mark the chat as read
+        if (chat.unread) {
+            setActiveChats(prevChats => {
+                const newChats = new Map(prevChats);
+                const chatToUpdate = newChats.get(chatId);
+                if (chatToUpdate) {
+                    const updatedChat = { ...chatToUpdate, unread: false };
+                    newChats.set(chatId, updatedChat);
+                }
+                return newChats;
+            });
+        }
+
+        // Fetch history ONLY if we haven't fetched it before (i.e., messages array is empty)
+        if (chat.messages.length === 0) {
+            fetchChatHistory(chatId);
         }
     };
 
@@ -189,6 +205,37 @@ const AdminChatPage = ({ adminUsername }) => {
             });
             setInputValue('');
         }
+    };
+    const fetchChatHistory = async (ticketNumber) => {
+        /*
+        // API Endpoint: GET /api/tickets/chat-history/{ticketNumber}
+        // REQUEST PAYLOAD: None
+        */
+        try {
+            const response = await fetch(`${apiUrl}/api/chat-history/${ticketNumber}`, {
+                method: 'GET',
+                credentials: 'include',
+            });
+            if (response.ok) {
+                const history = await response.json();
+
+                // Update the master list of chats with the fetched history.
+                // This "caches" the history so we don't fetch it again.
+                setActiveChats(prevChats => {
+                    const newChats = new Map(prevChats);
+                    const chat = newChats.get(ticketNumber);
+                    if (chat) {
+                        const updatedChat = { ...chat, messages: history };
+                        newChats.set(ticketNumber, updatedChat);
+                    }
+                    return newChats;
+                });
+            }
+        } catch (error) {
+            console.error(`Failed to fetch chat history for ${ticketNumber}:`, error);
+        }
+
+
     };
 
     const currentChat = selectedChatId ? activeChats.get(selectedChatId) : null;
