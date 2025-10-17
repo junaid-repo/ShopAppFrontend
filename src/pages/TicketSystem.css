@@ -19,6 +19,7 @@
 
 .tickets-table-wrapper {
     overflow-x: auto;
+    margin-bottom: 10rem;
 }
 
 .tickets-table {

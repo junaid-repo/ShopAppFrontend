@@ -201,7 +201,7 @@
     justify-content: flex-start;
     gap: 6px;
     background-color: rgba(53, 58, 173, 0.1); /* faint tint */
-    color: #41ad35;
+    color: #61ca55;
     font-size: 0.7rem; /* smaller font */
     font-weight: 600;
     padding: 0.15rem 0.0rem;
@@ -219,6 +219,6 @@
 
 .sidebar-chat-button .chat-support svg {
     font-size: 0.1rem;
-    color: #41ad35;
+    color: #61ca55;
 }
 

@@ -173,7 +173,7 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar, selectedPage, setSelected
                     title="Products"
                     style={buttonStyleFor('products')}
                 >
-                    <Archive weight="duotone" style={{ color: iconColors.products }} />
+                    <Archive weight="duotone" style={{ color: 'var(--text-color)' }} />
                     <span className="nav-text">Products</span>
                 </button>
 
@@ -184,7 +184,7 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar, selectedPage, setSelected
                     title="Sales"
                     style={buttonStyleFor('sales')}
                 >
-                    <ShoppingCart weight="duotone" style={{ color: iconColors.sales }} />
+                    <ShoppingCart weight="duotone" style={{ color: 'var(--text-color)' }} />
                     <span className="nav-text">Sales</span>
                 </button>
 
@@ -195,7 +195,7 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar, selectedPage, setSelected
                     title="GSTBilling"
                     style={buttonStyleFor('billing2')}
                 >
-                    <Receipt weight="duotone" style={{ color: iconColors.billing }} />
+                    <Receipt weight="duotone" style={{ color: 'var(--text-color)' }} />
                     <span className="nav-text">GSTBilling</span>
                 </button>
 
@@ -206,7 +206,7 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar, selectedPage, setSelected
                     title="Customers"
                     style={buttonStyleFor('customers')}
                 >
-                    <UsersFour weight="duotone" style={{ color: iconColors.customers }} />
+                    <UsersFour weight="duotone" style={{ color: 'var(--text-color)' }} />
                     <span className="nav-text">Customers</span>
                 </button>
 
@@ -217,7 +217,7 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar, selectedPage, setSelected
                     title="Payments"
                     style={buttonStyleFor('payments')}
                 >
-                    <CreditCard weight="duotone" style={{ color: iconColors.payments }} />
+                    <CreditCard weight="duotone" style={{ color: 'var(--text-color)' }} />
                     <span className="nav-text">Payments</span>
                 </button>
 
@@ -228,7 +228,7 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar, selectedPage, setSelected
                     title="Reports"
                     style={buttonStyleFor('reports')}
                 >
-                    <MicrosoftExcelLogo weight="duotone" style={{ color: iconColors.reports }} />
+                    <MicrosoftExcelLogo weight="duotone" style={{ color: 'var(--text-color)' }} />
                     <span className="nav-text">Reports</span>
                 </button>
 
@@ -239,7 +239,7 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar, selectedPage, setSelected
                     title="Analytics"
                     style={buttonStyleFor('analytics')}
                 >
-                    <ChartLineUp weight="duotone" style={{ color: iconColors.analytics }} />
+                    <ChartLineUp weight="duotone" style={{ color: 'var(--text-color)' }} />
                     <span className="nav-text">Analytics</span>
                 </button>
             </nav>
@@ -253,7 +253,7 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar, selectedPage, setSelected
                     title="Chat Support"
                 >
                     <Headset size={20} weight="duotone" style={{ marginRight: '8px' }} />
-                    <span className="chat-text">Support</span>
+                    <span className="nav-text">Chat Support</span>
                 </button>
             </div>
         </aside>

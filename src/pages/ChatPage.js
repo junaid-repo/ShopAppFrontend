@@ -30,6 +30,13 @@ const ChatPage = ({ setSelectedPage }) => {
     const apiUrl = config ? config.API_URL : "";
     const messagesEndRef = useRef(null);
 
+    const [emailSubject, setEmailSubject] = useState('');
+    const [emailBody, setEmailBody] = useState('');
+    const [emailAttachment, setEmailAttachment] = useState(null);
+    const [isSendingEmail, setIsSendingEmail] = useState(false);
+    const fileInputRef = useRef(null); // Ref for clearing the file input
+
+
     // --- API Functions ---
 
     // 1. Fetch User Profile and Tickets
@@ -112,6 +119,54 @@ const ChatPage = ({ setSelectedPage }) => {
         } catch (error) {
             console.error("Error closing ticket:", error);
             return false;
+        }
+    };
+
+    // --- NEW: API call for sending an email ---
+    const handleSendEmail = async (event) => {
+        event.preventDefault();
+        if (!emailSubject || !emailBody) {
+            showAlert("Please provide a subject and a message for the email.");
+            return;
+        }
+        setIsSendingEmail(true);
+
+        const formData = new FormData();
+        formData.append('subject', emailSubject);
+        formData.append('body', emailBody);
+        if (emailAttachment) {
+            formData.append('attachment', emailAttachment);
+        }
+
+        /*
+        // API Endpoint: POST /support/send-email
+        // REQUEST PAYLOAD: FormData with 'subject', 'body', and optional 'attachment'.
+        // Content-Type will be 'multipart/form-data' (set by browser).
+        */
+        try {
+            const response = await fetch(`${apiUrl}/api/support/send-email`, {
+                method: 'POST',
+                credentials: 'include',
+                body: formData, // The browser sets the correct headers for FormData
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ summary: 'Failed to send email. Please try again.' }));
+                throw new Error(errorData.summary || `HTTP error! status: ${response.status}`);
+            }
+
+            showAlert("Email sent successfully!");
+            setEmailSubject('');
+            setEmailBody('');
+            setEmailAttachment(null);
+            if (fileInputRef.current) {
+                fileInputRef.current.value = ""; // Clear the file input visually
+            }
+        } catch (error) {
+            console.error("Error sending email:", error);
+            showAlert(error.message || "An error occurred while sending the email.");
+        } finally {
+            setIsSendingEmail(false);
         }
     };
 
@@ -313,6 +368,49 @@ const ChatPage = ({ setSelectedPage }) => {
                         </table>
                     </div>
                 )}
+                {/* --- NEW EMAIL FORM SECTION --- */}
+                <div className="email-support-container glass-card">
+                    <h2>Contact Support via Email</h2>
+                    <form onSubmit={handleSendEmail}>
+                        <div className="form-group">
+                            <label htmlFor="email-subject">Subject</label>
+                            <input
+                                id="email-subject"
+                                type="text"
+                                value={emailSubject}
+                                onChange={(e) => setEmailSubject(e.target.value)}
+                                placeholder="e.g., Issue with recent invoice"
+                                required
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="email-body">Message</label>
+                            <textarea
+                                id="email-body"
+                                value={emailBody}
+                                onChange={(e) => setEmailBody(e.target.value)}
+                                placeholder="Please describe your issue in detail..."
+                                required
+                                style={{ width: '100%', minHeight: '48px', padding: '6px', borderRadius: '8px', border: '1px solid var(--bp-border)', resize: 'vertical', background: 'var(--glass-card)', color: 'var(--bp-text)' }}
+
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="email-attachment-input">Attachment (Optional)</label>
+                            <input
+                                ref={fileInputRef}
+                                id="email-attachment-input"
+                                type="file"
+                                onChange={(e) => setEmailAttachment(e.target.files[0])}
+                            />
+                        </div>
+                        <div className="form-actions">
+                            <button type="submit" className="btn" disabled={isSendingEmail}>
+                                {isSendingEmail ? 'Sending...' : 'Send Email'}
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         );
     }
