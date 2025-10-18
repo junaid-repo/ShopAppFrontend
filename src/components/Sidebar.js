@@ -1,6 +1,6 @@
 // src/components/Sidebar.js
 import React, { useState, useEffect } from 'react';
-import { Gauge, UsersFour, Invoice , Archive, ChartLineUp, MicrosoftExcelLogo, ShoppingCart, CreditCard, Receipt, Headset } from "@phosphor-icons/react";
+import { Gauge, UsersFour, Invoice , Archive, ChartLineUp, MicrosoftExcelLogo, ShoppingCart, CreditCard, Receipt, Headset, Gear } from "@phosphor-icons/react";
 // 👆 Added `Headset` icon for chat support
 
 import './Sidebar.css';
@@ -245,6 +245,7 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar, selectedPage, setSelected
             </nav>
 
             {/* 🟢 Chat Support Button — Distinct + Left Corner */}
+
             <div className="sidebar-chat-button">
                 <button
                     type="button"
@@ -254,6 +255,17 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar, selectedPage, setSelected
                 >
                     <Headset size={20} weight="duotone" style={{ marginRight: '8px' }} />
                     <span className="nav-text">Chat Support</span>
+                </button>
+            </div>
+            <div className="sidebar-chat-button">
+                <button
+                    type="button"
+                    onClick={makeClickHandler('settings')}
+                    className={`nav-link chat-support`}
+                    title="Chat Support"
+                >
+                    <Gear size={20} weight="duotone" style={{ marginRight: '8px' }} />
+                    <span className="nav-text">Settings</span>
                 </button>
             </div>
         </aside>

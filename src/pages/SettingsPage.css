@@ -7,18 +7,18 @@
     margin: 2rem auto;
 }
 
-.settings-page .section {
+.settings-page .section2 {
     margin-bottom: 2.5rem;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 5px dotted var(--border-color);
     padding-bottom: 1.5rem;
 }
 
-.settings-page .section:last-child {
+.settings-page .section2:last-child {
     border-bottom: none;
     margin-bottom: 0;
 }
 
-.settings-page .section-header {
+.settings-page .section-header2 {
     margin-bottom: 1.5rem;
 }
 
@@ -42,6 +42,7 @@
 }
 
 /* NEW: Vertical items for "UI" and "Schedulers" sections */
+/* Updated vertical layout with switch on the left */
 .setting-item {
     display: flex;
     flex-direction: column;
@@ -49,6 +50,22 @@
     padding: 1rem 0.5rem;
     margin-bottom: 1rem;
 }
+
+/* New container for toggle + label */
+.setting-toggle {
+    display: flex;
+    align-items: center;
+    gap: 1rem; /* Space between switch and label */
+}
+
+/* Label aligned beside the switch */
+.setting-toggle label {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-color);
+    cursor: pointer;
+}
+
 
 .setting-item > label {
     font-size: 1rem;

@@ -55,8 +55,8 @@ const SettingsPage = () => {
             if (!apiUrl) return;
             try {
                 // MOCK API CALL: This would fetch all existing settings
-                // const response = await fetch(`${apiUrl}/api/shop/get/settings`, { credentials: 'include' });
-                // const data = await response.json();
+                const response = await fetch(`${apiUrl}/api/shop/get/user/settings`, { credentials: 'include' });
+                const data = await response.json();
 
                 // Mocking the data for now
                 const mockData = {
@@ -68,10 +68,10 @@ const SettingsPage = () => {
                     },
                 };
 
-                setUiSettings(mockData.ui);
-                setOriginalUiSettings(mockData.ui);
-                setSchedulerSettings(mockData.schedulers);
-                setOriginalSchedulerSettings(mockData.schedulers);
+                setUiSettings(data.ui);
+                setOriginalUiSettings(data.ui);
+                setSchedulerSettings(data.schedulers);
+                setOriginalSchedulerSettings(data.schedulers);
 
             } catch (error) {
                 console.error("Failed to fetch settings:", error);
@@ -200,7 +200,7 @@ const SettingsPage = () => {
 
     const handleSaveUiSettings = async () => {
         try {
-            /*
+
             // --- API CALL TO SAVE UI SETTINGS ---
             // Endpoint: PUT /api/shop/update/settings/ui
             // Payload: The 'uiSettings' object
@@ -209,7 +209,7 @@ const SettingsPage = () => {
             //   "billingPageDefault": false,
             //   "autoPrintInvoice": true
             // }
-            const response = await fetch(`${apiUrl}/api/shop/update/settings/ui`, {
+            const response = await fetch(`${apiUrl}/api/shop/settings/user/save/ui`, {
                 method: "PUT",
                 credentials: 'include',
                 headers: { "Content-Type": "application/json" },
@@ -217,7 +217,7 @@ const SettingsPage = () => {
             });
             if (!response.ok) throw new Error("Server error");
             // Expected Success Response: { status: "success", message: "UI settings updated." }
-            */
+
             showAlert("UI settings saved successfully!");
             setOriginalUiSettings(uiSettings); // Sync original state to hide save button
         } catch (error) {
@@ -228,7 +228,7 @@ const SettingsPage = () => {
 
     const handleSaveSchedulers = async () => {
         try {
-            /*
+
             // --- API CALL TO SAVE SCHEDULER SETTINGS ---
             // Endpoint: PUT /api/shop/update/settings/schedulers
             // Payload: The 'schedulerSettings' object
@@ -241,7 +241,7 @@ const SettingsPage = () => {
             //     "inactiveDays": 90
             //   }
             // }
-            const response = await fetch(`${apiUrl}/api/shop/update/settings/schedulers`, {
+            const response = await fetch(`${apiUrl}/api/shop/settings/user/save/scheduler`, {
                 method: "PUT",
                 credentials: 'include',
                 headers: { "Content-Type": "application/json" },
@@ -249,7 +249,7 @@ const SettingsPage = () => {
             });
             if (!response.ok) throw new Error("Server error");
             // Expected Success Response: { status: "success", message: "Scheduler settings updated." }
-            */
+
             showAlert("Scheduler settings saved successfully!");
             setOriginalSchedulerSettings(schedulerSettings); // Sync original state
         } catch (error) {
@@ -271,176 +271,177 @@ const SettingsPage = () => {
 
     // --- Main Render ---
 
-    return (
-        <div className="settings-page">
-            <div className="glass-card">
-                <h2>Settings</h2>
+    return (<div className="settings-page">
+        <div className="glass-card">
+            <h2>Settings</h2>
 
-                {/* ====== ACCOUNT SECTION ====== */}
-                <div className="section">
-                    <div className="section-header">
-                        <h3>Account</h3>
-                    </div>
-                    <div className="setting-row">
-                        <span>Update Password</span>
-                        <button className="btn" onClick={() => setShowPasswordModal(true)}>Change</button>
-                    </div>
-                    <div className="setting-row">
-                        <span>Update Username</span>
-                        <button className="btn" onClick={() => setShowUsernameModal(true)}>Change</button>
-                    </div>
+            {/* ====== ACCOUNT SECTION ====== */}
+            <div className="section2">
+                <div className="section-header2">
+                    <h3>Account</h3>
+                </div>
+                <div className="setting-row">
+                    <span>Update Password</span>
+                    <button className="btn" onClick={() => setShowPasswordModal(true)}>Change</button>
                 </div>
 
-                {/* ====== UI SECTION ====== */}
-                {/* ====== UI SECTION (VERTICAL LAYOUT) ====== */}
-                <div className="section">
-                    <div className="section-header">
-                        <h3>UI</h3>
-                    </div>
-                    <div className="setting-item">
-                        <label>Select dark mode as default theme</label>
+            </div>
+
+            {/* ====== UI SECTION (VERTICAL LAYOUT) ====== */}
+            <div className="section2">
+                <div className="section-header2">
+                    <h3>UI</h3>
+                </div>
+                <div className="setting-item">
+                    <div className="setting-toggle">
                         <ToggleSwitch
                             checked={uiSettings.darkModeDefault}
                             onChange={(e) => setUiSettings({ ...uiSettings, darkModeDefault: e.target.checked })}
                         />
+                        <label>Select dark mode as default theme</label>
                     </div>
-                    <div className="setting-item">
-                        <label>Select Billing Page as default</label>
+                </div>
+
+                <div className="setting-item">
+                    <div className="setting-toggle">
                         <ToggleSwitch
                             checked={uiSettings.billingPageDefault}
                             onChange={(e) => setUiSettings({ ...uiSettings, billingPageDefault: e.target.checked })}
                         />
+                        <label>Select Billing Page as default</label>
                     </div>
-                    <div className="setting-item">
-                        <label>Directly forward to invoice printing after payment</label>
+                </div>
+                <div className="setting-item">
+                    <div className="setting-toggle">
                         <ToggleSwitch
                             checked={uiSettings.autoPrintInvoice}
                             onChange={(e) => setUiSettings({ ...uiSettings, autoPrintInvoice: e.target.checked })}
                         />
+                        <label>Directly forward to invoice printing after payment</label>
                     </div>
-                    {isUiDirty && (
-                        <div className="save-button-container">
-                            <button className="btn" onClick={handleSaveUiSettings}>Save UI Settings</button>
-                        </div>
-                    )}
                 </div>
-
-                {/* ====== SCHEDULERS SECTION (VERTICAL LAYOUT) ====== */}
-                <div className="section">
-                    <div className="section-header">
-                        <h3>Schedulers</h3>
-                    </div>
-                    <div className="setting-item">
-                        <label>Receive low stock alerts</label>
-                        <ToggleSwitch
-                            checked={schedulerSettings.lowStockAlerts}
-                            onChange={(e) => setSchedulerSettings({ ...schedulerSettings, lowStockAlerts: e.target.checked })}
-                        />
-                    </div>
-                    <div className="setting-item">
-                        <label>Auto delete notifications after</label>
-                        <div className="input-group">
-                            <input
-                                type="number"
-                                className="small-input"
-                                value={schedulerSettings.autoDeleteNotificationsDays}
-                                onChange={(e) => setSchedulerSettings({ ...schedulerSettings, autoDeleteNotificationsDays: Number(e.target.value) })}
-                            />
-                            <span>days</span>
-                        </div>
-                    </div>
-                    <div className="setting-item">
-                        <label>Auto delete customers</label>
-                        <ToggleSwitch
-                            checked={schedulerSettings.autoDeleteCustomers.enabled}
-                            onChange={(e) => setSchedulerSettings({
-                                ...schedulerSettings,
-                                autoDeleteCustomers: { ...schedulerSettings.autoDeleteCustomers, enabled: e.target.checked }
-                            })}
-                        />
-                        {schedulerSettings.autoDeleteCustomers.enabled && (
-                            <div className="indented-controls">
-                                <label>Who spent less than an amount and were inactive for a period</label>
-                                <div className="input-group">
-                                    <span>Spent less than ₹</span>
-                                    <input
-                                        type="number"
-                                        className="small-input"
-                                        value={schedulerSettings.autoDeleteCustomers.minSpent}
-                                        onChange={(e) => setSchedulerSettings({
-                                            ...schedulerSettings,
-                                            autoDeleteCustomers: { ...schedulerSettings.autoDeleteCustomers, minSpent: Number(e.target.value) }
-                                        })}
-                                    />
-                                </div>
-                                <div className="input-group">
-                                    <span>Inactive for</span>
-                                    <input
-                                        type="number"
-                                        className="small-input"
-                                        value={schedulerSettings.autoDeleteCustomers.inactiveDays}
-                                        onChange={(e) => setSchedulerSettings({
-                                            ...schedulerSettings,
-                                            autoDeleteCustomers: { ...schedulerSettings.autoDeleteCustomers, inactiveDays: Number(e.target.value) }
-                                        })}
-                                    />
-                                    <span> days</span>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                    {isSchedulersDirty && (
-                        <div className="save-button-container">
-                            <button className="btn" onClick={handleSaveSchedulers}>Save Schedulers</button>
-                        </div>
-                    )}
-                </div>
-
-                {/* ====== MODALS ====== */}
-                {showPasswordModal && (
-                    <div className="modal-overlay">
-                        <div className="modal-content">
-                            <h3>{passwordStep === 1 ? 'Enter Current Password' : 'Set New Password'}</h3>
-                            {passwordStep === 1 ? (
-                                <div className="form-group"><label>Current Password</label><input type="password" value={passwordData.currentPassword} onChange={e => setPasswordData({ ...passwordData, currentPassword: e.target.value })} /></div>
-                            ) : (
-                                <><div className="form-group"><label>New Password</label><input type="password" value={passwordData.newPassword} onChange={e => setPasswordData({ ...passwordData, newPassword: e.target.value })} /></div><div className="form-group"><label>Confirm New Password</label><input type="password" value={passwordData.confirmPassword} onChange={e => setPasswordData({ ...passwordData, confirmPassword: e.target.value })} /></div></>
-                            )}
-                            <div className="modal-actions">
-                                <button className="btn" onClick={handlePasswordSubmit}>{passwordStep === 1 ? 'Validate' : 'Submit'}</button>
-                                <button className="btn btn-cancel" onClick={() => { setShowPasswordModal(false); setPasswordStep(1); }}>Cancel</button>
-                            </div>
-                        </div>
+                {isUiDirty && (
+                    <div className="save-button-container">
+                        <button className="btn" onClick={handleSaveUiSettings}>Save UI Settings</button>
                     </div>
                 )}
+            </div>
 
-                {showUsernameModal && (
-                    <div className="modal-overlay">
-                        <div className="modal-content">
-                            <h3>Update Username</h3>
-                            <div className="form-group">
-                                <label>New Username</label>
-                                <div className="username-check-wrapper">
-                                    <input type="text" value={newUsername} onChange={(e) => { setNewUsername(e.target.value); setUsernameCheck({ status: null, message: '' }); }} />
-                                    <button className="btn" onClick={handleCheckUsername} disabled={isChecking}>{isChecking ? '...' : 'Check'}</button>
-                                </div>
-                                {usernameCheck.message && (
-                                    <span className={`username-status ${usernameCheck.status ? 'success' : 'error'}`}>
+            {/* ====== SCHEDULERS SECTION (VERTICAL LAYOUT) ====== */}
+            <div className="section2">
+                <div className="section-header2">
+                    <h3>Schedulers</h3>
+                </div>
+                <div className="setting-item">
+                    <ToggleSwitch
+                        checked={schedulerSettings.lowStockAlerts}
+                        onChange={(e) => setSchedulerSettings({ ...schedulerSettings, lowStockAlerts: e.target.checked })}
+                    />
+                    <label>Receive low stock alerts</label>
+                </div>
+                <div className="setting-item">
+                    <label>Auto delete notifications after</label>
+                    <div className="input-group">
+                        <input
+                            type="number"
+                            className="small-input"
+                            value={schedulerSettings.autoDeleteNotificationsDays}
+                            onChange={(e) => setSchedulerSettings({ ...schedulerSettings, autoDeleteNotificationsDays: Number(e.target.value) })}
+                        />
+                        <span>days</span>
+                    </div>
+                </div>
+                <div className="setting-item">
+                    <ToggleSwitch
+                        checked={schedulerSettings.autoDeleteCustomers.enabled}
+                        onChange={(e) => setSchedulerSettings({
+                            ...schedulerSettings,
+                            autoDeleteCustomers: { ...schedulerSettings.autoDeleteCustomers, enabled: e.target.checked }
+                        })}
+                    />
+                    <label>Auto delete customers</label>
+                    {schedulerSettings.autoDeleteCustomers.enabled && (
+                        <div className="indented-controls">
+                            <label>Who spent less than an amount and were inactive for a period</label>
+                            <div className="input-group">
+                                <span>Spent less than ₹</span>
+                                <input
+                                    type="number"
+                                    className="small-input"
+                                    value={schedulerSettings.autoDeleteCustomers.minSpent}
+                                    onChange={(e) => setSchedulerSettings({
+                                        ...schedulerSettings,
+                                        autoDeleteCustomers: { ...schedulerSettings.autoDeleteCustomers, minSpent: Number(e.target.value) }
+                                    })}
+                                />
+                            </div>
+                            <div className="input-group">
+                                <span>Inactive for</span>
+                                <input
+                                    type="number"
+                                    className="small-input"
+                                    value={schedulerSettings.autoDeleteCustomers.inactiveDays}
+                                    onChange={(e) => setSchedulerSettings({
+                                        ...schedulerSettings,
+                                        autoDeleteCustomers: { ...schedulerSettings.autoDeleteCustomers, inactiveDays: Number(e.target.value) }
+                                    })}
+                                />
+                                <span> days</span>
+                            </div>
+                        </div>
+                    )}
+                </div>
+                {isSchedulersDirty && (
+                    <div className="save-button-container">
+                        <button className="btn" onClick={handleSaveSchedulers}>Save Schedulers</button>
+                    </div>
+                )}
+            </div>
+
+            {/* ====== MODALS ====== */}
+            {showPasswordModal && (
+                <div className="modal-overlay">
+                    <div className="modal-content">
+                        <h3>{passwordStep === 1 ? 'Enter Current Password' : 'Set New Password'}</h3>
+                        {passwordStep === 1 ? (
+                            <div className="form-group"><label>Current Password</label><input type="password" value={passwordData.currentPassword} onChange={e => setPasswordData({ ...passwordData, currentPassword: e.target.value })} /></div>
+                        ) : (
+                            <><div className="form-group"><label>New Password</label><input type="password" value={passwordData.newPassword} onChange={e => setPasswordData({ ...passwordData, newPassword: e.target.value })} /></div><div className="form-group"><label>Confirm New Password</label><input type="password" value={passwordData.confirmPassword} onChange={e => setPasswordData({ ...passwordData, confirmPassword: e.target.value })} /></div></>
+                        )}
+                        <div className="modal-actions">
+                            <button className="btn" onClick={handlePasswordSubmit}>{passwordStep === 1 ? 'Validate' : 'Submit'}</button>
+                            <button className="btn btn-cancel" onClick={() => { setShowPasswordModal(false); setPasswordStep(1); }}>Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showUsernameModal && (
+                <div className="modal-overlay">
+                    <div className="modal-content">
+                        <h3>Update Username</h3>
+                        <div className="form-group">
+                            <label>New Username</label>
+                            <div className="username-check-wrapper">
+                                <input type="text" value={newUsername} onChange={(e) => { setNewUsername(e.target.value); setUsernameCheck({ status: null, message: '' }); }} />
+                                <button className="btn" onClick={handleCheckUsername} disabled={isChecking}>{isChecking ? '...' : 'Check'}</button>
+                            </div>
+                            {usernameCheck.message && (
+                                <span className={`username-status ${usernameCheck.status ? 'success' : 'error'}`}>
                                         {usernameCheck.message}
                                     </span>
-                                )}
-                            </div>
-                            <div className="modal-actions">
-                                <button className="btn" onClick={handleUpdateUsername} disabled={!usernameCheck.status}>Change</button>
-                                <button className="btn btn-cancel" onClick={() => setShowUsernameModal(false)}>Cancel</button>
-                            </div>
+                            )}
+                        </div>
+                        <div className="modal-actions">
+                            <button className="btn" onClick={handleUpdateUsername} disabled={!usernameCheck.status}>Change</button>
+                            <button className="btn btn-cancel" onClick={() => setShowUsernameModal(false)}>Cancel</button>
                         </div>
                     </div>
-                )}
+                </div>
+            )}
 
-            </div>
         </div>
-    );
+    </div>);
 };
 
 export default SettingsPage;
