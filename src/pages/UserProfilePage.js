@@ -343,6 +343,100 @@ const UserProfilePage = () => {
         }
     };
 
+    const handleGstinBlur = async () => {
+        const gstin = (formData.gstin || '').trim();
+        if (!gstin) return;
+        try {
+            const res = await fetch(`https://gst-return-status.p.rapidapi.com/free/gstin/${gstin}`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "x-rapidapi-key": "1a05818094mshaeae5bbb1e2604dp153414jsn8fad5fb302a1",
+                    "x-rapidapi-host": "gst-return-status.p.rapidapi.com"
+                }
+            });
+
+            if (!res.ok) {
+                console.warn('GSTIN lookup returned non-ok');
+                showAlert('GSTIN not found');
+                return;
+            }
+
+            const data = await res.json();
+            console.log('data from gstin call ', data);
+
+            // Get data from GSTIN API
+            const shopNameFromApi = data.data.tradeName || data.lgnm || '';
+            const shopPanFromApi = data.data.pan || '';
+            const shopAddresssFromApi = data.data.adr || '';
+            const shopPincodeFromApi = data.data.pincode || '';
+
+            // --- NEW LOGIC ---
+            // Create an object with the data we have so far
+            let updates = {
+                shopName: shopNameFromApi,
+                pan: shopPanFromApi,
+                shopAddress: shopAddresssFromApi,
+                shopPincode: shopPincodeFromApi
+            };
+
+            // If we got a pincode, automatically fetch city and state
+            if (shopPincodeFromApi) {
+                const pincodeDetails = await fetchPincodeDetails(shopPincodeFromApi);
+                if (pincodeDetails) {
+                    // Merge the pincode results (shopState, shopCity) into our updates
+                    updates = { ...updates, ...pincodeDetails };
+                }
+            }
+
+            // Set all data in one go
+            setFormData(prev => ({ ...prev, ...updates }));
+
+        } catch (err) {
+            console.error('GSTIN lookup failed:', err);
+        }
+    };
+
+    // This is your new reusable function
+    const fetchPincodeDetails = async (pincode) => {
+        if (!pincode) return null; // Exit if no pincode
+
+        try {
+            const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+            if (!res.ok) {
+                console.warn('Pincode lookup returned non-ok');
+                showAlert('Invalid Pincode or API error');
+                return null;
+            }
+
+            const data = await res.json();
+
+            if (!data || !Array.isArray(data) || data.length === 0 || data[0].Status !== 'Success') {
+                showAlert('No details found for this Pincode');
+                return null;
+            }
+
+            const postOffice = data[0].PostOffice && data[0].PostOffice[0];
+            if (!postOffice) {
+                showAlert('No post office details found for this Pincode');
+                return null;
+            }
+
+            // Return the data instead of setting state directly
+            return {
+                shopState: postOffice.State || '',
+                shopCity: postOffice.District || ''
+                // You could also return country: postOffice.Country, etc.
+            };
+
+        } catch (err) {
+            console.error('Pincode lookup failed:', err);
+            showAlert('Failed to fetch pincode details');
+            return null;
+        }
+    };
+
+
     const handlePincodeBlur = async () => {
         const pincode = (formData.shopPincode || '').trim(); // or whichever field you’re using
         if (!pincode) return;
@@ -437,7 +531,9 @@ const UserProfilePage = () => {
                     shopSlogan: formData.shopSlogan,
                     shopPincode: formData.shopPincode,
                     shopCity: formData.shopCity,
-                    shopState: formData.shopState
+                    shopState: formData.shopState,
+                    gstin: formData.gstin || formData.gstNumber,
+                    panNumber: formData.pan
 
                 };
 
@@ -456,8 +552,6 @@ const UserProfilePage = () => {
 
             if (section === 'finance') {
                 const financePayload = {
-                    gstin: formData.gstin || formData.gstNumber,
-                    pan: formData.pan,
                     upi: formData.upi,
                     bankHolder: formData.bankHolder,
                     bankAccount: formData.bankAccount,
@@ -516,6 +610,7 @@ const UserProfilePage = () => {
                     <div className="ribbon"><span>Account Source: {userSource}</span></div>
                     <h2>User & Shop Profile</h2>
                     <span className="info-text" style={{marginLeft: "-1100px"}}>* You cannot update Name, Email and Profile Photo if source is google</span>
+                    <span className="info-text" style={{marginLeft: "-1237px"}}>* Enter valid GSTIN to autopopulate shop details</span>
                 </div>
                 {/* Tabs */}
                 <div className="tab-header">
@@ -603,7 +698,14 @@ const UserProfilePage = () => {
                                 <input type="file" ref={shopLogoInputRef} style={{ display: 'none' }} onChange={handleShopLogoChange} accept="image/*" />
                                 <img src={shopLogoPreview} alt="Shop Logo" className={`shop-logo ${sectionEdit.basic ? 'editable' : ''}`} onClick={() => { if (sectionEdit.basic) shopLogoInputRef.current.click(); }} />
                             </div>
-
+                            <div className="form-group">
+                                <label>GSTIN</label>
+                                <input type="text" value={formData.gstin || formData.gstNumber || ''} disabled={!sectionEdit.basic} onChange={e => setFormData({ ...formData, gstin: e.target.value, gstNumber: e.target.value })}  onBlur={handleGstinBlur} />
+                            </div>
+                            <div className="form-group">
+                                <label>PAN</label>
+                                <input type="text" value={formData.pan || ''} disabled={!sectionEdit.basic} onChange={e => setFormData({ ...formData, pan: e.target.value })} />
+                            </div>
                             <div className="form-group">
                                 <label>Shop Name</label>
                                 <input type="text" value={formData.shopName || ''} disabled={!sectionEdit.basic} onChange={e => setFormData({ ...formData, shopName: e.target.value })} />
@@ -637,6 +739,7 @@ const UserProfilePage = () => {
                                 <input type="text" value={formData.shopPhone || ''} disabled={!sectionEdit.basic} onChange={e => setFormData({ ...formData, shopPhone: e.target.value })} />
                             </div>
 
+
                             {sectionEdit.basic && (<div className="section-actions"><button className="btn" onClick={() => handleSectionSave('basic')}>Save Basic Details</button><button className="btn btn-cancel" onClick={() => setSectionEdit(prev => ({ ...prev, basic: false }))}>Cancel</button></div>)}
                         </div>
 
@@ -660,14 +763,14 @@ const UserProfilePage = () => {
 
                             </div>
 
-                            <div className="form-group">
+                           {/* <div className="form-group">
                                 <label>GSTIN</label>
                                 <input type="text" value={formData.gstin || formData.gstNumber || ''} disabled={!sectionEdit.finance} onChange={e => setFormData({ ...formData, gstin: e.target.value, gstNumber: e.target.value })} />
                             </div>
                             <div className="form-group">
                                 <label>PAN</label>
                                 <input type="text" value={formData.pan || ''} disabled={!sectionEdit.finance} onChange={e => setFormData({ ...formData, pan: e.target.value })} />
-                            </div>
+                            </div>*/}
                             <div className="form-group">
                                 <label>UPI ID</label>
                                 <input type="text" value={formData.upi || ''} disabled={!sectionEdit.finance} onChange={e => setFormData({ ...formData, upi: e.target.value })} />

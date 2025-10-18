@@ -104,6 +104,7 @@ const DashboardPage = ({ setSelectedPage }) => {
     const [topCustomers, setTopCustomers] = useState([]); // removed usage - kept empty
     const [isLoadingRecentOrders, setIsLoadingRecentOrders] = useState(false);
     const [isLoadingTopCustomers, setIsLoadingTopCustomers] = useState(false);
+    const [notification, setNotification] = useState(null);
 
     const config = useConfig();
     const navigate = useNavigate();
@@ -437,6 +438,76 @@ const DashboardPage = ({ setSelectedPage }) => {
         if (apiUrl) fetchGoalData();
     }, [timeRange, apiUrl]);
 
+    // --- Sanity Check API Call on Page Load ---
+    useEffect(() => {
+        if (!apiUrl) return;
+
+        const runSanityCheck = async () => {
+            try {
+                const response = await fetch(`${apiUrl}/api/shop/gstBilling/sanityCheck`, {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                });
+                if (!response.ok) return;
+
+                const data = await response.json();
+
+                if (data && data.success === false) {
+                    // --- This is the new part ---
+
+                    // 1. Define the click handler function
+                    const handleLinkClick = (e) => {
+                        e.preventDefault(); // Prevent the <a> tag from jumping to '#'
+                        setSelectedPage('profile');
+
+                        // Optional: If your notification system has a close function,
+                        // you might want to call it here so it disappears on click.
+                        // e.g., setNotification(null);
+                    };
+
+                    // 2. Create the message with the link included
+                    const messageWithLink = (
+                        <span>
+                        {data.message}{' '}
+                            <a
+                                href="#"
+                                onClick={handleLinkClick}
+                                // Adding some inline style to make it look like a link
+                                style={{
+                                    color: '#007bff', // Or your app's link color
+                                    textDecoration: 'underline',
+                                    cursor: 'pointer',
+                                    marginLeft: '5px'
+                                }}
+                            >
+                            Complete Profile
+                        </a>
+                    </span>
+                    );
+
+                    // 3. Pass the JSX element as the message
+                    setNotification({ type: data.type, message: messageWithLink });
+                }
+            } catch (error) {
+                console.error("Sanity check API failed:", error);
+            }
+        };
+
+        runSanityCheck();
+    }, [apiUrl, setSelectedPage]);
+
+    useEffect(() => {
+        if (notification) {
+            const timer = setTimeout(() => {
+                setNotification(null); // Hide notification after 5 seconds
+            }, 5000);
+
+            // Cleanup the timer if the component unmounts
+            return () => clearTimeout(timer);
+        }
+    }, [notification]);
+
     // Add Customer
     const handleAddCustomer = async (e) => {
         e.preventDefault();
@@ -661,6 +732,28 @@ const DashboardPage = ({ setSelectedPage }) => {
 
     return (
         <div className="dashboard">
+
+
+            {notification && (
+                <div style={{
+                    padding: '1rem',
+
+                    textAlign: 'center',
+                    fontWeight: 500,
+                    position: 'sticky',
+                    top: 0,
+                    width: '80%',
+                    zIndex: 1050,
+                    borderRadius: '20px',
+                    // Background color changes based on notification type
+                    backgroundColor: notification.type === 'error' ? '#d9534f' : 'rgba(240,173,78,0)',
+                    color: 'var(--text-color)'
+                }}>
+                    <strong>{notification.type.toUpperCase()}: </strong>
+                    {notification.message}
+                </div>
+            )}
+
             <h2 style={{marginBottom: "1.0rem"}}>Dashboard</h2>
 
             {/* Time Range Selector */}

@@ -22,7 +22,7 @@ const useDebounce = (value, delay) => {
     return debouncedValue;
 };
 
-const BillingPage = () => {
+const BillingPage = ({ setSelectedPage }) => {
     const { showAlert } = useAlert();
     const {
         selectedCustomer, setSelectedCustomer,
@@ -57,7 +57,6 @@ const BillingPage = () => {
     // --- State for Product Search ---
     const [productSearchTerm, setProductSearchTerm] = useState("");
     const debouncedSearchTerm = useDebounce(productSearchTerm, 300); // Debounce search input
-
     // State for Customer Search Modal
     const [searchTerm, setSearchTerm] = useState('');
     const [isPrinting, setIsPrinting] = useState(false);
@@ -155,19 +154,50 @@ const BillingPage = () => {
 
         const runSanityCheck = async () => {
             try {
-                // NOTE: Replace with your actual sanity check endpoint
                 const response = await fetch(`${apiUrl}/api/shop/gstBilling/sanityCheck`, {
                     method: 'GET',
                     credentials: 'include',
                     headers: { 'Content-Type': 'application/json' },
                 });
-                if (!response.ok) return; // Don't show an error if the API itself fails
+                if (!response.ok) return;
 
                 const data = await response.json();
 
-                // Only show a notification if the check is NOT successful
                 if (data && data.success === false) {
-                    setNotification({ type: data.type, message: data.message });
+                    // --- This is the new part ---
+
+                    // 1. Define the click handler function
+                    const handleLinkClick = (e) => {
+                        e.preventDefault(); // Prevent the <a> tag from jumping to '#'
+                        setSelectedPage('profile');
+
+                        // Optional: If your notification system has a close function,
+                        // you might want to call it here so it disappears on click.
+                        // e.g., setNotification(null);
+                    };
+
+                    // 2. Create the message with the link included
+                    const messageWithLink = (
+                        <span>
+                        {data.message}{' '}
+                            <a
+                                href="#"
+                                onClick={handleLinkClick}
+                                // Adding some inline style to make it look like a link
+                                style={{
+                                    color: '#007bff', // Or your app's link color
+                                    textDecoration: 'underline',
+                                    cursor: 'pointer',
+                                    marginLeft: '5px'
+                                }}
+                            >
+                            Complete Profile
+                        </a>
+                    </span>
+                    );
+
+                    // 3. Pass the JSX element as the message
+                    setNotification({ type: data.type, message: messageWithLink });
                 }
             } catch (error) {
                 console.error("Sanity check API failed:", error);
@@ -175,7 +205,7 @@ const BillingPage = () => {
         };
 
         runSanityCheck();
-    }, [apiUrl]); // Runs once when the component mounts and apiUrl is available
+    }, [apiUrl, setSelectedPage]);// Runs once when the component mounts and apiUrl is available
 
 // --- Timer to automatically dismiss the notification ---
     useEffect(() => {
