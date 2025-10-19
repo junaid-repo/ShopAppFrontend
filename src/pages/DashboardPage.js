@@ -8,6 +8,7 @@ import { useConfig } from "./ConfigProvider";
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import { useNumberFormat } from "../context/NumberFormatContext";
 import { useAlert } from '../context/AlertContext';
+import toast, {Toaster} from 'react-hot-toast';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -742,12 +743,12 @@ const DashboardPage = ({ setSelectedPage }) => {
                     fontWeight: 500,
                     position: 'sticky',
                     top: 0,
-                    width: '80%',
+                    width: '70%',
                     zIndex: 1050,
-                    borderRadius: '20px',
+                    borderRadius: '25px',
                     // Background color changes based on notification type
-                    backgroundColor: notification.type === 'error' ? '#d9534f' : 'rgba(240,173,78,0)',
-                    color: 'var(--text-color)'
+                    backgroundColor: notification.type === 'error' ? '#d9534f' : '#f0ad4e',
+                    color: 'white'
                 }}>
                     <strong>{notification.type.toUpperCase()}: </strong>
                     {notification.message}
@@ -891,8 +892,10 @@ const DashboardPage = ({ setSelectedPage }) => {
                             <h3 className="card-header">Quick Shortcuts</h3>
                             <div className="shortcuts-container">
                                 <button className="btn" onClick={() => { if (setSelectedPage) setSelectedPage('billing'); else navigate('/billing'); }}>New Sale</button>
-                                <button className="btn" onClick={() => setIsAddProdModalOpen(true)}>Add Product</button>
-                                <button className="btn" onClick={() => setIsNewCusModalOpen(true)}>New Customer</button>
+                                <button className="btn" onClick={() => { if (setSelectedPage) setSelectedPage('reports'); else navigate('/reports'); }}>Reports</button>
+                                <button className="btn" onClick={() => { if (setSelectedPage) setSelectedPage('profile'); else navigate('/profile'); }}>Profile</button>
+                                <button className="btn" onClick={() => { if (setSelectedPage) setSelectedPage('notifications'); else navigate('/notifications'); }}>Notifications</button>
+
                             </div>
                         </div>
 

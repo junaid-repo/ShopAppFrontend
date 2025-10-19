@@ -7,7 +7,7 @@ import './UserProfilePage.css';
 import EditIcon from '@mui/icons-material/ModeEditOutlineOutlined'
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import { Gauge, UsersFour, Invoice , Archive, ChartLineUp, MicrosoftExcelLogo, ShoppingCart, CreditCard, Receipt} from "@phosphor-icons/react";
-
+import toast, {Toaster} from 'react-hot-toast';
 // Mock data (used as initial fallback while API loads)
 const mockUser = {
    
@@ -130,7 +130,7 @@ const UserProfilePage = () => {
             } catch (err) {
                 console.error("Error loading profile:", err);
                 // keep user-friendly message but don't remove original behavior
-                showAlert("Something went wrong while loading your profile.");
+                toast.error("Something went wrong while loading your profile.");
             }
         };
 
@@ -197,11 +197,11 @@ const UserProfilePage = () => {
 
             setUser({ ...formData, profilePic: profilePicPreview });
             setIsEditing(false);
-            showAlert("Profile updated successfully!");
+            toast.success("Profile updated successfully!");
 
         } catch (error) {
             console.error("Error updating user:", error);
-            showAlert("Something went wrong while updating user details.");
+            toast.error("Something went wrong while updating user details.");
         }
     };
 
@@ -298,7 +298,7 @@ const UserProfilePage = () => {
                     return;
                 }
 
-                showAlert("Password updated successfully!");
+                toast.success("Password updated successfully!");
                 setShowPasswordModal(false);
                 setPasswordStep(1);
                 setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
@@ -330,7 +330,7 @@ const UserProfilePage = () => {
             const res = await fetch(`https://ifsc.razorpay.com/${ifsc}`);
             if (!res.ok) {
                 console.warn('IFSC lookup returned non-ok');
-                showAlert('IFSC code not found');
+                toast.error('IFSC code not found');
                 return;
             }
             const data = await res.json();
@@ -358,7 +358,7 @@ const UserProfilePage = () => {
 
             if (!res.ok) {
                 console.warn('GSTIN lookup returned non-ok');
-                showAlert('GSTIN not found');
+                toast.error('GSTIN not found');
                 return;
             }
 
@@ -405,20 +405,20 @@ const UserProfilePage = () => {
             const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
             if (!res.ok) {
                 console.warn('Pincode lookup returned non-ok');
-                showAlert('Invalid Pincode or API error');
+                toast.error('Invalid Pincode');
                 return null;
             }
 
             const data = await res.json();
 
             if (!data || !Array.isArray(data) || data.length === 0 || data[0].Status !== 'Success') {
-                showAlert('No details found for this Pincode');
+                toast.error('No details found for this Pincode');
                 return null;
             }
 
             const postOffice = data[0].PostOffice && data[0].PostOffice[0];
             if (!postOffice) {
-                showAlert('No post office details found for this Pincode');
+                toast.error('No post office details found for this Pincode');
                 return null;
             }
 
@@ -545,7 +545,7 @@ const UserProfilePage = () => {
                 });
                 if (!resp.ok) throw new Error('Failed to update basic shop details');
 
-                showAlert('Basic shop details updated');
+                toast.success('Basic shop details updated');
                 setSectionEdit(prev => ({ ...prev, basic: false }));
                 setUser(prev => ({ ...prev, ...basicPayload, shopLogo: shopLogoPreview }));
             }
@@ -568,7 +568,7 @@ const UserProfilePage = () => {
                 });
                 if (!resp.ok) throw new Error('Failed to update finance details');
 
-                showAlert('Finance details updated');
+                toast.success('Finance details updated');
                 setSectionEdit(prev => ({ ...prev, finance: false }));
                 setUser(prev => ({ ...prev, ...financePayload }));
             }
@@ -579,7 +579,7 @@ const UserProfilePage = () => {
                     terms2: formData.terms2,
                     terms3: formData.terms3
                 };
-                showAlert("reached here to save other");
+
                 const resp = await fetch(`${apiUrl}/api/shop/user/edit/details/others`, {
                     method: 'PUT',
                     credentials: 'include',
@@ -588,7 +588,7 @@ const UserProfilePage = () => {
                 });
                 if (!resp.ok) throw new Error('Failed to update other details');
 
-                showAlert('Other details updated');
+                toast.success('Other details updated');
                 setSectionEdit(prev => ({ ...prev, others: false }));
                 setUser(prev => ({ ...prev, ...othersPayload }));
             }
@@ -605,6 +605,17 @@ const UserProfilePage = () => {
     // ------------------------ render ------------------------
     return (
         <div className="user-profile-page">
+            <Toaster position="top-center" toastOptions={{
+                duration: 8000,
+                style: {
+                    background: 'lightgreen',
+                    color: 'var(--text-color)',
+                    borderRadius: '25px',
+                    padding: '12px',
+                    width: '100%',
+                    fontSize: '16px',
+                },
+            }}   reverseOrder={false} />
             <div className="glass-card" style={{width:'100%'}}>
                 <div className="profile-header">
                     <div className="ribbon"><span>Account Source: {userSource}</span></div>

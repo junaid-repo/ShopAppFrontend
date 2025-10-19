@@ -325,7 +325,17 @@
     
         return (
             <div className="page-container">
-                <Toaster position="top-center" reverseOrder={false} />
+                <Toaster position="top-center" toastOptions={{
+                    duration: 8000,
+                    style: {
+                        background: 'lightgreen',
+                        color: 'var(--text-color)',
+                        borderRadius: '25px',
+                        padding: '12px',
+                        width: '100%',
+                        fontSize: '16px',
+                    },
+                }}   reverseOrder={false} />
                 <h2>Customers</h2>
                 <div className="page-header">
                     <div className="header-actions">
@@ -523,7 +533,7 @@
                         </div>
                         <div className="form-group">
                             <label>GST Number</label>
-                            <input type="text" required value={gstNumber} onChange={(e) => setGstNumber(e.target.value)} />
+                            <input type="text"  value={gstNumber} onChange={(e) => setGstNumber(e.target.value)} />
                         </div>
                         <div className="form-group">
                             <label>State</label>
@@ -560,7 +570,7 @@
                         </div>
                         <div className="form-group">
                             <label>GST Number</label>
-                            <input type="text" required value={gstNumber} onChange={(e) => setGstNumber(e.target.value)} />
+                            <input type="text"  value={gstNumber} onChange={(e) => setGstNumber(e.target.value)} />
                         </div>
                         <div className="form-group">
                             <label>State</label>

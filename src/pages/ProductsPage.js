@@ -604,7 +604,17 @@ const ProductsPage = () => {
 
     return (
         <div className="page-container">
-            <Toaster position="top-center" reverseOrder={false} />
+            <Toaster position="top-center" toastOptions={{
+                duration: 8000,
+                style: {
+                    background: 'lightgreen',
+                    color: 'var(--text-color)',
+                    borderRadius: '25px',
+                    padding: '12px',
+                    width: '3500px',
+                    fontSize: '16px',
+                },
+            }} reverseOrder={false} />
             <h2 style={{paddingBottom:"30px"}}>Products</h2>
 
             <div className="page-header">

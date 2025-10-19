@@ -271,7 +271,7 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar, selectedPage, setSelected
                     <Headset size={20} weight="duotone" style={{ marginRight: '8px' }} />
                     <span className="nav-text">Chat Support</span>
                 </button>
-                <button
+                {/*<button
                     type="button"
                     onClick={makeClickHandler('settings')}
                     className={`nav-link settings-button ${selectedPage === 'settings' ? 'active' : ''}`}
@@ -280,7 +280,7 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar, selectedPage, setSelected
                 >
                     <Gear size={20} weight="duotone" style={{ marginRight: '8px' }} />
                     <span className="nav-text">Settings</span>
-                </button>
+                </button>*/}
             </div>
         </aside>
     );
