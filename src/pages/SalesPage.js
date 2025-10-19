@@ -296,6 +296,7 @@ const SalesPage = () => {
             {/* Pagination */}
             {totalPages > 1 && (
                 <div className="pagination">
+                    <div className="pagination-controls">
                     <button onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1}>
                         &laquo;  Prev
                     </button>
@@ -311,6 +312,7 @@ const SalesPage = () => {
                     <button onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages}>
                         Next &raquo;
                     </button>
+                </div>
                 </div>
             )}
 

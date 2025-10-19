@@ -68,7 +68,6 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar, selectedPage, setSelected
 
     const navButtonBaseStyle = {
         border: 'none',
-        width: '100%',
         textAlign: 'left',
         padding: '0.75rem 1rem',
         marginBottom: '0.5rem',
@@ -79,6 +78,21 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar, selectedPage, setSelected
         if (selectedPage === page) return navButtonBaseStyle;
         return { ...navButtonBaseStyle, background: 'transparent' };
     };
+
+    const footerNavButtonBaseStyle = {
+        border: 'none',
+        color: 'var(--primary-color)',
+        textAlign: 'left',
+        padding: '0.6rem 1rem',    // Smaller padding
+        marginBottom: '0.25rem',   // Closer together
+        borderRadius: '8px',       // Distinct (not a pill)
+        fontSize: '0.7em',         // Smaller font
+    };
+    const footerButtonStyleFor = (page) => {
+        if (selectedPage === page) return footerNavButtonBaseStyle;
+        return { ...footerNavButtonBaseStyle, background: 'transparent' };
+    };
+
 
     return (
         <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
@@ -146,7 +160,7 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar, selectedPage, setSelected
                 <h1 className="logo">{isCollapsed ? '' : 'Clear Bill'}</h1>
             </div>
 
-            {/* Sidebar Main Navigation */}
+
             <nav className="sidebar-nav">
                 <button
                     type="button"
@@ -244,25 +258,25 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar, selectedPage, setSelected
                 </button>
             </nav>
 
-            {/* 🟢 Chat Support Button — Distinct + Left Corner */}
 
-            <div className="sidebar-chat-button">
+
+            <div className="sidebar-footer">
                 <button
                     type="button"
                     onClick={makeClickHandler('chat')}
                     className={`nav-link chat-support ${selectedPage === 'chat' ? 'active' : ''}`}
                     title="Chat Support"
+                    style={footerButtonStyleFor('chat')}
                 >
                     <Headset size={20} weight="duotone" style={{ marginRight: '8px' }} />
                     <span className="nav-text">Chat Support</span>
                 </button>
-            </div>
-            <div className="sidebar-chat-button">
                 <button
                     type="button"
                     onClick={makeClickHandler('settings')}
-                    className={`nav-link chat-support`}
-                    title="Chat Support"
+                    className={`nav-link settings-button ${selectedPage === 'settings' ? 'active' : ''}`}
+                    title="Settings"
+                    style={footerButtonStyleFor('settings')}
                 >
                     <Gear size={20} weight="duotone" style={{ marginRight: '8px' }} />
                     <span className="nav-text">Settings</span>

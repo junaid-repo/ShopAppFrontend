@@ -842,7 +842,7 @@ const ProductsPage = () => {
                     <div className="form-group"><label>Product Name</label><input type="text" required value={name} onChange={e => setName(e.target.value)} /></div>
                     <div className="form-group"><label>HSN</label><input type="text" required value={hsn} onChange={e => setHsn(e.target.value)} /></div>
 
-                    <div className="form-group"><label>Category</label><select required value={category} onChange={e => setCategory(e.target.value)}><option value="">-- Select --</option><option>Smartphones</option><option>Laptops</option><option>Audio</option><option>Accessories</option><option>Others</option></select></div>
+                    <div className="form-group"><label>Category</label><select required value={category} onChange={e => setCategory(e.target.value)}><option value="">Product</option><option>Service</option><option>Others</option></select></div>
                     <div className="form-group"><label>Cost Price</label><input type="number" step="0.01" required value={costPrice} onChange={e => setCostPrice(e.target.value)} /></div>
                     <div className="form-group"><label>Selling Price</label><input type="number" step="0.01" required value={price} onChange={e => setPrice(e.target.value)} /></div>
                     <div className="form-group"><label>Stock Quantity</label><input type="number" required value={stock} onChange={e => setStock(e.target.value)} /></div>

@@ -35,6 +35,7 @@
         const [currentPage, setCurrentPage] = useState(1);
         const [totalPages, setTotalPages] = useState(0);
         const [customerState, setCustomerState] = useState("");
+        const [gstNumber, setGstNumber] = useState("");
         const [shopState, setShopState] = useState("");
         const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
         const [viewMode, setViewMode] = useState(
@@ -167,7 +168,7 @@
         const handleAddCustomer = async (e) => {
             e.preventDefault();
             try {
-                const payload = { name, email, phone, city,  customerState};
+                const payload = { name, email, phone, city,  customerState, gstNumber};
     
                 const response = await fetch(`${apiUrl}/api/shop/create/customer`, {
                     method: "POST",
@@ -186,7 +187,7 @@
         const handleUpdateCustomer = async (e) => {
             e.preventDefault();
             try {
-                const payload = { id, name, email, phone, city,  customerState};
+                const payload = { id, name, email, phone, city,  customerState, gstNumber};
     
                 const response = await fetch(`${apiUrl}/api/shop/update/customer`, {
                     method: "PUT",
@@ -255,6 +256,7 @@
             setState(customer.state);
             setCity(customer.city || "");
             setShopState(customer.shopState);
+            setGstNumber(customer.gstNumber);
             setIsUpdateModalOpen(true);
         };
     
@@ -270,6 +272,7 @@
             setState("");
             setCity("");
             setShopState("");
+            setGstNumber("");
         };
     
         const handleToggleSelectMode = () => {
@@ -386,6 +389,7 @@
                                                <h4 style={{marginBottom:"10px"}}>{customer.city}, {customer.state}</h4>
                                             <p className="customer-info"><FaEnvelope className="icon" /> {customer.email}</p>
                                             <p className="customer-info spaced"><FaPhone className="icon" /> {customer.phone}</p>
+                                               <p className="customer-info spaced"><FaPhone className="icon" /> {customer.gstNumber}</p>
                                            </div>
                                             <p className="customer-info money"><FaMoneyBillWave className="icon" /> ₹{customer.totalSpent?.toLocaleString('en-IN')}</p>
                                             <button
@@ -423,6 +427,9 @@
                                         <th className="sortable-header" onClick={() => handleSort('phone')}>
                                             Phone {sortConfig.key === 'phone' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
                                         </th>
+                                        <th className="sortable-header" onClick={() => handleSort('gstNumber')}>
+                                            GST Number {sortConfig.key === 'gstNumber' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                                        </th>
                                         <th className="sortable-header" onClick={() => handleSort('state')}>
                                             State {sortConfig.key === 'state' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
                                         </th>
@@ -452,6 +459,7 @@
                                                 <td>{customer.name}</td>
                                                 <td>{customer.email}</td>
                                                 <td>{customer.phone}</td>
+                                                <td>{customer.gstNumber}</td>
                                                 <td>{customer.state}</td>
                                                 <td>{customer.city}</td>
                                                 <td>₹{customer.totalSpent?.toLocaleString('en-IN')}</td>
@@ -498,7 +506,7 @@
                         </div>
                         <div className="form-group">
                             <label>Email</label>
-                            <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+                            <input type="email"  value={email} onChange={(e) => setEmail(e.target.value)} />
                         </div>
                         <div className="form-group">
                             <label>Phone Number</label>
@@ -512,6 +520,10 @@
                                 pattern="[5-9][0-9]{9}"
                                 title="Phone number must be 10 digits and start with 5, 6, 7, 8, or 9"
                             />
+                        </div>
+                        <div className="form-group">
+                            <label>GST Number</label>
+                            <input type="text" required value={gstNumber} onChange={(e) => setGstNumber(e.target.value)} />
                         </div>
                         <div className="form-group">
                             <label>State</label>
@@ -545,6 +557,10 @@
                         <div className="form-group">
                             <label>Phone Number</label>
                             <input type="tel" required value={phone} onChange={(e) => setPhone(e.target.value)} />
+                        </div>
+                        <div className="form-group">
+                            <label>GST Number</label>
+                            <input type="text" required value={gstNumber} onChange={(e) => setGstNumber(e.target.value)} />
                         </div>
                         <div className="form-group">
                             <label>State</label>

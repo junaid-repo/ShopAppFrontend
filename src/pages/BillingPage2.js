@@ -49,6 +49,7 @@ const BillingPage = ({ setSelectedPage }) => {
     const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("");
     const [city, setCity] = useState("");
+    const [gstNumber, setGstNumber] = useState("");
     const [customerState, setCustomerState] = useState("");
     const [shopState, setShopState] = useState("");
     const [isSearchFocused, setIsSearchFocused] = useState(false); // NEW: Controls search results visibility
@@ -422,7 +423,7 @@ const BillingPage = ({ setSelectedPage }) => {
 
     const handleAddCustomer = async (e) => {
         e.preventDefault();
-        const payload = { name, email, phone, city, customerState };
+        const payload = { name, email, phone, city, customerState, gstNumber };
         try {
             const response = await fetch(`${apiUrl}/api/shop/create/forBilling/customer`, {
                 method: "POST",
@@ -978,7 +979,7 @@ const BillingPage = ({ setSelectedPage }) => {
                     </div>
                     <div className="form-group">
                         <label>Email</label>
-                        <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+                        <input type="email"  value={email} onChange={(e) => setEmail(e.target.value)} />
                     </div>
 
 
@@ -994,6 +995,10 @@ const BillingPage = ({ setSelectedPage }) => {
                             pattern="[5-9][0-9]{9}"
                             title="Phone number must be 10 digits and start with 5, 6, 7, 8, or 9"
                         />
+                    </div>
+                    <div className="form-group">
+                        <label>GST Number</label>
+                        <input type="tel" required value={gstNumber} onChange={(e) => setGstNumber(e.target.value)} />
                     </div>
                     <div className="form-group">
                         <label>State</label>
