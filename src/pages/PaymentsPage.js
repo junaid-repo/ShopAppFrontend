@@ -194,17 +194,36 @@ const PaymentsPage = ({setSelectedPage}) => {
     };
 
   // compute totals and mode counts for the selected range
-  const { totalAmount, modeCounts } = useMemo(() => {
-    const counts = {};
-    let total = 0;
-    filteredPayments.forEach((p) => {
-      const amt = Number(p.amount) || 0;
-      total += amt;
-      const m = p.method || "Unknown";
-      counts[m] = (counts[m] || 0) + 1;
-    });
-    return { totalAmount: total, modeCounts: counts };
-  }, [filteredPayments]);
+    // compute totals and mode counts for the selected range
+    // --- UPDATED: Added totalDueAmount and dueCount ---
+    const { totalAmount, totalDueAmount, dueCount, modeCounts } = useMemo(() => {
+        const counts = {};
+        let total = 0;
+        let totalDue = 0;
+        let countDue = 0;
+
+        filteredPayments.forEach((p) => {
+            const amt = Number(p.amount) || 0;
+            const dueAmt = Number(p.due) || 0; // Get the due amount
+
+            total += amt;
+            totalDue += dueAmt; // Add to total due
+
+            if (dueAmt > 0) {
+                countDue++; // Increment count if due > 0
+            }
+
+            const m = p.method || "Unknown";
+            counts[m] = (counts[m] || 0) + 1;
+        });
+
+        return {
+            totalAmount: total,
+            totalDueAmount: totalDue, // <-- New value
+            dueCount: countDue,       // <-- New value
+            modeCounts: counts
+        };
+    }, [filteredPayments]); // Dependency remains the same
 
   // pagination calculations (apply on filteredPayments)
   const indexOfLast = currentPage * itemsPerPage;
@@ -262,14 +281,38 @@ const PaymentsPage = ({setSelectedPage}) => {
         </div>
 
         {/* Total card */}
-        <div className="stats-card total-card">
-          <div className="card-title">Total Payments</div>
-          <div  style={{
-              fontSize: "40.1px",
-              fontWeight: "bold"
-          }}>₹{totalAmount.toLocaleString()}</div>
-          <div className="total-sub">Showing: {fromDate} — {toDate}</div>
-        </div>
+          {/* Total card --- UPDATED STRUCTURE --- */}
+          <div className="stats-card total-card">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
+                  {/* Left Side: Total Payments */}
+                  <div>
+                      <div className="card-title">Total Payments</div>
+                      <div style={{
+                          fontSize: "40.1px",
+                          fontWeight: "bold",
+                          color: 'var(--text-dark)' // Ensure default color
+                      }}>
+                          ₹{totalAmount.toLocaleString()}
+                      </div>
+                      <div className="total-sub">Showing: {fromDate} — {toDate}</div>
+                  </div>
+
+                  {/* Right Side: Total Due */}
+                  <div style={{ textAlign: 'right' }}>
+                      <div className="card-title">Total Due</div>
+                      <div style={{
+                          fontSize: "40.1px",
+                          fontWeight: "bold",
+                          color: 'maroon' // Apply maroon color
+                      }}>
+                          ₹{totalDueAmount.toLocaleString()}
+                      </div>
+                      <div className="total-sub" style={{ marginTop: '5px' }}>
+                          {dueCount} Invoice{dueCount !== 1 ? 's' : ''} with dues
+                      </div>
+                  </div>
+              </div>
+          </div>
 
         {/* Bars card */}
         <div className="stats-card bars-card">
@@ -318,8 +361,11 @@ const PaymentsPage = ({setSelectedPage}) => {
               <th>Payment Ref. Number</th>
               <th>Invoice ID</th>
               <th>Date</th>
+                <th>Method</th>
               <th>Amount</th>
-              <th>Method</th>
+                <th>Paid</th>
+                <th>Due</th>
+                <th>Status</th>
             </tr>
           </thead>
           <tbody>
@@ -329,8 +375,13 @@ const PaymentsPage = ({setSelectedPage}) => {
                   <td>{payment.id}</td>
                   <td>{payment.saleId}</td>
                   <td>{formatDate(payment.date)}</td>
+                    <td>{payment.method}</td>
                   <td>₹{payment.amount.toLocaleString()}</td>
-                  <td>{payment.method}</td>
+                    <td>₹{payment.paid.toLocaleString()}</td>
+                    <td>₹{payment.due.toLocaleString()}</td>
+                    <span className={payment.status === 'Paid' ? 'status-paid' : 'status-pending'}>
+                              {payment.status}
+                            </span>
                 </tr>
               ))
             ) : (

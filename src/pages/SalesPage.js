@@ -6,6 +6,9 @@ import {MdDownload} from "react-icons/md";
 import './SalesPage.css';
 import { formatDate } from "../utils/formatDate";
 import { useAlert } from '../context/AlertContext';
+import {PaperPlaneTilt} from "@phosphor-icons/react";
+import { FaPaperPlane } from 'react-icons/fa';
+
 import {
     MdPerson,
     MdEmail,
@@ -14,6 +17,9 @@ import {
     MdClose,
     MdCheckCircle,
     MdCancel,
+    MdNotifications,
+    MdSend,
+    MdPayment
 } from 'react-icons/md';
 import { useLocation } from 'react-router-dom';
 import {useSearchKey} from "../context/SearchKeyContext";
@@ -31,6 +37,16 @@ const SalesPage = () => {
     const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
     const [hasSortActive, setHasSortActive] = useState(false);
     const [hoveredRow, setHoveredRow] = useState(null);
+    const [showReminderModal, setShowReminderModal] = useState(false); // <-- NEW
+    const [currentReminderInvoiceId, setCurrentReminderInvoiceId] = useState(null); // <-- NEW
+    const [reminderMessage, setReminderMessage] = useState(""); // <-- NEW
+    const [sendViaEmail, setSendViaEmail] = useState(true); // <-- NEW, default to email
+    const [sendViaWhatsapp, setSendViaWhatsapp] = useState(false); // <-- NEW
+
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [currentPaymentOrder, setCurrentPaymentOrder] = useState(null); // Will hold {id, total, paid}
+    const [payingAmount, setPayingAmount] = useState(""); // Input is a string
+    const [isUpdatingPayment, setIsUpdatingPayment] = useState(false); // For loading state
 
     const config = useConfig();
     var apiUrl = "";
@@ -142,6 +158,121 @@ const SalesPage = () => {
   // const currentSales = filteredSales.slice(indexOfFirst, indexOfLast);
     const currentSales = sales;
 
+    const handleOpenReminderModal = (saleId) => {
+        setCurrentReminderInvoiceId(saleId);
+        setReminderMessage(""); // Clear previous message
+        setSendViaEmail(true); // Reset to default
+        setSendViaWhatsapp(false); // Reset to default
+        setShowReminderModal(true);
+    };
+
+    const handleConfirmSendReminder = async () => {
+        if (!currentReminderInvoiceId) return;
+
+        // Basic validation: ensure at least one channel is selected
+        if (!sendViaEmail && !sendViaWhatsapp) {
+            showAlert("Please select at least one channel (Email or WhatsApp).", "warning");
+            return;
+        }
+
+        try {
+            const payload = {
+                message: reminderMessage, // The optional message from the textbox
+                sendViaEmail: sendViaEmail,
+                sendViaWhatsapp: sendViaWhatsapp,
+                orderId: currentReminderInvoiceId
+            };
+
+            await axios.post(
+                `${apiUrl}/api/shop/payment/send-reminder`,
+                payload,
+                { withCredentials: true }
+            );
+
+            // On success, update the local state to reflect the new count
+            setSales(currentSales =>
+                currentSales.map(sale =>
+                    sale.id === currentReminderInvoiceId
+                        ? { ...sale, reminderCount: (sale.reminderCount || 0) + 1 }
+                        : sale
+                )
+            );
+
+            showAlert('Reminder sent successfully!', 'success');
+            setShowReminderModal(false); // Close modal on success
+            setReminderMessage(""); // Clear message
+            setCurrentReminderInvoiceId(null); // Clear invoice ID
+
+        } catch (error) {
+            console.error("Error sending reminder:", error);
+            showAlert("Failed to send the reminder. Please try again.");
+        }
+    };
+
+    const handleOpenPaymentModal = (sale) => {
+        setCurrentPaymentOrder(sale);
+        setPayingAmount(""); // Clear old amount
+        setShowPaymentModal(true);
+    };
+
+    const handleConfirmUpdatePayment = async () => {
+        if (!currentPaymentOrder) return;
+
+        const amount = parseFloat(payingAmount);
+        const dueAmount = currentPaymentOrder.total - currentPaymentOrder.paid;
+
+        // --- Validation ---
+        if (isNaN(amount) || amount <= 0) {
+            showAlert("Please enter a valid payment amount.", "warning");
+            return;
+        }
+        // Use a small tolerance (e.g., 0.01) for float comparison
+        if (amount > dueAmount + 0.01) {
+            showAlert(`Payment cannot be more than the due amount of ₹${dueAmount.toLocaleString()}.`, "warning");
+            return;
+        }
+
+        setIsUpdatingPayment(true);
+        try {
+            const payload = {
+                invoiceId: currentPaymentOrder.id,
+                amount: amount
+            };
+
+            // Assuming a new endpoint /api/shop/payment/update
+            await axios.post(`${apiUrl}/api/shop/payment/update`, payload, {
+                withCredentials: true,
+            });
+
+            // Update local state on success
+            setSales(prevSales =>
+                prevSales.map(sale => {
+                    if (sale.id === currentPaymentOrder.id) {
+                        const newPaidAmount = sale.paid + amount;
+                        // Check if new paid amount is >= total (with tolerance)
+                        const newStatus = (newPaidAmount + 0.01) >= sale.total ? 'Paid' : 'SemiPaid';
+                        return {
+                            ...sale,
+                            paid: newPaidAmount,
+                            status: newStatus
+                        };
+                    }
+                    return sale;
+                })
+            );
+
+            showAlert("Payment updated successfully!", "success");
+            setShowPaymentModal(false);
+            setCurrentPaymentOrder(null);
+
+        } catch (error) {
+            console.error("Error updating payment:", error);
+            showAlert("Failed to update payment. Please try again.");
+        } finally {
+            setIsUpdatingPayment(false);
+        }
+    };
+
 
     const handleDownloadInvoice = async (saleId) => {try {
         const response = await axios.get(
@@ -191,6 +322,30 @@ const SalesPage = () => {
 
     };
 
+    const handleSendReminder = async (saleId) => {
+        try {
+            // This assumes a POST request to an endpoint like /api/shop/send-reminder/{invoiceId}
+            await axios.post(`${apiUrl}/api/shop/send-reminder/${saleId}`, {}, {
+                withCredentials: true,
+            });
+
+            // On success, update the local state to reflect the new count
+            setSales(currentSales =>
+                currentSales.map(sale =>
+                    sale.id === saleId
+                        ? { ...sale, reminderCount: (sale.reminderCount || 0) + 1 }
+                        : sale
+                )
+            );
+
+            showAlert('Reminder sent successfully!', 'success');
+
+        } catch (error) {
+            console.error("Error sending reminder:", error);
+            showAlert("Failed to send the reminder. Please try again.");
+        }
+    };
+
     return (
         <div className="page-container">
             <h2>Sales</h2>
@@ -234,11 +389,17 @@ const SalesPage = () => {
                             Total {hasSortActive && sortConfig.key === 'totalAmount' ? (sortConfig.direction === 'asc' ? ' ▲' : ' ▼') : ''}
                         </th>
 
+                        <th style={{ cursor: 'pointer' }} onClick={() => toggleSort('paid')}>
+                            Paid {hasSortActive && sortConfig.key === 'paid' ? (sortConfig.direction === 'asc' ? ' ▲' : ' ▼') : ''}
+                        </th>
+
                         {/* This key 'status' should be verified against your backend model */}
                         <th>Status</th>
 
-                        <th>Comments</th>
+
                         <th>Invoice</th>
+                        <th>Remind</th>
+                        <th>Update</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -258,12 +419,13 @@ const SalesPage = () => {
                             <td>{sale.customer}</td>
                             <td>{formatDate(sale.date)}</td>
                             <td>₹{sale.total.toLocaleString()}</td>
+                            <td>₹{sale.paid.toLocaleString()}</td>
                             <td>
                             <span className={sale.status === 'Paid' ? 'status-paid' : 'status-pending'}>
                               {sale.status}
                             </span>
                             </td>
-                            <td>{sale.remarks}</td>
+
                             <td>
                                 <button
                                     className="download-btn"
@@ -284,6 +446,60 @@ const SalesPage = () => {
                                 >
                                     <MdDownload size={18} color="#d32f2f" />
                                 </button>
+                            </td>
+                            <td>
+                                {(sale.status === 'SemiPaid' || sale.status === 'UnPaid') && (
+                                    <button
+                                        className="reminder-btn"
+                                        title="Send Payment Reminder"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleOpenReminderModal(sale.id); // <-- MODIFIED to open modal
+                                        }}
+                                        style={{
+                                            cursor: "pointer",
+                                            borderRadius: "6px",
+                                            padding: "6px 8px",
+                                            display: "inline-flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            gap: "5px",
+                                            background: "var(--primary-color-light)", // Light Maroon-ish/Orange background <-- NEW STYLE
+                                            border: "1px solid var(--border-color)",
+                                            boxShadow: "0 2px 5px rgba(0,0,0,0.1)" // Optional: subtle shadow
+                                        }}
+                                    >
+                                        <FaPaperPlane size={18} color="var(--primary-color)" />
+                                        <span style={{fontWeight: "bold", fontSize: "0.9em", color: "var(--text-color)"}}>
+                                            {sale.reminderCount || 0}
+                                        </span>
+                                    </button>
+                                )}
+                            </td>
+                            <td>
+                                {(sale.status === 'SemiPaid' || sale.status === 'UnPaid') && (
+                                    <button
+                                        className="btn-update-payment"
+                                        title="Update Payment"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleOpenPaymentModal(sale);
+                                        }}
+                                        style={{
+                                            cursor: "pointer",
+                                            borderRadius: "6px",
+                                            padding: "6px 8px",
+                                            display: "inline-flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            gap: "5px",
+                                            background: "#e0f2f1", // A light teal
+                                            border: "1px solid #00796b",
+                                        }}
+                                    >
+                                        <MdPayment size={18} color="#00796b" />
+                                    </button>
+                                )}
                             </td>
                         </tr>
                     ))}
@@ -428,8 +644,171 @@ const SalesPage = () => {
                 </div>
             )}
 
+            {showReminderModal && (
+                <div className="order-modal-overlay" onClick={() => setShowReminderModal(false)}>
+                    <div className="order-modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+                        <div className="order-modal-header">
+                            <h2>Send Reminder for Invoice #{currentReminderInvoiceId}</h2>
+                            <button className="close-button" onClick={() => setShowReminderModal(false)}>
+                                <MdClose size={28} />
+                            </button>
+                        </div>
 
+                        <div style={{ padding: '20px' }}>
+                            <div className="form-group" style={{ marginBottom: '15px' }}>
+                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+                                    Message (Optional):
+                                </label>
+                                <textarea
+                                    value={reminderMessage}
+                                    onChange={(e) => setReminderMessage(e.target.value)}
+                                    placeholder="Add a custom message for the reminder..."
+                                    rows="4"
+                                    style={{
+                                        width: '100%',
+                                        padding: '10px',
+                                        borderRadius: '8px',
+                                        border: '1px solid var(--border-color)',
+                                        background: 'var(--input-bg)',
+                                        color: 'var(--text-color)',
+                                        fontSize: '1rem',
+                                        resize: 'vertical'
+                                    }}
+                                />
+                            </div>
 
+                            <div className="form-group" style={{ marginBottom: '20px' }}>
+                                <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>
+                                    Send via:
+                                </label>
+                                <div style={{ display: 'flex', gap: '20px' }}>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={true}
+                                            onChange={(e) => setSendViaEmail(e.target.checked)}
+                                            style={{ transform: 'scale(1.2)', accentColor: 'var(--primary-color)' }}
+                                        />
+                                        Email
+                                    </label>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={sendViaWhatsapp}
+                                            onChange={(e) => setSendViaWhatsapp(e.target.checked)}
+                                            style={{ transform: 'scale(1.2)', accentColor: 'var(--primary-color)' }}
+                                        />
+                                        WhatsApp
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                                <button
+                                    className="btn"
+                                    onClick={() => setShowReminderModal(false)}
+                                    style={{ background: 'var(--glass-card-bg)', color: 'var(--text-color)', border: '1px solid var(--border-color)' }}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    className="btn"
+                                    onClick={handleConfirmSendReminder}
+                                    style={{
+                                        background: 'var(--primary-color)',
+                                        color: 'white',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '8px'
+                                    }}
+                                >
+                                    <MdSend size={18} /> Send Reminder
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {showPaymentModal && currentPaymentOrder && (
+                <div className="order-modal-overlay" onClick={() => setShowPaymentModal(false)}>
+                    <div className="order-modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '450px' }}>
+                        <div className="order-modal-header">
+                            <h2>Update Payment for #{currentPaymentOrder.id}</h2>
+                            <button className="close-button" onClick={() => setShowPaymentModal(false)}>
+                                <MdClose size={28} />
+                            </button>
+                        </div>
+
+                        <div style={{ padding: '20px' }}>
+                            {/* Payment Summary Details */}
+                            <div className="payment-summary-box" style={{ marginBottom: '20px', padding: '15px', background: 'var(--glass-bg)', borderRadius: '8px', border: '1px solid var(--border-color)'}}>
+                                <div style={{display: 'flex', justifyContent: 'space-between', fontSize: '1.1em', marginBottom: '10px'}}>
+                                    <span>Total Amount:</span>
+                                    <strong>₹{currentPaymentOrder.total.toLocaleString()}</strong>
+                                </div>
+                                <div style={{display: 'flex', justifyContent: 'space-between', fontSize: '1.1em', marginBottom: '10px'}}>
+                                    <span>Amount Paid:</span>
+                                    <strong style={{color: 'green'}}>₹{currentPaymentOrder.paid.toLocaleString()}</strong>
+                                </div>
+                                <hr style={{border: 'none', borderTop: '1px solid var(--border-color)', margin: '10px 0'}} />
+                                <div style={{display: 'flex', justifyContent: 'space-between', fontSize: '1.2em', fontWeight: 'bold'}}>
+                                    <span>Amount Due:</span>
+                                    <strong style={{color: '#d32f2f'}}>₹{(currentPaymentOrder.total - currentPaymentOrder.paid).toLocaleString()}</strong>
+                                </div>
+                            </div>
+
+                            {/* Payment Input */}
+                            <div className="form-group" style={{ marginBottom: '20px' }}>
+                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+                                    Enter Paying Amount:
+                                </label>
+                                <input
+                                    type="number"
+                                    value={payingAmount}
+                                    onChange={(e) => setPayingAmount(e.target.value)}
+                                    placeholder="0.00"
+                                    style={{
+                                        width: '100%',
+                                        padding: '12px',
+                                        borderRadius: '8px',
+                                        border: '1px solid var(--border-color)',
+                                        background: 'var(--input-bg)',
+                                        color: 'var(--text-color)',
+                                        fontSize: '1.2rem',
+                                        textAlign: 'right'
+                                    }}
+                                />
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                                <button
+                                    className="btn"
+                                    onClick={() => setShowPaymentModal(false)}
+                                    style={{ background: 'var(--glass-card-bg)', color: 'var(--text-color)', border: '1px solid var(--border-color)' }}
+                                    disabled={isUpdatingPayment}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    className="btn"
+                                    onClick={handleConfirmUpdatePayment}
+                                    disabled={isUpdatingPayment}
+                                    style={{
+                                        background: 'var(--primary-color)',
+                                        color: 'white',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '8px'
+                                    }}
+                                >
+                                    {isUpdatingPayment ? 'Processing...' : 'Confirm Payment'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
         </div>
     );

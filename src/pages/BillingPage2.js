@@ -71,6 +71,27 @@ const BillingPage = ({ setSelectedPage }) => {
     const [customerSearchResults, setCustomerSearchResults] = useState([]);
     const [isCustomerLoading, setIsCustomerLoading] = useState(false);
 
+    // --- Calculations ---
+    const actualSubtotal = cart.reduce((total, item) => total + (item.listPrice || item.price) * item.quantity, 0);
+    const sellingSubtotal = cart.reduce((total, item) => total + (item.sellingPrice * item.quantity), 0);
+    const tax = cart.reduce((total, item) => {
+        const totalSellingPrice = item.sellingPrice * item.quantity;
+        const itemTaxAmount = totalSellingPrice - (totalSellingPrice / (1 + (item.tax / 100)));
+        return total + itemTaxAmount;
+    }, 0);
+    const total = sellingSubtotal - tax;
+    const discountPercentage = actualSubtotal > 0 ? (((actualSubtotal - sellingSubtotal) / actualSubtotal) * 100).toFixed(2) : 0;
+
+    // --- NEW: State for Paying Amount ---
+    const [payingAmount, setPayingAmount] = useState(sellingSubtotal);
+    const remainingAmount = sellingSubtotal - payingAmount;
+
+    // --- NEW: Effect to sync payingAmount with sellingSubtotal ---
+    useEffect(() => {
+        setPayingAmount(sellingSubtotal);
+    }, [sellingSubtotal]);
+
+
     // --- API Calls and Data Fetching ---
 
     // Fetch customers list on initial load
@@ -487,6 +508,7 @@ const BillingPage = ({ setSelectedPage }) => {
             };
         });
 
+        // --- MODIFICATION 2: Add payingAmount and remainingAmount to payload ---
         const payload = {
             selectedCustomer,
             cart: cartForBackend, // <-- Use the newly created cart object
@@ -495,6 +517,8 @@ const BillingPage = ({ setSelectedPage }) => {
             tax,
             paymentMethod,
             remarks,
+            payingAmount: payingAmount, // <-- ADDED
+            remainingAmount: remainingAmount, // <-- ADDED
             ...paymentProviderPayload // Include Razorpay IDs if any
         };
 
@@ -510,7 +534,7 @@ const BillingPage = ({ setSelectedPage }) => {
             });
             const data = await res.json();
             setOrderRef(data.invoiceNumber || 'N/A');
-            setPaidAmount(data.totalAmount || sellingSubtotal);
+            setPaidAmount(data.totalAmount || sellingSubtotal); // You might want to change this to data.payingAmount if backend returns it
             setShowPopup(true);
             handleNewBilling();
         } catch (err) {
@@ -524,11 +548,14 @@ const BillingPage = ({ setSelectedPage }) => {
 
     const HandleCardProcessPayment = async () => {
         setLoading(true);
+        // --- Use payingAmount for Razorpay, not sellingSubtotal ---
+        const amountToPay = payingAmount > 0 ? payingAmount : sellingSubtotal;
+
         const orderResponse = await fetch(`${apiUrl}/api/razorpay/create-order`, {
             method: "POST",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ amount: sellingSubtotal * 100, currency: "INR" }),
+            body: JSON.stringify({ amount: amountToPay * 100, currency: "INR" }), // Use amountToPay
         });
 
         if (!orderResponse.ok) {
@@ -573,17 +600,6 @@ const BillingPage = ({ setSelectedPage }) => {
             processPayment();
         }
     };
-
-    // --- Calculations ---
-    const actualSubtotal = cart.reduce((total, item) => total + (item.listPrice || item.price) * item.quantity, 0);
-    const sellingSubtotal = cart.reduce((total, item) => total + (item.sellingPrice * item.quantity), 0);
-    const tax = cart.reduce((total, item) => {
-        const totalSellingPrice = item.sellingPrice * item.quantity;
-        const itemTaxAmount = totalSellingPrice - (totalSellingPrice / (1 + (item.tax / 100)));
-        return total + itemTaxAmount;
-    }, 0);
-    const total = sellingSubtotal - tax;
-    const discountPercentage = actualSubtotal > 0 ? (((actualSubtotal - sellingSubtotal) / actualSubtotal) * 100).toFixed(2) : 0;
 
     // --- Render ---
     return (
@@ -685,7 +701,7 @@ const BillingPage = ({ setSelectedPage }) => {
                                                     Price: ₹{p.price} | Tax: {p.tax}% | Stock: {p.stock}
                                                 </div>
                                             </div>
-                                            {/*    <button className="btn small-btn" onClick={() => handleAddProduct(p)}>
+                                            {/* <button className="btn small-btn" onClick={() => handleAddProduct(p)}>
                                                 <FaPlus /> Add
                                             </button>*/}
                                         </div>
@@ -828,6 +844,41 @@ const BillingPage = ({ setSelectedPage }) => {
                         </div>
                         <p className="discount">Discount: <span>{discountPercentage}%</span></p>
                         <h4 className="subtotal-selling">Final Total: <span>₹{sellingSubtotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></h4>
+
+                        {/* --- MODIFICATION 1: Add Paying and Remaining Fields --- */}
+                        {/* I've changed the className from "form-group" to "payment-input-group"
+    to avoid conflicts. I also corrected alignItems and adjusted the input width. */}
+                        <div className="payment-input-group" style={{
+                            display: 'flex',
+                            alignItems: 'center', // <-- Corrected from 'left'
+                            justifyContent: 'space-between',
+                            margin: '1rem 0 0.5rem 0',
+                            gap: '10px' // <-- Added a bit more gap
+                        }}>
+                            <label style={{ fontWeight: 500, color: 'var(--primary-color)', whiteSpace: 'nowrap' }}>
+                                Paying:
+                            </label>
+                            <input
+                                type="number"
+                                value={payingAmount}
+                                onChange={(e) => setPayingAmount(parseFloat(e.target.value) || 0)}
+                                style={{
+                                    width: '40%', // <-- This will fill the remaining space
+                                    padding: '10px',
+                                    borderRadius: '15px', // <-- Matched your other inputs
+                                    border: '3px solid var(--border-color)',
+                                    background: 'var(--input-bg)',
+                                    color: 'var(--text-color)',
+                                    fontSize: '1rem',
+                                    textAlign: 'right'
+                                }}
+                            />
+                        </div>
+                        <h5 className="remaining-total" style={{ margin: '0 0 1rem 0', textAlign: 'right', color: 'var(--primary-color)' }}>
+                            Due: <span>₹{remainingAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </h5>
+                        {/* --- End of MODIFICATION 1 --- */}
+
 
                         <div className="remarks-section" style={{ margin: '1rem 0' }}>
                             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: 'var(--primary-color)' }}>
@@ -1068,6 +1119,17 @@ const BillingPage = ({ setSelectedPage }) => {
                             <strong>Final Total:</strong>
                             <strong>₹{sellingSubtotal.toLocaleString()}</strong>
                         </div>
+
+                        {/* --- I've also added the Paying/Remaining to the preview modal --- */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '1.1em', paddingTop: '10px', borderTop: '1px solid var(--border-color-light)' }}>
+                            <strong>Paying:</strong>
+                            <strong>₹{payingAmount.toLocaleString()}</strong>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '1.1em' }}>
+                            <strong>Remaining:</strong>
+                            <strong>₹{remainingAmount.toLocaleString()}</strong>
+                        </div>
+
                         <div style={{ marginTop: '15px' }}>
                             <strong>Payment Method:</strong> {paymentMethod}
                         </div>
@@ -1191,8 +1253,17 @@ const BillingPage = ({ setSelectedPage }) => {
                             Order Reference: <strong>{orderRef}</strong>
                         </p>
                         <p style={{ fontSize: '1.1rem', margin: '0.5rem 0' }}>
+                            {/* This now shows the amount that was actually paid */}
                             Amount Paid: <strong>₹{paidAmount.toLocaleString()}</strong>
                         </p>
+
+                        {/* This will show the remaining balance if any */}
+                        {remainingAmount > 0 && (
+                            <p style={{ fontSize: '1.1rem', margin: '0.5rem 0', color: '#d9534f' }}>
+                                Amount Remaining: <strong>₹{remainingAmount.toLocaleString()}</strong>
+                            </p>
+                        )}
+
 
                         {/* --- NEW Button Container --- */}
                         <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '1.5rem' }}>

@@ -8,6 +8,7 @@ import EditIcon from '@mui/icons-material/ModeEditOutlineOutlined'
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import { Gauge, UsersFour, Invoice , Archive, ChartLineUp, MicrosoftExcelLogo, ShoppingCart, CreditCard, Receipt} from "@phosphor-icons/react";
 import toast, {Toaster} from 'react-hot-toast';
+import './InvoiceTemplates.css';
 // Mock data (used as initial fallback while API loads)
 const mockUser = {
    
@@ -52,6 +53,21 @@ const UserProfilePage = () => {
         confirmPassword: ''
     });
 
+    // --- ADDED: Define your invoice templates ---
+    const invoiceTemplates = [
+        { name: 'gstinvoiceskyblue', displayName: 'Modern Blue', imageUrl: '/invoiceTemplates/Screenshot_20251019_235059.png' }, // Replace with actual paths/URLs
+        { name: 'gstinvoiceLightGreen', displayName: 'Elegant Green', imageUrl: '/invoiceTemplates/Screenshot_20251019_235119.png' },
+        { name: 'gstinvoiceGreen', displayName: 'Simple Green', imageUrl: '/invoiceTemplates/Screenshot_20251019_235133.png' },
+        { name: 'gstinvoiceBlue', displayName: 'Simple Blue', imageUrl: '/invoiceTemplates/Screenshot_20251019_235150.png' },
+        { name: 'gstinvoiceOrange', displayName: 'Classic Orange', imageUrl: '/invoiceTemplates/Screenshot_20251019_235203.png' },
+        { name: 'gstinvoice', displayName: 'Best Purple', imageUrl: '/invoiceTemplates/Screenshot_20251019_235220.png' },
+    ];
+
+    // --- ADDED: State for Invoice Templates ---
+    const [selectedTemplate, setSelectedTemplate] = useState(''); // Store the *name* of the selected template
+    const [modalOpen, setModalOpen] = useState(false);
+    const [modalTemplate, setModalTemplate] = useState(null); // Store the template object for the modal
+
     useEffect(() => {
         // initial fallback while API loads
         setFormData(mockUser);
@@ -59,6 +75,91 @@ const UserProfilePage = () => {
         setProfilePicPreview(mockUser.profilePic);
         setShopLogoPreview(mockUser.shopLogo);
     }, []);
+
+    useEffect(() => {
+        const loadSelectedTemplate = async () => {
+            if (!apiUrl) return;
+            // Assuming you have the username available (fetched in the other useEffect)
+            const currentUsername = user?.username || formData?.username; // Get username safely
+            if (!currentUsername) {
+                // Fetch username if not available yet (or handle error)
+                try {
+                    const userRes = await fetch(`${apiUrl}/api/shop/user/profile`, { method: "GET", credentials: 'include' });
+                    if (userRes.ok) {
+                        const { username: fetchedUsername } = await userRes.json();
+                        // Now fetch template with the username
+                        fetchTemplate(fetchedUsername);
+                    }
+                } catch (err) {
+                    console.error("Could not get username to fetch template:", err);
+                }
+                return; // Exit if username cannot be determined
+            }
+            fetchTemplate(currentUsername);
+        };
+
+        const fetchTemplate = async (username) => {
+            try {
+                // Replace with your actual endpoint to GET the selected template
+                const response = await fetch(`${apiUrl}/api/shop/user/get/user/invoiceTemplate`, {
+                    method: 'GET',
+                    credentials: 'include',
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    setSelectedTemplate(data.selectedTemplateName || ''); // Assuming the API returns { selectedTemplateName: 'modern-blue' }
+                } else {
+                    console.warn("Failed to fetch selected template:", response.status);
+                }
+            } catch (error) {
+                console.error("Error fetching selected template:", error);
+            }
+        };
+
+        // Only run when the component mounts or apiUrl/user changes significantly
+        loadSelectedTemplate();
+
+    }, [apiUrl, user?.username, formData?.username]); // Dependencies
+
+    // --- ADDED: Handler for selecting a template ---
+    const handleSelectTemplate = async (templateName, displayName) => {
+        if (!apiUrl || !user?.username) {
+            toast.error("Cannot save selection. User session not found.");
+            return;
+        }
+
+        try {
+            // Replace with your actual endpoint to PUT/POST the selected template
+            const response = await fetch(`${apiUrl}/api/shop/user/save/user/invoiceTemplate`, {
+                method: 'POST', // Or POST
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ selectedTemplateName: templateName }),
+            });
+
+            if (response.ok) {
+                setSelectedTemplate(templateName);
+                toast.success(`Template "${displayName}" selected!`);
+                setModalOpen(false); // Close modal if selection was made from modal
+            } else {
+                toast.error(`Failed to select template: ${response.statusText}`);
+            }
+        } catch (error) {
+            console.error("Error selecting template:", error);
+            toast.error("Something went wrong while saving your selection.");
+        }
+    };
+
+    // --- ADDED: Handlers for modal ---
+    const openTemplateModal = (template) => {
+        setModalTemplate(template);
+        setModalOpen(true);
+    };
+
+    const closeTemplateModal = () => {
+        setModalOpen(false);
+        setModalTemplate(null);
+    };
 
     useEffect(() => {
         // keep logic and API calls from your original file intact while adding shop-logo fetch
@@ -606,10 +707,10 @@ const UserProfilePage = () => {
     return (
         <div className="user-profile-page">
             <Toaster position="top-center" toastOptions={{
-                duration: 8000,
+                duration: 5000,
                 style: {
                     background: 'lightgreen',
-                    color: 'var(--text-color)',
+                    color: 'white',
                     borderRadius: '25px',
                     padding: '12px',
                     width: '100%',
@@ -627,6 +728,7 @@ const UserProfilePage = () => {
                 <div className="tab-header">
                     <button className={`tab-btn ${activeTab === 'user' ? 'active' : ''}`} onClick={() => setActiveTab('user')}>User Details</button>
                     <button className={`tab-btn ${activeTab === 'shop' ? 'active' : ''}`} onClick={() => setActiveTab('shop')}>Shop Details</button>
+                    <button className={`tab-btn ${activeTab === 'templates' ? 'active' : ''}`} onClick={() => setActiveTab('templates')}>Invoice Templates</button>
                 </div>
 
                 {/* USER TAB */}
@@ -861,6 +963,58 @@ const UserProfilePage = () => {
 
                             {sectionEdit.others && (<div className="section-actions"><button className="btn" onClick={() => handleSectionSave('others')}>Save Other Details</button><button className="btn btn-cancel" onClick={() => setSectionEdit(prev => ({ ...prev, others: false }))}>Cancel</button></div>)}
 
+                        </div>
+                    </div>
+                )}
+
+                {/* --- ADDED: INVOICE TEMPLATES TAB --- */}
+                {activeTab === 'templates' && (
+                    <div className="tab-content invoice-templates-tab">
+                        <h3>Select Your Invoice Template</h3>
+                        <p>Choose the design you prefer for your generated invoices.</p>
+                        <div className="template-grid">
+                            {invoiceTemplates.map((template) => (
+                                <div
+                                    key={template.name}
+                                    className={`template-card ${selectedTemplate === template.name ? 'selected' : ''}`}
+                                >
+                                    <img
+                                        src={template.imageUrl}
+                                        alt={template.displayName}
+                                        onClick={() => openTemplateModal(template)}
+                                        className="template-image"
+                                    />
+                                    <div className="template-info">
+                                        <span className="template-name">{template.displayName}</span>
+                                        <button
+                                            className="btn select-btn"
+                                            onClick={() => handleSelectTemplate(template.name, template.displayName)}
+                                            disabled={selectedTemplate === template.name}
+                                        >
+                                            {selectedTemplate === template.name ? 'Selected' : 'Select'}
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+
+                {/* --- ADDED: Template Modal --- */}
+                {modalOpen && modalTemplate && (
+                    <div className="template-modal-overlay" onClick={closeTemplateModal}>
+                        <div className="template-modal-content" onClick={(e) => e.stopPropagation()}>
+                            <button className="close-modal-btn" onClick={closeTemplateModal}>&times;</button>
+                            <img src={modalTemplate.imageUrl} alt={modalTemplate.displayName} className="modal-image-full"/>
+                            <h4>{modalTemplate.displayName}</h4>
+                            <button
+                                className="btn select-btn-modal"
+                                onClick={() => handleSelectTemplate(modalTemplate.name, modalTemplate.displayName)}
+                                disabled={selectedTemplate === modalTemplate.name}
+                            >
+                                {selectedTemplate === modalTemplate.name ? 'Currently Selected' : 'Select This Template'}
+                            </button>
                         </div>
                     </div>
                 )}
