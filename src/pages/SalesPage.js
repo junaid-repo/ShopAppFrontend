@@ -398,8 +398,6 @@ const SalesPage = () => {
 
 
                         <th>Invoice</th>
-                        <th>Remind</th>
-                        <th>Update</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -447,60 +445,7 @@ const SalesPage = () => {
                                     <MdDownload size={18} color="#d32f2f" />
                                 </button>
                             </td>
-                            <td>
-                                {(sale.status === 'SemiPaid' || sale.status === 'UnPaid') && (
-                                    <button
-                                        className="reminder-btn"
-                                        title="Send Payment Reminder"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleOpenReminderModal(sale.id); // <-- MODIFIED to open modal
-                                        }}
-                                        style={{
-                                            cursor: "pointer",
-                                            borderRadius: "6px",
-                                            padding: "6px 8px",
-                                            display: "inline-flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            gap: "5px",
-                                            background: "var(--primary-color-light)", // Light Maroon-ish/Orange background <-- NEW STYLE
-                                            border: "1px solid var(--border-color)",
-                                            boxShadow: "0 2px 5px rgba(0,0,0,0.1)" // Optional: subtle shadow
-                                        }}
-                                    >
-                                        <FaPaperPlane size={18} color="var(--primary-color)" />
-                                        <span style={{fontWeight: "bold", fontSize: "0.9em", color: "var(--text-color)"}}>
-                                            {sale.reminderCount || 0}
-                                        </span>
-                                    </button>
-                                )}
-                            </td>
-                            <td>
-                                {(sale.status === 'SemiPaid' || sale.status === 'UnPaid') && (
-                                    <button
-                                        className="btn-update-payment"
-                                        title="Update Payment"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleOpenPaymentModal(sale);
-                                        }}
-                                        style={{
-                                            cursor: "pointer",
-                                            borderRadius: "6px",
-                                            padding: "6px 8px",
-                                            display: "inline-flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            gap: "5px",
-                                            background: "#e0f2f1", // A light teal
-                                            border: "1px solid #00796b",
-                                        }}
-                                    >
-                                        <MdPayment size={18} color="#00796b" />
-                                    </button>
-                                )}
-                            </td>
+
                         </tr>
                     ))}
                     </tbody>

@@ -106,7 +106,7 @@ function App() {
         clearTimers();
         inactivityTimerRef.current = setTimeout(() => {
             setWarning(true);
-            let timeLeft = 60;
+            let timeLeft = 360;
             setCountdown(timeLeft);
             countdownRef.current = setInterval(() => {
                 timeLeft -= 1;
