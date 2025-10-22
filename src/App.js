@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import MainLayout from './components/MainLayout';
@@ -67,6 +67,7 @@ function App() {
     };
 
     const checkSession = async () => {
+        setIsLoading(true); // Move isLoading to the start
         try {
             const response = await fetch(`${apiUrl}/api/shop/user/profileWithRole`, {
                 method: 'GET',
@@ -75,13 +76,15 @@ function App() {
             if (response.ok) {
                 const data = await response.json();
                 setUser(data);
-                resetInactivityTimer();
+                handleUserActivity(); // <-- Call this instead of resetInactivityTimer
             } else {
                 setUser(null);
+                clearTimers(); // Ensure timers are cleared if session check fails
             }
         } catch (error) {
             console.error('Error checking session:', error);
             setUser(null);
+            clearTimers(); // Ensure timers are cleared on error
         } finally {
             setIsLoading(false);
         }
@@ -99,7 +102,8 @@ function App() {
         setUser(null);
         // When logging out, reset selectedPage to the default
         setSelectedPage('dashboard');
-        clearTimers();
+        clearTimers(); // <-- Make sure this is called
+        setWarning(false); // Also hide warning on explicit logout
     };
 
     const resetInactivityTimer = () => {
@@ -121,20 +125,79 @@ function App() {
     };
 
     const clearTimers = () => {
+        // Clear both the main inactivity timeout and the countdown interval
         if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
         if (countdownRef.current) clearInterval(countdownRef.current);
+        inactivityTimerRef.current = null;
+        countdownRef.current = null;
     };
+    const startInactivityWarning = () => {
+        // Clear only the main timer before setting a new one
+        if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
+
+        inactivityTimerRef.current = setTimeout(() => {
+            setWarning(true); // Show the warning modal/message
+            let timeLeft = 360; // Start the 6-minute (360s) countdown
+            setCountdown(timeLeft);
+
+            // Clear any previous countdown interval before starting a new one
+            if (countdownRef.current) clearInterval(countdownRef.current);
+
+            countdownRef.current = setInterval(() => {
+                timeLeft -= 1;
+                setCountdown(timeLeft);
+                if (timeLeft <= 0) {
+                    // Time's up - log out
+                    clearTimers();
+                    alert("You have been logged out due to inactivity."); // Consider using a modal instead of alert
+                    handleLogout();
+                }
+            }, 1000);
+        }, 14 * 60 * 1000); // 14 minutes
+    };
+
+    const handleUserActivity = useCallback(() => {
+        if (!user) return; // Only run if logged in
+
+        clearTimers(); // Clear both main timer and countdown (if active)
+        setWarning(false); // Hide the warning modal/message
+        startInactivityWarning(); // Restart the 14-minute timer
+        // Add dependencies that handleUserActivity relies on indirectly
+    }, [user, clearTimers, setWarning, startInactivityWarning]);
 
     const { setSearchKey } = useSearchKey();
 
     useEffect(() => {
-        const resetEvents = ['mousemove', 'keydown', 'click'];
-        const resetHandler = () => { if (user) resetInactivityTimer(); };
-        resetEvents.forEach(evt => window.addEventListener(evt, resetHandler));
         checkSession();
-        return () => resetEvents.forEach(evt => window.removeEventListener(evt, resetHandler));
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, []); // Empty dependency array means run only once
+
+    // Effect 2: Manage activity listeners based on login state
+    useEffect(() => {
+        // Only add listeners if a user is logged in
+        if (user) {
+            const resetEvents = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
+            const activityHandler = () => handleUserActivity(); // Use the memoized handler
+
+            resetEvents.forEach(evt => window.addEventListener(evt, activityHandler, { capture: true, passive: true }));
+            console.log("Activity listeners added."); // For debugging
+
+            // Start the timer when listeners are added (i.e., user is confirmed logged in)
+            handleUserActivity();
+
+            // Cleanup function: Remove listeners when user logs out or component unmounts
+            return () => {
+                console.log("Removing activity listeners."); // For debugging
+                resetEvents.forEach(evt => window.removeEventListener(evt, activityHandler, { capture: true }));
+                clearTimers(); // Also clear timers on logout/unmount
+            };
+        } else {
+            // If there's no user, ensure any stray timers are cleared
+            clearTimers();
+            console.log("No user, ensuring timers are clear and listeners removed."); // For debugging
+            // No need to return a cleanup function here as no listeners were added
+        }
+    }, [user, handleUserActivity]);
 
     const [selectedPage, setSelectedPage] = useState('dashboard');
 

@@ -20,6 +20,9 @@
     margin-top: 15px;
     cursor: pointer; /* ✅ ADDED: Indicates the card is clickable */
 }
+.sortable-header{
+    cursor: pointer;
+}
 
 .customer-card:hover {
     transform: translateY(-4px);

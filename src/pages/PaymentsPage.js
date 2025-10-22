@@ -36,6 +36,8 @@ const PaymentsPage = ({ setSelectedPage }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10); // show 5 records per page
 
+
+
     const now = new Date();
     const { searchKey, setSearchKey } = useSearchKey();
     // Default to last 7 days (including today)
@@ -597,7 +599,6 @@ const PaymentsPage = ({ setSelectedPage }) => {
                         <th>Paid</th>
                         <th>Due</th>
                         <th>Status</th>
-                        <th>Remind</th>
                         <th>Update</th>
                     </tr>
                     </thead>
@@ -632,7 +633,7 @@ const PaymentsPage = ({ setSelectedPage }) => {
                                             </span>
                                     </td>
                                     {/* --- REMINDER BUTTON (Hover effect added) --- */}
-                                    <td>
+                                   {/* <td>
                                         {(payment.status === 'SemiPaid' || payment.status === 'UnPaid') && (
                                             <button
                                                 className="reminder-btn"
@@ -651,9 +652,9 @@ const PaymentsPage = ({ setSelectedPage }) => {
                                                     alignItems: "center",
                                                     justifyContent: "center",
                                                     gap: "5px",
-                                                    background: "var(--primary-color-light)",
+                                                    background: "var(--small-bg-cyan)",
                                                     border: "1px solid var(--border-color)",
-                                                    boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
+
                                                     // --- NEW: Hover Styles ---
                                                     transform: isRemindHovered ? 'scale(1.1)' : 'scale(1)',
                                                     opacity: isRemindHovered ? 0.8 : 1,
@@ -666,7 +667,7 @@ const PaymentsPage = ({ setSelectedPage }) => {
                                                     </span>
                                             </button>
                                         )}
-                                    </td>
+                                    </td>*/}
                                     {/* --- UPDATE PAYMENT BUTTON (Hover effect added) --- */}
                                     <td>
                                         {(payment.status === 'SemiPaid' || payment.status === 'UnPaid') && (
@@ -689,7 +690,7 @@ const PaymentsPage = ({ setSelectedPage }) => {
                                                     gap: "5px",
                                                     background: "var(--primary-color-light)",
                                                     border: "1px solid var(--border-color)",
-                                                    boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
+
                                                     // --- NEW: Hover Styles ---
                                                     transform: isUpdateHovered ? 'scale(1.1)' : 'scale(1)',
                                                     opacity: isUpdateHovered ? 0.8 : 1,

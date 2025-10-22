@@ -422,9 +422,9 @@ const ChatPage = ({ setSelectedPage }) => {
             {isCloseModalOpen && (
                 <div className="modal-overlay">
                     <div className="modal-content">
-                        <h3>Close Ticket {activeTicket?.ticketNumber}</h3>
-                        <p>Please provide a reason for closing this ticket.</p>
-                        <textarea placeholder="Closing remarks..." value={closingRemarks} onChange={(e) => setClosingRemarks(e.target.value)} />
+                        <h3 style ={{ marginBottom:"1.4rem"}}>Close Ticket {activeTicket?.ticketNumber}</h3>
+                        <p style ={{ marginBottom:"1.0rem", fontStyle: "italic"}}>Please provide a reason for closing this ticket.</p>
+                        <textarea style={{ width: '100%', minHeight: '100px', padding: '10px', borderRadius: '15px', border: '1px solid var(--border-color)', background: 'var(--glass-bg)', resize: 'vertical', fontSize: '1rem', color: 'var(--text-color)' }}  placeholder="Closing remarks..." value={closingRemarks} onChange={(e) => setClosingRemarks(e.target.value)} />
                         <div className="modal-actions">
                             <button className="btn btn-secondary" onClick={() => setIsCloseModalOpen(false)}>Cancel</button>
                             <button className="btn" onClick={handleCloseTicketSubmit}>Submit & Close</button>

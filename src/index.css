@@ -3,7 +3,7 @@
     --primary-color: #00aaff;
     --primary-color-light: #e0f7ff;
     --background-color: #f0f8ff;
-    --glass-bg: rgba(255, 255, 255, 0.85); /* Slightly more opaque for better readability */
+    --glass-bg: rgba(255, 255, 255, 0.89); /* Slightly more opaque for better readability */
     --border-color: rgba(224, 247, 255, 0.7);
     --shadow-color: rgb(0 0 0 / 15%);
     --text-color: #103784;
@@ -21,6 +21,8 @@
     --error-bg: rgba(207, 50, 50, 0.39);
     --error-message: #ff6b6b;
     --error-color: #c80b0b;
+
+    --small-bg-cyan: rgba(105, 207, 9, 0.13);
     --bp-order-summary-bg: var(--modal-bg, #fff); /* global fallback for billing/order summary */
 }
 
@@ -44,6 +46,7 @@ body.dark-theme {
     --pagination-disabled-bg: #161b22;
     --pagination-disabled-color: #484f58;
     --bp-order-summary-bg: var(--modal-bg, #161b22); /* ensure billing/order summaries have a bg in dark theme */
+    --small-bg-cyan: rgb(31, 132, 120);
 }
 
 * {
@@ -307,7 +310,7 @@ body {
 
 /* Download button stays visible in dark mode */
 .dark-theme .download-btn {
-    background-color: #6cdb11;
+    background-color: rgba(108, 219, 17, 0.3);
     color: #fff;
 }
 
@@ -539,7 +542,7 @@ body.dark-theme .time-range-selector select:focus {
 
 /* Download Button */
 .download-btn {
-    background: linear-gradient(135deg, #54ff59, #34ff3d);
+    background: linear-gradient(135deg, rgba(84, 255, 89, 0.45), rgba(84, 255, 89, 0.45));
     color: white;
     border: none;
     border-radius: 50%;
@@ -550,7 +553,6 @@ body.dark-theme .time-range-selector select:focus {
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
 }
 
 .download-btn:hover {

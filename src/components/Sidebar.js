@@ -268,7 +268,7 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar, selectedPage, setSelected
                     title="Chat Support"
                     style={footerButtonStyleFor('chat')}
                 >
-                    <Headset size={20} weight="duotone" style={{ marginRight: '8px' }} />
+                    <Headset size={20} weight="duotone" style={{ marginRight: '8px', color: "var(--text-color)" }} />
                     <span className="nav-text">Chat Support</span>
                 </button>
                 {/*<button

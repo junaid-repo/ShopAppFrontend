@@ -14,7 +14,7 @@
 .template-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr); /* 3 columns */
-    gap: 65px; /* Spacing between grid items */
+    gap: 45px; /* Spacing between grid items */
 }
 
 .template-card {

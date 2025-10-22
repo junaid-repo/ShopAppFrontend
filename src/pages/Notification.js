@@ -7,6 +7,7 @@ const domainToRoute = {
     products: 'products',
     sales: 'sales',
     customers: 'customers',
+    payments: 'payments'
 };
 
 const Notification = ({ setSelectedPage }) => {
@@ -326,32 +327,32 @@ const Notification = ({ setSelectedPage }) => {
                                         {getFormattedDateTime(selectedNotification.createdAt)}
                                     </div>
                                 </div>
-                                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                <div style={{ display: 'flex', gap: '0.1rem', flexWrap: 'wrap' }}>
                                     {/* CHANGE 3: Updated button colors and added icons */}
-                                    <button className="btn" style={{ backgroundColor: '#28a745', color: 'white' }} onClick={() => handleTakeAction(selectedNotification)}>
+                                    <button className="small-btn" style={{ backgroundColor: 'rgba(40,167,69,0.72)', color: 'white', borderRadius: '25px' }} onClick={() => handleTakeAction(selectedNotification)}>
                                         <FaCheck size={14}/> Take Action
                                     </button>
                                     <button
-                                        className="btn"
-                                        style={{ backgroundColor: selectedNotification?.isFlagged ? '#6c757d' : '#ffc107', color: 'white' }}
+                                        className="small-btn"
+                                        style={{ backgroundColor: selectedNotification?.isFlagged ? '#6c757d' : '#ffc107', color: 'white', borderRadius: '25px' }}
                                         onClick={() => handleFlag(selectedNotification.id, !selectedNotification.isFlagged)}
                                     >
                                         <FaFlag size={14}/> {selectedNotification?.isFlagged ? 'Unflag' : 'Flag'}
                                     </button>
-                                    <button className="btn" style={{ backgroundColor: '#dc3545', color: 'white' }} onClick={() => handleDelete(selectedNotification.id)}>
+                                    <button className="small-btn" style={{ backgroundColor: 'rgba(220,53,69,0.87)', color: 'white', borderRadius: '25px' }} onClick={() => handleDelete(selectedNotification.id)}>
                                         <FaTrash size={14}/> Delete
                                     </button>
                                 </div>
                             </div>
                             <div style={{}}>
                                 {/* CHANGE 4: Increased spacing */}
-                                <div style={{ marginBottom: '2rem', marginTop: '1.5rem' }}>
+                               {/* <div style={{ marginBottom: '2rem', marginTop: '1.5rem' }}>
                                     <strong style={{  marginBottom: '8px', fontWeight: "bold" }}>Subject: </strong>
                                     <span style={{  marginBottom: '8px', fontWeight: "bold" }}>{selectedNotification.subject}</span>
-                                </div>
+                                </div>*/}
                                 <div>
 
-                                    <p style={{ margin: 0, lineHeight: 1.6 }}>{selectedNotification.message || 'No additional details provided.'}</p>
+                                    <p onClick={() => handleTakeAction(selectedNotification)} style={{ margin: 0, lineHeight: 1.6, cursor: 'pointer' }} >{selectedNotification.message || 'No additional details provided.' }</p>
                                 </div>
                             </div>
                             <div style={{ fontSize: '0.85rem', color: '#888', marginTop: 'auto', paddingTop: '1rem', textAlign: 'right' }}>

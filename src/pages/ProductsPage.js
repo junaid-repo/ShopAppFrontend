@@ -248,7 +248,7 @@ const ProductsPage = () => {
     const handleAddProduct = async (e) => {
         e.preventDefault();
         try {
-            const payload = { name, category, price, costPrice, stock, tax };
+            const payload = { name, category, price, costPrice, stock, tax, hsn };
             const response = await fetch(`${apiUrl}/api/shop/create/product`, {
                 method: "POST",
                 credentials: 'include',
@@ -277,9 +277,11 @@ const ProductsPage = () => {
                 body: JSON.stringify(payload),
             });
             if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
-            toast.success('Product updated successfully!');
+
             fetchProducts(); // <-- Refresh the product list
             setIsUpdateModalOpen(false);
+            toast.success('Product updated successfully!');
+
             resetForm();
         } catch (err) {
             console.error("Error updating product:", err);
@@ -850,9 +852,9 @@ const ProductsPage = () => {
                 <form onSubmit={handleAddProduct}>
                     {/* Form groups for name, category, costPrice, price, stock, tax */}
                     <div className="form-group"><label>Product Name</label><input type="text" required value={name} onChange={e => setName(e.target.value)} /></div>
-                    <div className="form-group"><label>HSN</label><input type="text" required value={hsn} onChange={e => setHsn(e.target.value)} /></div>
+                    <div className="form-group"><label>HSN</label><input type="text"  value={hsn} onChange={e => setHsn(e.target.value)} /></div>
 
-                    <div className="form-group"><label>Category</label><select required value={category} onChange={e => setCategory(e.target.value)}><option value="">Product</option><option>Service</option><option>Others</option></select></div>
+                    <div className="form-group"><label>Category</label><select required value={category} onChange={e => setCategory(e.target.value)}><option value="">-- Select --</option><option>Product</option><option>Services</option><option>Others</option></select></div>
                     <div className="form-group"><label>Cost Price</label><input type="number" step="0.01" required value={costPrice} onChange={e => setCostPrice(e.target.value)} /></div>
                     <div className="form-group"><label>Selling Price</label><input type="number" step="0.01" required value={price} onChange={e => setPrice(e.target.value)} /></div>
                     <div className="form-group"><label>Stock Quantity</label><input type="number" required value={stock} onChange={e => setStock(e.target.value)} /></div>
@@ -865,8 +867,11 @@ const ProductsPage = () => {
                 <form onSubmit={handleUpdateProduct}>
                     {/* Form groups for name, category, costPrice, price, stock, tax */}
                     <div className="form-group"><label>Product Name</label><input type="text" required value={name} onChange={e => setName(e.target.value)} /></div>
-                    <div className="form-group"><label>HSN</label><input type="text" required value={hsn} onChange={e => setHsn(e.target.value)} /></div>
-                    <div className="form-group"><label>Category</label><input type="text" required value={category} onChange={e => setCategory(e.target.value)} /></div>
+                    <div className="form-group"><label>HSN</label><input type="text"  value={hsn} onChange={e => setHsn(e.target.value)} /></div>
+
+                    <div className="form-group"><label>Category</label><select required value={category} onChange={e => setCategory(e.target.value)}><option value="">-- Select --</option><option>Product</option><option>Services</option><option>Others</option></select></div>
+
+
                     <div className="form-group"><label>Cost Price</label><input type="number" step="0.01" required value={costPrice} onChange={e => setCostPrice(e.target.value)} /></div>
                     <div className="form-group"><label>Selling Price</label><input type="number" step="0.01" required value={price} onChange={e => setPrice(e.target.value)} /></div>
                     <div className="form-group"><label>Stock Quantity</label><input type="number" required value={stock} onChange={e => setStock(e.target.value)} /></div>

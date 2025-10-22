@@ -7,7 +7,10 @@ import {
     Sun,
     UserCircle,
     SignOut,
+    User,        // <-- Added for dropdown
+    Gear,        // <-- Added for dropdown
 } from "@phosphor-icons/react";
+import "./Topbar.css"
 import { useConfig } from "../pages/ConfigProvider";
 
 const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage }) => {
@@ -26,8 +29,13 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage }) => {
     const [isThemeHovered, setIsThemeHovered] = useState(false);
     const [isNotiHovered, setIsNotiHovered] = useState(false);
 
+    // --- NEW: State for user dropdown ---
+    const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+    const userDropdownRef = useRef(null); // Ref for the user dropdown
+
     // Fetch user profile + pic
     useEffect(() => {
+        // ... (existing profile fetch logic - no changes needed here)
         (async () => {
             try {
                 const res = await fetch(`${apiUrl}/api/shop/user/profile`, {
@@ -51,46 +59,7 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage }) => {
         })();
     }, [apiUrl]);
 
-    // Fetch unseen notifications
-    const fetchNotifications = async () => {
-        try {
-            const res = await fetch(`${apiUrl}/api/shop/notifications/unseen`, {
-                credentials: "include",
-            });
-            if (!res.ok) return;
-            const data = await res.json();
-            setNotifications(data.notifications || []);
-            setUnseenCount(data.count || 0);
-        } catch {}
-    };
-
-    useEffect(() => {
-        fetchNotifications();
-        const interval = setInterval(fetchNotifications, 30000);
-        return () => clearInterval(interval);
-    }, [apiUrl]);
-
-    // Logout
-    const handleLogout = async () => {
-        if (!window.confirm("Do you really want to log out?")) return;
-        onLogout();
-        await fetch(`${apiUrl}/api/user/logout`, {
-            method: "POST",
-            credentials: "include",
-        });
-        navigate("/login", { replace: true });
-    };
-
-    const getRelativeTime = (dateString) => {
-        const now = new Date();
-        const date = new Date(dateString);
-        const diff = Math.floor((now - date) / 1000);
-        if (diff < 60) return "just now";
-        if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-        if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-        return date.toLocaleDateString();
-    };
-    // Fetch unseen notifications
+    // Fetch unseen notifications (using the combined function)
     const fetchUnseenNotifications = async () => {
         if (!apiUrl) return;
         try {
@@ -114,20 +83,47 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage }) => {
         return () => clearInterval(interval);
     }, [apiUrl]);
 
-    // Close dropdown on outside click
+    // Close dropdowns on outside click (combined logic)
     useEffect(() => {
-        if (!notifDropdownOpen) return;
         const handleClick = (e) => {
-            if (notifDropdownRef.current && !notifDropdownRef.current.contains(e.target)) {
+            if (notifDropdownOpen && notifDropdownRef.current && !notifDropdownRef.current.contains(e.target)) {
                 setNotifDropdownOpen(false);
+            }
+            // --- NEW: Close user dropdown on outside click ---
+            if (isUserDropdownOpen && userDropdownRef.current && !userDropdownRef.current.contains(e.target)) {
+                setIsUserDropdownOpen(false);
             }
         };
         document.addEventListener('mousedown', handleClick);
         return () => document.removeEventListener('mousedown', handleClick);
-    }, [notifDropdownOpen]);
+    }, [notifDropdownOpen, isUserDropdownOpen]); // Depend on both dropdown states
+
+    // Logout (no changes needed)
+    const handleLogout = async () => {
+        if (!window.confirm("Do you really want to log out?")) return;
+        onLogout();
+        await fetch(`${apiUrl}/api/user/logout`, {
+            method: "POST",
+            credentials: "include",
+        });
+        navigate("/login", { replace: true });
+    };
+
+    const getRelativeTime = (dateString) => {
+        // ... (existing time logic - no changes)
+        const now = new Date();
+        const date = new Date(dateString);
+        const diff = Math.floor((now - date) / 1000);
+        if (diff < 60) return "just now";
+        if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+        if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+        return date.toLocaleDateString();
+    };
+
 
     // Clear notifications (mark all as seen)
     const handleClearNotifications = async (e) => {
+        // ... (existing logic - no changes)
         e.stopPropagation();
         try {
             await fetch(`${apiUrl}/api/shop/notifications/clear`, {
@@ -139,8 +135,9 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage }) => {
         } catch (err) {}
     };
 
-    // Handle notification icon click
+    // Handle notification icon click (Navigate to notifications page)
     const handleNotifClick = () => {
+        // ... (existing logic - no changes)
         setNotifDropdownOpen(false);
         if (setSelectedPage) {
             setSelectedPage('notifications');
@@ -161,106 +158,64 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage }) => {
     >
         {/* 🔘 Button Container */}
         <div
-            className="glass-card2"
-            style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "1.0rem",
-                padding: "0.4rem 1.2rem",
-                marginTop: "0rem",
-                borderRadius: "26px",
-                backdropFilter: "blur(10px)",
-                border: "1px solid rgba(255,255,255,0.25)",
-            }}
+            className="glass-card2 topbar-buttons-container" // Added class for easier CSS targeting
         >
             {/* 🔔 Notifications */}
             <div
                 ref={notifDropdownRef}
-                style={{
-                    position: 'relative',
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    borderRadius: "18px",
-                    padding: "8px",
-                    background: 'var(--primary-color-light)',
-                    transition: "all 0.25s ease",
-                    transform: isNotiHovered ? "translateY(-5px)" : "translateY(0)",
-                }}
+                className="topbar-icon-wrapper" // Added class
+                style={{ position: 'relative' }} // Needed for badge positioning
                 onMouseEnter={() => {
                     setIsNotiHovered(true);
                     setNotifDropdownOpen(true);
                 }}
                 onMouseLeave={() => {
-                    setIsNotiHovered(false);
-                    setNotifDropdownOpen(false);
+                    // Use a small delay to allow moving to the dropdown
+                    setTimeout(() => {
+                        if (!notifDropdownHover) {
+                            setIsNotiHovered(false);
+                            setNotifDropdownOpen(false);
+                        }
+                    }, 600);
                 }}
-                onClick={() => setSelectedPage('notifications')}
+                onClick={handleNotifClick} // Navigate on click
             >
                 <Bell size={28} weight="duotone" />
                 {unseenCount > 0 && (
-                    <span
-                        style={{
-                            position: "absolute",
-                            top: "5px",
-                            right: "7px",
-                            background: "#e80a0d",
-                            color: "#fff",
-                            borderRadius: "50%",
-                            fontSize: "0.65rem",
-                            width: "16px",
-                            height: "16px",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                        }}
-                    >
-                    {unseenCount}
-                </span>
+                    <span className="notification-badge">
+                        {unseenCount}
+                    </span>
                 )}
+                {/* Notification Dropdown */}
                 {notifDropdownOpen && (
                     <div
-                        style={{
-                            position: 'absolute',
-                            top: '50px',
-                            right: 0,
-                            minWidth: '320px',
-                            background: 'var(--modal-bg)',
-                            border: '1px solid var(--border-color)',
-                            borderRadius: '18px',
-                            boxShadow: '0 12px 24px rgba(0,0,0,0.2), 0 8px 16px rgba(0,0,0,0.15)',
-                            zIndex: 100,
-                            padding: '0.5rem 0',
-                        }}
+                        className="notification-dropdown" // Added class
                         onMouseEnter={() => setNotifDropdownHover(true)}
-                        onMouseLeave={() => { setNotifDropdownHover(false); setNotifDropdownOpen(false); }}
+                        onMouseLeave={() => {
+                            setNotifDropdownHover(false);
+                            setNotifDropdownOpen(false);
+                        }}
                     >
-                        <div style={{ padding: '0.5rem 1rem', fontWeight: 600, color: 'var(--primary-color)' }}>Notifications</div>
+                        <div className="notification-dropdown-header">Notifications</div>
                         {notifications.length === 0 ? (
-                            <div style={{ padding: '0.75rem 1rem', color: '#888' }}>No new notifications.</div>
+                            <div className="notification-dropdown-empty">No new notifications.</div>
                         ) : (
                             notifications.slice(0, 5).map(n => (
-                                <div key={n.id} style={{
-                                    padding: '0.5rem 1rem',
-                                    borderBottom: '1px solid var(--border-color)',
-                                    background: n.seen ? 'transparent' : 'rgba(0,170,255,0.08)',
-                                    fontWeight: n.seen ? 400 : 600,
-                                    cursor: 'pointer',
-                                }}
-                                     onClick={() => {
-                                         setNotifDropdownOpen(false);
-                                         navigate('/notifications');
+                                <div key={n.id}
+                                     className={`notification-dropdown-item ${!n.seen ? 'unread' : ''}`}
+                                     onClick={(e) => { // Allow clicking item to navigate
+                                         e.stopPropagation(); // Prevent parent onClick
+                                         handleNotifClick();
                                      }}
                                 >
-                                    <div style={{ fontSize: '1rem', fontWeight: "bold" }}>{n.title}</div>
-                                    <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>{n.subject}</div>
-                                    <div style={{ fontSize: '0.8rem', color: '#888', marginTop: 2, paddingLeft: "170px"}}>{getRelativeTime(n.createdAt)}</div>
+                                    <div className="notification-title">{n.title}</div>
+                                    <div className="notification-subject">{n.subject}</div>
+                                    <div className="notification-time">{getRelativeTime(n.createdAt)}</div>
                                 </div>
                             ))
                         )}
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '0.5rem 1rem' }}>
-                            <button className="btn btn-cancel" style={{ fontSize: '0.9rem', padding: '0.4rem 1rem' }} onClick={handleClearNotifications}>Clear</button>
+                        <div className="notification-dropdown-actions">
+                            <button className="btn btn-clear-notif" onClick={handleClearNotifications}>Clear</button>
                         </div>
                     </div>
                 )}
@@ -268,20 +223,11 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage }) => {
 
             {/* 🌙 / ☀️ Theme Toggle */}
             <div
+                className="topbar-icon-wrapper" // Added class
                 onClick={toggleTheme}
                 onMouseEnter={() => setIsThemeHovered(true)}
                 onMouseLeave={() => setIsThemeHovered(false)}
-                style={{
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    borderRadius: "18px",
-                    padding: "8px",
-                    background: 'var(--primary-color-light)',
-                    transition: "all 0.25s ease",
-                    transform: isThemeHovered ? "translateY(-5px)" : "translateY(0)",
-                }}
+                style={{ transform: isThemeHovered ? "translateY(-5px)" : "translateY(0)"}} // Keep hover effect inline for simplicity
             >
                 {theme === "light" ? (
                     <Moon size={28} weight="duotone" />
@@ -290,70 +236,131 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage }) => {
                 )}
             </div>
 
-            {/* 👤 User Info */}
+            {/* --- MODIFIED: 👤 User Info Wrapper for Dropdown --- */}
             <div
-                onClick={() => setSelectedPage("profile")}
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => setIsHovered(false)}
-                style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "10px",
-                    cursor: "pointer",
-                    padding: "6px 12px 6px 6px",
-                    borderRadius: "999px", // Pill shape
-                    background: 'var(--primary-color-light)',
-                    border: "1px solid rgba(200, 200, 200, 0.5)",
-                    transition: "all 0.25s ease",
-                    transform: isHovered ? "translateY(-5px)" : "translateY(0)",
+                ref={userDropdownRef} // Add ref to the wrapper
+                className="user-profile-wrapper" // New wrapper class
+                style={{ position: 'relative' }} // Needed for dropdown positioning
+                onMouseEnter={() => {
+                    clearTimeout(window.userDropdownTimeout);
+                    setIsUserDropdownOpen(true);
+                }}
+                onMouseLeave={() => {
+                    window.userDropdownTimeout = setTimeout(() => {
+                        setIsUserDropdownOpen(false);
+                    }, 300); // <-- Adjust delay (300ms is good)
                 }}
             >
-                {profilePic ? (
-                    <img
-                        src={profilePic}
-                        alt="Profile"
-                        style={{
-                            width: "34px",
-                            height: "34px",
-                            borderRadius: "50%",
-                            objectFit: "cover",
+                {/* Original User Info Div (can still be clicked) */}
+                <div
+                    className="user-profile-trigger" // New class for trigger
+                    onClick={() => setSelectedPage("profile")} // Keep direct click functional
+                    onMouseEnter={() => setIsHovered(true)}    // Keep individual hover effect
+                    onMouseLeave={() => setIsHovered(false)}   // Keep individual hover effect
+                    style={{ transform: isHovered ? "translateY(-5px)" : "translateY(0)" }} // Keep hover effect inline
+                >
+                    {profilePic ? (
+                        <img
+                            src={profilePic}
+                            alt="Profile"
+                            className="user-profile-pic" // Added class
+                        />
+                    ) : (
+                        <UserCircle
+                            size={36} // Slightly larger icon if no pic
+                            weight="duotone"
+                        />
+                    )}
+                    <span className="user-profile-name">
+                        {userName || "Guest"}
+                    </span>
+                </div>
+
+                {/* --- NEW: User Dropdown --- */}
+                {isUserDropdownOpen && (
+                    <div
+                        className="user-dropdown"
+                        onMouseEnter={() => {
+                            clearTimeout(window.userDropdownTimeout);
+                            setIsUserDropdownOpen(true);
                         }}
-                    />
-                ) : (
-                    <UserCircle
-                        size={32}
-                        weight="duotone"
-                    />
+                        onMouseLeave={() => {
+                            window.userDropdownTimeout = setTimeout(() => {
+                                setIsUserDropdownOpen(false);
+                            }, 300);
+                        }}
+                        style={{
+                            position: "absolute",
+                            top: "100%",
+                            right: 0,
+                            background: "var(--background-color)",
+                            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                            borderRadius: "25px",
+                            marginTop: "6px",
+                            padding: "8px 0",
+                            zIndex: 2000,
+                            minWidth: "250px",
+                            transition: "opacity 0.2s ease-in-out",
+                        }}
+                    >
+
+                    {/* Shop and Profile Item */}
+                        <div
+                            className="user-dropdown-item"
+                            onClick={() => {
+                                setSelectedPage("profile");
+                                setIsUserDropdownOpen(false); // Close on click
+                            }}
+                        >
+                            <User size={28} weight="duotone" />
+                            <span>Shop and Profile</span>
+                        </div>
+
+                        {/* Settings Item */}
+                        <div
+                            className="user-dropdown-item"
+                            onClick={() => {
+                                setSelectedPage("settings");
+                                setIsUserDropdownOpen(false); // Close on click
+                            }}
+                        >
+                            <Gear size={28} weight="duotone" />
+                            <span>Settings</span>
+                        </div>
+
+                        {/* Logout Item */}
+                        <div
+                            className="user-dropdown-item logout" // Added 'logout' class for specific styling if needed
+                            onClick={() => {
+                                handleLogout();
+                                setIsUserDropdownOpen(false); // Close on click
+                            }}
+                        >
+                            <SignOut size={28} weight="duotone" color="#e80a0d"/> {/* Specific color for logout */}
+                            <span>Logout</span>
+                        </div>
+                    </div>
                 )}
-                <span style={{ fontWeight: 600, fontSize: "1rem" }}>
-                {userName || "Guest"}
-            </span>
             </div>
 
-            {/* 🚪 Logout */}
+            {/* --- MODIFIED: 🚪 Logout Button (Now part of dropdown, keep original structure/styles if needed elsewhere) --- */}
+            {/* This button is now redundant if the dropdown is always used, but kept for structure reference */}
+            {/* You might want to remove this outer logout button entirely */}
+            {/*
             <div
+                className="topbar-icon-wrapper logout-button-wrapper" // Added class
                 onClick={handleLogout}
                 onMouseEnter={() => setIsLogoutHovered(true)}
                 onMouseLeave={() => setIsLogoutHovered(false)}
-                style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    cursor: "pointer",
-                    padding: "8px",
-                    borderRadius: "18px",
-                    background: 'rgba(232, 10, 13, 0.2)', // Light red background
-                    border: '0px solid rgba(232, 10, 13, 0.4)', // Optional: a slightly darker border
-                    transition: "all 0.3s ease",
-                    transform: isLogoutHovered ? "translateY(-5px)" : "translateY(0)",
-                }}
+                style={{ transform: isLogoutHovered ? "translateY(-5px)" : "translateY(0)" }}
             >
                 <SignOut
                     size={28}
                     weight="duotone"
-                    color="#e80a0d" // Making icon color solid red
+                    color="#e80a0d"
                 />
             </div>
+             */}
         </div>
     </header>);
 };

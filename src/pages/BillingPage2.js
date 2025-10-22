@@ -1049,7 +1049,7 @@ const BillingPage = ({ setSelectedPage }) => {
                     </div>
                     <div className="form-group">
                         <label>GST Number</label>
-                        <input type="tel" required value={gstNumber} onChange={(e) => setGstNumber(e.target.value)} />
+                        <input type="text"  value={gstNumber} onChange={(e) => setGstNumber(e.target.value)} />
                     </div>
                     <div className="form-group">
                         <label>State</label>

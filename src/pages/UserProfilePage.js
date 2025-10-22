@@ -728,7 +728,6 @@ const UserProfilePage = () => {
                 <div className="tab-header">
                     <button className={`tab-btn ${activeTab === 'user' ? 'active' : ''}`} onClick={() => setActiveTab('user')}>User Details</button>
                     <button className={`tab-btn ${activeTab === 'shop' ? 'active' : ''}`} onClick={() => setActiveTab('shop')}>Shop Details</button>
-                    <button className={`tab-btn ${activeTab === 'templates' ? 'active' : ''}`} onClick={() => setActiveTab('templates')}>Invoice Templates</button>
                 </div>
 
                 {/* USER TAB */}
@@ -968,7 +967,7 @@ const UserProfilePage = () => {
                 )}
 
                 {/* --- ADDED: INVOICE TEMPLATES TAB --- */}
-                {activeTab === 'templates' && (
+                {/*{activeTab === 'templates' && (
                     <div className="tab-content invoice-templates-tab">
                         <h3>Select Your Invoice Template</h3>
                         <p>Choose the design you prefer for your generated invoices.</p>
@@ -998,7 +997,7 @@ const UserProfilePage = () => {
                             ))}
                         </div>
                     </div>
-                )}
+                )}*/}
 
 
                 {/* --- ADDED: Template Modal --- */}

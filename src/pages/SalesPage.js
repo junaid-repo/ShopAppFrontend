@@ -9,6 +9,8 @@ import { useAlert } from '../context/AlertContext';
 import {PaperPlaneTilt} from "@phosphor-icons/react";
 import { FaPaperPlane } from 'react-icons/fa';
 
+import toast, {Toaster} from 'react-hot-toast';
+
 import {
     MdPerson,
     MdEmail,
@@ -47,6 +49,8 @@ const SalesPage = () => {
     const [currentPaymentOrder, setCurrentPaymentOrder] = useState(null); // Will hold {id, total, paid}
     const [payingAmount, setPayingAmount] = useState(""); // Input is a string
     const [isUpdatingPayment, setIsUpdatingPayment] = useState(false); // For loading state
+
+    const [hoveredReminderBtnId, setHoveredReminderBtnId] = useState(null);
 
     const config = useConfig();
     var apiUrl = "";
@@ -198,7 +202,7 @@ const SalesPage = () => {
                 )
             );
 
-            showAlert('Reminder sent successfully!', 'success');
+            toast.success('Reminder sent successfully!', 'success');
             setShowReminderModal(false); // Close modal on success
             setReminderMessage(""); // Clear message
             setCurrentReminderInvoiceId(null); // Clear invoice ID
@@ -285,15 +289,17 @@ const SalesPage = () => {
         );
 
         const blob = new Blob([response.data], { type: "application/pdf" });
+
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
         link.setAttribute("download", `invoice-${saleId}.pdf`);
         document.body.appendChild(link);
+
         link.click();
         link.parentNode.removeChild(link);
         window.URL.revokeObjectURL(url);
-
+        toast.success("Invoice downloaded!");
     } catch (error) {
         console.error("Error downloading invoice:", error);
         showAlert("Failed to download the invoice. Please try again.");
@@ -338,7 +344,7 @@ const SalesPage = () => {
                 )
             );
 
-            showAlert('Reminder sent successfully!', 'success');
+            toast.success('Reminder sent successfully!', 'success');
 
         } catch (error) {
             console.error("Error sending reminder:", error);
@@ -348,6 +354,17 @@ const SalesPage = () => {
 
     return (
         <div className="page-container">
+            <Toaster position="top-center" toastOptions={{
+                duration: 8000,
+                style: {
+                    background: 'lightgreen',
+                    color: 'var(--text-color)',
+                    borderRadius: '25px',
+                    padding: '12px',
+                    width: '100%',
+                    fontSize: '16px',
+                },
+            }}   reverseOrder={false} />
             <h2>Sales</h2>
             <div className="page-header" style={{marginTop: "20px"}}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', border: '1px solid var(--border-color)', borderRadius: '20px', padding: '0.2rem 1rem' }}>
@@ -398,56 +415,94 @@ const SalesPage = () => {
 
 
                         <th>Invoice</th>
+                        <th>Remind</th>
                     </tr>
                     </thead>
                     <tbody>
-                    {currentSales.map((sale) => (
-                        <tr
-                            key={sale.id}
-                            onClick={() => handleRowClick(sale.id)}
-                            onMouseEnter={() => setHoveredRow(sale.id)}
-                            onMouseLeave={() => setHoveredRow(null)}
-                            style={{
-                                cursor: "pointer",
-                                background: hoveredRow === sale.id ? "rgba(0, 170, 255, 0.08)" : "transparent",
-                                transition: "all 0.25s ease",
-                            }}
-                        >
-                            <td>{sale.id}</td>
-                            <td>{sale.customer}</td>
-                            <td>{formatDate(sale.date)}</td>
-                            <td>₹{sale.total.toLocaleString()}</td>
-                            <td>₹{sale.paid.toLocaleString()}</td>
-                            <td>
-                            <span className={sale.status === 'Paid' ? 'status-paid' : 'status-pending'}>
-                              {sale.status}
+                    {currentSales.map((sale) => {
+                        // Check if this button is hovered
+                        const isRemindHovered = hoveredReminderBtnId === sale.id;
+
+                        return (
+                            <tr
+                                key={sale.id}
+                                onClick={() => handleRowClick(sale.id)}
+                                onMouseEnter={() => setHoveredRow(sale.id)}
+                                onMouseLeave={() => setHoveredRow(null)}
+                                style={{
+                                    cursor: "pointer",
+                                    background: hoveredRow === sale.id ? "rgba(0, 170, 255, 0.08)" : "transparent",
+                                    transition: "all 0.25s ease",
+                                }}
+                            >
+                                <td>{sale.id}</td>
+                                <td>{sale.customer}</td>
+                                <td>{formatDate(sale.date)}</td>
+                                <td>₹{sale.total.toLocaleString()}</td>
+                                <td>₹{sale.paid.toLocaleString()}</td>
+                                <td>
+                    <span className={sale.status === 'Paid' ? 'status-paid' : 'status-pending'}>
+                        {sale.status}
+                    </span>
+                                </td>
+                                <td>
+                                    <button
+                                        className="download-btn"
+                                        title="Download Invoice"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDownloadInvoice(sale.id);
+                                        }}
+                                        style={{
+                                            cursor: "pointer",
+                                            borderRadius: "6px",
+                                            padding: "6px",
+                                            marginRight: "8px",
+                                            display: "inline-flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                        }}
+                                    >
+                                        <MdDownload size={18} color="var(--primary-color)" />
+                                    </button>
+                                </td>
+                                <td>
+                                    {(sale.total !== sale.paid) && ( // Check if not fully paid
+                                        <button
+                                            className="reminder-btn"
+                                            title="Send Payment Reminder"
+                                            onMouseEnter={() => setHoveredReminderBtnId(sale.id)}
+                                            onMouseLeave={() => setHoveredReminderBtnId(null)}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleOpenReminderModal(sale.id);
+                                            }}
+                                            style={{
+                                                cursor: "pointer",
+                                                borderRadius: "6px",
+                                                padding: "6px 8px",
+                                                display: "inline-flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                gap: "5px",
+                                                background: "var(--small-bg-cyan)", // Use your theme variable
+                                                border: "1px solid var(--border-color)", // Use your theme variable
+                                                transition: 'all 0.2s ease',
+                                                // Apply hover styles conditionally
+                                                transform: isRemindHovered ? 'scale(1.1)' : 'scale(1)',
+                                                opacity: isRemindHovered ? 0.8 : 1
+                                            }}
+                                        >
+                                            <FaPaperPlane size={18} color="var(--primary-color)" />
+                                            <span style={{ fontWeight: "bold", fontSize: "0.9em", color: "var(--text-color)" }}>
+                                {sale.reminderCount || 0}
                             </span>
-                            </td>
-
-                            <td>
-                                <button
-                                    className="download-btn"
-                                    title="Download Invoice"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDownloadInvoice(sale.id);
-                                    }}
-                                    style={{
-                                        cursor: "pointer",
-                                        borderRadius: "6px",
-                                        padding: "6px",
-                                        marginRight: "8px",
-                                        display: "inline-flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                    }}
-                                >
-                                    <MdDownload size={18} color="#d32f2f" />
-                                </button>
-                            </td>
-
-                        </tr>
-                    ))}
+                                        </button>
+                                    )}
+                                </td>
+                            </tr>
+                        );
+                    })}
                     </tbody>
 
                 </table>
@@ -517,7 +572,7 @@ const SalesPage = () => {
                                     <MdCancel size={20} color="red" />
                                 )}
                                 <span>
-                              <strong>Status:</strong> {selectedOrder.paid ? "Paid" : "Pending"}
+                              <strong>Status:</strong> {selectedOrder.paid ? "Paid" : "Partially Paid"}
                                 </span>
                             </div>
                         </div>

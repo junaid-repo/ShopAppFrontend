@@ -2,6 +2,7 @@
     import Modal from '../components/Modal';
     import './CustomersPage.css';
     import { FaEnvelope, FaPhone, FaMoneyBillWave, FaTrash, FaThLarge, FaList, FaCheckDouble } from 'react-icons/fa';
+    import { Envelope, Phone, IdentificationCard, Money } from "@phosphor-icons/react";
     import { useConfig } from "./ConfigProvider";
     import { useLocation, useNavigate } from 'react-router-dom';
     import { useSearchKey } from '../context/SearchKeyContext';
@@ -41,9 +42,10 @@
         const [viewMode, setViewMode] = useState(
             () => localStorage.getItem('customerViewMode') || 'grid'
         );
-        const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
-    
-    
+        const [sortConfig, setSortConfig] = useState({ key: 'totalSpent', direction: 'asc' });
+
+        const iconSize = 18; // Adjust size as needed
+        const iconColor = "var(--text-color)";
         const domainToRoute = {
             products: 'products',
             sales: 'sales',
@@ -393,15 +395,21 @@
                                             className={`customer-card ${isSelected ? 'selected' : ''} ${deletingCustomerId === customer.id ? 'deleting' : ''}`}
                                             onClick={() => isSelectMode ? handleSelectCustomer(customer.id) : handleTakeAction(customer.name)}
                                         >
-                                            {isSelectMode && <input type="checkbox"  className="styled-checkbox" checked={isSelected} readOnly />}
+                                            {isSelectMode && <input type="checkbox" className="styled-checkbox" checked={isSelected} readOnly />}
                                             <h3>{customer.name}</h3>
-                                           <div style={{marginTop:"20px"}}>
-                                               <h4 style={{marginBottom:"10px"}}>{customer.city}, {customer.state}</h4>
-                                            <p className="customer-info"><FaEnvelope className="icon" /> {customer.email}</p>
-                                            <p className="customer-info spaced"><FaPhone className="icon" /> {customer.phone}</p>
-                                               <p className="customer-info spaced"><FaPhone className="icon" /> {customer.gstNumber}</p>
-                                           </div>
-                                            <p className="customer-info money"><FaMoneyBillWave className="icon" /> ₹{customer.totalSpent?.toLocaleString('en-IN')}</p>
+                                            <div style={{ marginTop: "20px" }}>
+                                                <h4 style={{ marginBottom: "10px" }}>{customer.city}, {customer.state}</h4>
+                                                <p className="customer-info">
+                                                    <Envelope size={iconSize} weight="duotone" color={iconColor} className="icon" /> {customer.email}
+                                                </p>
+                                                <p className="customer-info spaced">
+                                                    <Phone size={iconSize} weight="duotone" color={iconColor} className="icon" /> {customer.phone}
+                                                </p>
+
+                                            </div>
+                                            <p className="customer-info money">
+                                                <Money size={iconSize} weight="duotone" color={iconColor} className="icon" /> ₹{customer.totalSpent?.toLocaleString('en-IN')}
+                                            </p>
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
@@ -410,13 +418,14 @@
                                                 className="edit-btn"
                                                 title="Edit Customer"
                                             >
-                                        <MdEdit size={18}/>
-                                    </button>
-                                            <button className="delete-btn" onClick={(e) =>{e.stopPropagation();  handleDeleteCustomer(customer.id, customer.name)}}>
+                                                <MdEdit size={18} />
+                                            </button>
+                                            <button
+                                                className="delete-btn"
+                                                onClick={(e) => { e.stopPropagation(); handleDeleteCustomer(customer.id, customer.name) }}
+                                            >
                                                 <MdDelete />
                                             </button>
-    
-    
                                         </div>
                                     );
                                 })}
