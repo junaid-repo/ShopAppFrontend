@@ -76,7 +76,47 @@ function App() {
             if (response.ok) {
                 const data = await response.json();
                 setUser(data);
-                handleUserActivity(); // <-- Call this instead of resetInactivityTimer
+                handleUserActivity();
+                // --- START: NEW UI SETTINGS LOGIC ---
+                try {
+                    // Make a second call to get UI settings
+                    const settingsResponse = await fetch(`${apiUrl}/api/shop/get/user/settings`, {
+                        method: 'GET',
+                        credentials: 'include',
+                    });
+
+                    if (settingsResponse.ok) {
+                        const settingsData = await settingsResponse.json();
+                        console.log("The ui settings ", settingsData);
+                        console.log("The deafult theme as dark", settingsData.ui.darkModeDefault);
+                        // Assuming response is like: { darkModeDefault: true, billingPageDefault: false, autoPrintInvoice: true }
+
+                        // 1. Set default theme (only if user hasn't already set one)
+                        const savedTheme = localStorage.getItem('theme');
+                        if ( settingsData.ui.darkModeDefault) {
+                            setTheme('dark');
+                        }
+                        else{
+                            setTheme('light');
+                        }
+
+                        // 2. Set default page (only if user is still on the initial 'dashboard' page)
+                        if (settingsData.ui.billingPageDefault && selectedPage === 'dashboard') {
+                            setSelectedPage('billing2');
+                        }
+
+                        // 3. Save auto-print setting to local storage for the billing page
+                        localStorage.setItem('autoPrintInvoice', settingsData.ui.autoPrintInvoice);
+                        localStorage.setItem('autoSendInvoice', settingsData.billing.autoSendInvoice);
+
+                    } else {
+                        console.warn("Could not fetch user UI settings. Using defaults.");
+                    }
+                } catch (settingsError) {
+                    // Log the error but don't break the app; login was still successful
+                    console.error('Error fetching user UI settings:', settingsError);
+                }
+                // --- END: NEW UI SETTINGS LOGIC ---// <-- Call this instead of resetInactivityTimer
             } else {
                 setUser(null);
                 clearTimers(); // Ensure timers are cleared if session check fails

@@ -169,7 +169,7 @@ const ProductsPage = () => {
 
             // Backend should return: { data: [], totalPages: N, totalCount: N }
             const result = await response.json();
-
+            console.log("Fetched products:", result);
             // 3. Update state and cache
             setProducts(result.data || []);
             setTotalPages(result.totalPages || 0);

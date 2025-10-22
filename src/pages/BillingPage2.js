@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useBilling } from '../context/BillingContext';
 import Modal from '../components/Modal';
-import { FaPlus, FaTrash, FaSearch } from 'react-icons/fa';
+import { FaPlus, FaTrash, FaSearch, FaPaperPlane, FaPrint } from 'react-icons/fa';
 import '../index.css';
 import { useConfig } from "./ConfigProvider";
 import { getIndianStates } from "../utils/statesUtil";
 import { useAlert } from '../context/AlertContext';
+import toast, {Toaster} from 'react-hot-toast';
 
 // A simple debounce hook to prevent API calls on every keystroke
 const useDebounce = (value, delay) => {
@@ -61,6 +62,7 @@ const BillingPage = ({ setSelectedPage }) => {
     // State for Customer Search Modal
     const [searchTerm, setSearchTerm] = useState('');
     const [isPrinting, setIsPrinting] = useState(false);
+    const [isSendingEmail, setIsSendingEmail] = useState(false); // <-- ADD THIS
 
     const statesList = getIndianStates();
     const config = useConfig();
@@ -265,9 +267,10 @@ const BillingPage = ({ setSelectedPage }) => {
     // Replace your existing handlePrintInvoice function with this one
     const handlePrintInvoice = async (invoiceNumber) => {
         if (!invoiceNumber) {
-            showAlert("Order Reference number is not available.");
+            toast.error("Order Reference number is not available.");
             return;
         }
+        setShowPopup(false); // <-- ADDED
         setIsPrinting(true);
         try {
             const response = await fetch(`${apiUrl}/api/shop/get/invoice/${invoiceNumber}`, {
@@ -310,6 +313,39 @@ const BillingPage = ({ setSelectedPage }) => {
             showAlert("Could not retrieve the invoice. Please try again.");
         } finally {
             setIsPrinting(false);
+        }
+    };
+
+    const handleSendEmail = async (invoiceNumber) => {
+        if (!invoiceNumber) {
+            showAlert("Order Reference number is not available.", "error");
+            return;
+        }
+
+        setIsSendingEmail(true);
+        try {
+            // I'm assuming a POST request to an endpoint like this.
+            // Adjust the URL and method (GET/POST) as needed.
+            const response = await fetch(`${apiUrl}/api/shop/send-invoice-email/${invoiceNumber}`, {
+                method: 'POST', // or 'GET' if that's how you set it up
+                credentials: 'include',
+            });
+
+            if (!response.ok) {
+                // Try to get a meaningful error message from the backend
+                const errorData = await response.text();
+                throw new Error(errorData || `Failed to send invoice: ${response.statusText}`);
+            }
+
+            // If successful
+            toast.success("Invoice sent successfully!", "success");
+            setShowPopup(false);
+
+        } catch (error) {
+            console.error("Error sending invoice email:", error);
+            showAlert(`Could not send invoice: ${error.message}`, "error");
+        } finally {
+            setIsSendingEmail(false);
         }
     };
 
@@ -533,7 +569,25 @@ const BillingPage = ({ setSelectedPage }) => {
                 body,
             });
             const data = await res.json();
-            setOrderRef(data.invoiceNumber || 'N/A');
+
+            // --- START: NEW AUTOPRINT LOGIC ---
+
+            // 1. Get the invoice number from the response
+            const newInvoiceNumber = data.invoiceNumber || 'N/A';
+            setOrderRef(newInvoiceNumber); // Set state for the popup
+
+            // 2. Get the auto-print setting from localStorage
+            // We check against 'true' because localStorage stores strings
+            const autoPrint = localStorage.getItem('autoPrintInvoice') === 'true';
+
+            // 3. If auto-print is on and we have a valid invoice number, call print
+            if (autoPrint && newInvoiceNumber !== 'N/A') {
+                handlePrintInvoice(newInvoiceNumber);
+            }
+
+            // --- END: NEW AUTOPRINT LOGIC ---
+
+
             setPaidAmount(data.totalAmount || sellingSubtotal); // You might want to change this to data.payingAmount if backend returns it
             setShowPopup(true);
             handleNewBilling();
@@ -624,6 +678,18 @@ const BillingPage = ({ setSelectedPage }) => {
                     {notification.message}
                 </div>
             )}
+
+            <Toaster position="top-center" toastOptions={{
+                duration: 1000,
+                style: {
+                    background: 'lightgreen',
+                    color: 'var(--text-color)',
+                    borderRadius: '25px',
+                    padding: '12px',
+                    width: '100%',
+                    fontSize: '16px',
+                },
+            }}   reverseOrder={false} />
             {/* Page Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h2>Billing</h2>
@@ -1237,7 +1303,7 @@ const BillingPage = ({ setSelectedPage }) => {
                             padding: '2rem',
                             borderRadius: '25px',
                             width: '90%',
-                            maxWidth: '500px',
+                            maxWidth: '600px',
                             boxShadow: '0 8px 30px var(--shadow-color)',
                             color: 'var(--text-color)',
                             border: '1px solid var(--border-color)',
@@ -1266,7 +1332,13 @@ const BillingPage = ({ setSelectedPage }) => {
 
 
                         {/* --- NEW Button Container --- */}
-                        <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '1.5rem' }}>
+                        <div style={{
+                            display: 'flex',
+                            justifyContent: 'center',
+                            gap: '0.75rem',  // <-- Adjusted gap
+                            marginTop: '1.5rem',
+                            flexWrap: 'wrap'
+                        }}>
                             <button
                                 style={{
                                     padding: '0.75rem 1.5rem',
@@ -1281,6 +1353,33 @@ const BillingPage = ({ setSelectedPage }) => {
                             >
                                 Close
                             </button>
+
+                            {/* --- UPDATED: Email Button --- */}
+                            {localStorage.getItem('autoSendInvoice') !== 'true' && (
+                                <button
+                                    style={{
+                                        padding: '0.75rem 1.5rem',
+                                        borderRadius: '25px',
+                                        border: '1px solid var(--primary-color)',
+                                        background: 'transparent',
+                                        color: 'var(--primary-color)',
+                                        fontSize: '1rem',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s ease',
+                                        opacity: isSendingEmail ? 0.7 : 1,
+                                        // --- Add flex properties for icon ---
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.5rem'
+                                    }}
+                                    onClick={() => handleSendEmail(orderRef)}
+                                    disabled={isSendingEmail}
+                                >
+                                    <FaPaperPlane
+                                        size={20} />
+                                    {isSendingEmail ? 'Sending...' : 'Send to Email'}
+                                </button>
+                            )}
                             <button
                                 style={{
                                     padding: '0.75rem 1.5rem',
@@ -1291,13 +1390,19 @@ const BillingPage = ({ setSelectedPage }) => {
                                     fontSize: '1rem',
                                     cursor: 'pointer',
                                     transition: 'all 0.2s ease',
-                                    opacity: isPrinting ? 0.7 : 1
+                                    opacity: isPrinting ? 0.7 : 1,
+                                    // --- Add flex properties for icon ---
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem'
                                 }}
                                 onClick={() => handlePrintInvoice(orderRef)}
                                 disabled={isPrinting}
                             >
-                                {isPrinting ? 'Loading...' : '🖨️ Print Invoice'}
+                                <FaPrint size={20} />
+                                {isPrinting ? 'Loading...' : 'Print Invoice'}
                             </button>
+
                         </div>
                     </div>
                 </div>

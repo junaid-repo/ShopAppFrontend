@@ -16,11 +16,14 @@
 
 .settings-tab-nav button {
     padding: 10px 20px;
-    border: 1px solid transparent;
+    border: 0px solid transparent;
     /* --- Request 3: Unselected tab color --- */
-    background: var(--glass-bg-nav-start); /* Greyish background */
+    background: var(--primary-color-light); /* Greyish background */
+    border-top-color: var(--primary-color);
+    border-left-color: var(--primary-color);
+    border-right-color: var(--primary-color);
     cursor: pointer;
-    font-size: 0.95rem;
+    font-size: 1.25rem;
     font-weight: 500;
     color: var(--text-color-secondary);
     display: flex;
@@ -39,23 +42,27 @@
 
 .settings-tab-nav button.active {
     /* --- Request 3: Active tab color (matches content pane) --- */
-    background: var(--glass-card-bg);
+
     color: var(--primary-color);
+    background: var(--glass-bg);
     font-weight: 600;
     border: 1px solid var(--border-color);
     /* --- Request 4: Remove bottom border to blend --- */
-    border-bottom-color: transparent;
+
+    border-top-color: var(--border-color);
+    border-left-color: var(--border-color);
+    border-right-color: var(--border-color);
     margin-bottom: -1px; /* Pulls tab over the nav's bottom border */
 }
 
 /* --- NEW: Tab Content Pane --- */
 .tab-pane {
     /* --- Request 3: Content pane color (matches active tab) --- */
-    background: var(--glass-card-bg);
+    background: var(--glass-bg);
     /* --- Request 4: Remove top border to blend --- */
-    border: 1px solid var(--border-color);
-    border-top: none;
+    border: 2px solid var(--border-color);
     border-radius: 0 0 12px 12px; /* Rounded bottom corners */
+    border-top: none;
     padding: 1rem; /* Add some internal padding */
     animation: fadeIn 0.3s ease; /* Simple fade-in */
 }

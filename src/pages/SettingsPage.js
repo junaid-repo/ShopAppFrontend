@@ -10,6 +10,7 @@ import './SettingsPage.css';
 import './InvoiceTemplates.css'; // <-- ADDED CSS IMPORT
 import './UserProfilePage.css'; // Keep UserProfilePage CSS for modal styles maybe
 
+
 const SettingsPage = () => {
     const { showAlert } = useAlert();
     const config = useConfig();
@@ -172,7 +173,7 @@ const SettingsPage = () => {
                     body: JSON.stringify({ password: passwordData.newPassword }),
                 });
                 if (!response.ok) throw new Error("Failed to update password.");
-                showAlert("Password updated successfully!");
+                toast.success("Password updated successfully!");
                 setShowPasswordModal(false);
                 setPasswordStep(1);
                 setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
@@ -194,7 +195,7 @@ const SettingsPage = () => {
                 body: JSON.stringify(settings),
             });
             if (!response.ok) throw new Error("Server error");
-            showAlert(`${settingsName} settings saved successfully!`);
+            toast.success(`${settingsName} settings saved successfully!`);
             setOriginalSettings(settings);
         } catch (error) {
             console.error(`Error saving ${settingsName} settings:`, error);
@@ -264,7 +265,7 @@ const SettingsPage = () => {
                 color: 'var(--text-color)',
                 borderRadius: '25px',
                 padding: '12px',
-                width: '120%',
+                width: '180%',
                 minWidth: '250px',
                 fontSize: '16px',
             },
@@ -272,7 +273,7 @@ const SettingsPage = () => {
 
         <div className="glass-card" style={{ maxWidth: '1100px', marginTop: '50px' }}>
             <h1 style={{ textAlign: 'left', marginBottom: '55px' }}>Settings</h1>
-
+            <span className="info-text" style={{marginLeft: "-700px"}}>* Please logout and relogin for the settings to take effect</span>
             {/* ====== TAB NAVIGATION (Invoice Template First) ====== */}
             <div className="settings-tab-nav">
                 <button

@@ -106,6 +106,7 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage }) => {
             method: "POST",
             credentials: "include",
         });
+        localStorage.removeItem('theme');
         navigate("/login", { replace: true });
     };
 
