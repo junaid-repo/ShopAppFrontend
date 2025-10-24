@@ -498,7 +498,7 @@ const DashboardPage = ({ setSelectedPage }) => {
             {/* Stats */}
             <div className="stats-grid">
                 <div className="stat-card glass-card" onClick={() => { if (setSelectedPage) setSelectedPage('payments'); else navigate('/payments');}} >
-                    <FaChartLine className="icon revenue" />
+                    <i className="fa-duotone fa-solid fa-money-bill-trend-up icon revenue"></i>
                     <div>
                         <p>Total Revenue</p>
                         <h3>₹{dashboardData.monthlyRevenue?.toLocaleString()}</h3>

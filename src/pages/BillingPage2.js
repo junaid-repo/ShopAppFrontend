@@ -680,7 +680,7 @@ const BillingPage = ({ setSelectedPage }) => {
             )}
 
             <Toaster position="top-center" toastOptions={{
-                duration: 1000,
+                duration: 2000,
                 style: {
                     background: 'lightgreen',
                     color: 'var(--text-color)',
@@ -709,11 +709,12 @@ const BillingPage = ({ setSelectedPage }) => {
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                             <h3 style={{ margin: 0 }}>Current Bill</h3>
                             <div className="customer-actions" style={{ display: 'flex', gap: '10px' }}>
-                                <button className="btn" onClick={() => setIsModalOpen(true)}>
+                                <button className="btn" onClick={() => setIsModalOpen(true)}><i
+                                    className="fa-duotone fa-solid fa-user-magnifying-glass" style={{paddingRight:"5px"}}></i>
                                     {selectedCustomer ? `Change Customer` : 'Select Customer'}
                                 </button>
                                 <button className="btn" onClick={() => setIsNewCusModalOpen(true)}>
-                                    <FaPlus /> Create Customer
+                                    <i className="fa-duotone fa-solid fa-user-plus"></i> Create Customer
                                 </button>
                                 {cart.length > 0 && (
                                     <button className="btn btn-danger" onClick={handleNewBilling}>

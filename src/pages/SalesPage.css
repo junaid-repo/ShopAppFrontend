@@ -156,3 +156,11 @@
 .order-items-table tr:last-child td {
     border-bottom: none;
 }
+.pagination-ellipsis {
+    padding: 8px 12px;
+    margin: 0 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-color);
+}

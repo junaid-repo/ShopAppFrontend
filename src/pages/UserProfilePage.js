@@ -707,7 +707,7 @@ const UserProfilePage = () => {
     return (
         <div className="user-profile-page">
             <Toaster position="top-center" toastOptions={{
-                duration: 5000,
+                duration: 2000,
                 style: {
                     background: 'lightgreen',
                     color: 'white',

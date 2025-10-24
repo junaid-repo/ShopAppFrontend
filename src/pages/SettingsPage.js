@@ -259,7 +259,7 @@ const SettingsPage = () => {
     // --- Main Render ---
     return (<div className="settings-page">
         <Toaster position="top-center" toastOptions={{
-            duration: 5000,
+            duration: 1000,
             style: {
                 background: 'lightgreen',
                 color: 'var(--text-color)',

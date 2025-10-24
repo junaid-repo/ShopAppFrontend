@@ -5,6 +5,7 @@ import { Gauge, UsersFour, Invoice , Archive, ChartLineUp, MicrosoftExcelLogo, S
 
 import './Sidebar.css';
 
+
 const iconColors = {
     dashboard: "#353aad",
     products: "#353aad",
@@ -169,14 +170,15 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar, selectedPage, setSelected
                     title="Dashboard"
                     style={buttonStyleFor('dashboard')}
                 >
-                    <Gauge
+                    <i className="fa-duotone fa-solid fa-gauge-simple-high" style={{ marginRight:"15px", fontSize: '20px' }} ></i>
+                   {/* <Gauge
                         weight="duotone"
                         style={{
                             color: isDark
                                 ? '#ffffff'
                                 : iconColors.dashboard
                         }}
-                    />
+                    />*/}
                     <span className="nav-text">Dashboard</span>
                 </button>
 
@@ -187,7 +189,10 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar, selectedPage, setSelected
                     title="Products"
                     style={buttonStyleFor('products')}
                 >
+                    {/*
                     <Archive weight="duotone" style={{ color: 'var(--text-color)' }} />
+*/}
+                    <i className="fa-duotone fa-solid fa-boxes-stacked" style={{ paddingRight:"15px", fontSize: '20px' }}></i>
                     <span className="nav-text">Products</span>
                 </button>
 
@@ -198,7 +203,8 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar, selectedPage, setSelected
                     title="Sales"
                     style={buttonStyleFor('sales')}
                 >
-                    <ShoppingCart weight="duotone" style={{ color: 'var(--text-color)' }} />
+                    {/*<ShoppingCart weight="duotone" style={{ color: 'var(--text-color)' }} />*/}
+                    <i className="fa-duotone fa-solid fa-cart-shopping" style={{ paddingRight:"15px", fontSize: '20px' }}></i>
                     <span className="nav-text">Sales</span>
                 </button>
 
@@ -209,7 +215,8 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar, selectedPage, setSelected
                     title="GSTBilling"
                     style={buttonStyleFor('billing2')}
                 >
-                    <Receipt weight="duotone" style={{ color: 'var(--text-color)' }} />
+                    {/*<Receipt weight="duotone" style={{ color: 'var(--text-color)' }} />*/}
+                    <i className="fa-duotone fa-solid fa-file-invoice" style={{ paddingRight:"15px", fontSize: '20px' }}></i>
                     <span className="nav-text">GSTBilling</span>
                 </button>
 
@@ -220,8 +227,9 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar, selectedPage, setSelected
                     title="Customers"
                     style={buttonStyleFor('customers')}
                 >
-                    <UsersFour weight="duotone" style={{ color: 'var(--text-color)' }} />
-                    <span className="nav-text">Customers</span>
+                    {/*<UsersFour weight="duotone" style={{ color: 'var(--text-color)' }} />*/}
+                    <i className="fa-duotone fa-regular fa-users" style={{ paddingRight:"15px", fontSize: '20px' }}></i>
+                    <span className="nav-text" >Customers</span>
                 </button>
 
                 <button
@@ -231,7 +239,8 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar, selectedPage, setSelected
                     title="Payments"
                     style={buttonStyleFor('payments')}
                 >
-                    <CreditCard weight="duotone" style={{ color: 'var(--text-color)' }} />
+                    {/*<CreditCard weight="duotone" style={{ color: 'var(--text-color)' }} />*/}
+                    <i className="fa-duotone fa-solid fa-credit-card" style={{ paddingRight:"15px", fontSize: '20px' }}></i>
                     <span className="nav-text">Payments</span>
                 </button>
 
@@ -242,7 +251,8 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar, selectedPage, setSelected
                     title="Reports"
                     style={buttonStyleFor('reports')}
                 >
-                    <MicrosoftExcelLogo weight="duotone" style={{ color: 'var(--text-color)' }} />
+                    {/*<MicrosoftExcelLogo weight="duotone" style={{ color: 'var(--text-color)' }} />*/}
+                    <i className="fa-duotone fa-solid fa-file-spreadsheet" style={{ paddingRight:"15px", fontSize: '20px' }}></i>
                     <span className="nav-text">Reports</span>
                 </button>
 
@@ -253,11 +263,11 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar, selectedPage, setSelected
                     title="Analytics"
                     style={buttonStyleFor('analytics')}
                 >
-                    <ChartLineUp weight="duotone" style={{ color: 'var(--text-color)' }} />
+                    {/*<ChartLineUp weight="duotone" style={{ color: 'var(--text-color)' }} />*/}
+                    <i className="fa-duotone fa-solid fa-chart-mixed" style={{ paddingRight:"15px", fontSize: '20px' }}></i>
                     <span className="nav-text">Analytics</span>
                 </button>
             </nav>
-
 
 
             <div className="sidebar-footer">
@@ -268,7 +278,10 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar, selectedPage, setSelected
                     title="Chat Support"
                     style={footerButtonStyleFor('chat')}
                 >
-                    <Headset size={20} weight="duotone" style={{ marginRight: '8px', color: "var(--text-color)" }} />
+{/*
+                    <Headset size={20} weight="duotone" style={{marginRight: '8px', color: "var(--text-color)"}}/>
+*/}
+                    <i className="fa-duotone fa-solid fa-user-headset" style={{ paddingRight:"15px", fontSize: '20px' }}></i>
                     <span className="nav-text">Chat Support</span>
                 </button>
                 {/*<button

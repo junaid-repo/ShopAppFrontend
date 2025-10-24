@@ -314,7 +314,7 @@ function App() {
                 <Toaster
                     position="top-center"
                     toastOptions={{
-                        duration: 8000,
+                        duration: 2000,
                         style: {
                             background: 'lightgreen',
                             color: 'var(--text-color)',

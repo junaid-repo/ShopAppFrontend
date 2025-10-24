@@ -759,7 +759,7 @@ const DashboardPage = ({ setSelectedPage }) => {
 
             {/* Time Range Selector */}
             <div className="time-range-selector glass-card" style={{ boxShadow: "inset 0 -1px 0 rgba(0,0,0,0.06)", borderRadius: "20px", border: "2px solid var(--primary-color-light)"} }>
-                <label htmlFor="timeRange">📅 </label>
+                <label htmlFor="timeRange"><i class="fa-duotone fa-solid fa-calendar-range" style={{fontSize:'20px', marginRight:'0px'}}></i> </label>
                 <select
                     id="timeRange"
                     value={timeRange}
@@ -775,35 +775,46 @@ const DashboardPage = ({ setSelectedPage }) => {
 
             <div className="stats-grid">
                 <div className="stat-card glass-card" onClick={() => { if (setSelectedPage) setSelectedPage('payments'); else navigate('/payments');}} >
-                    <FaChartLine className="icon revenue" />
+                    <i className="fa-duotone fa-solid fa-money-bill-trend-up icon revenue"></i>
                     <div>
                         <p>Total Revenue</p>
                         <h3>₹{dashboardData.monthlyRevenue?.toLocaleString()}</h3>
                     </div>
                 </div>
-                <div className="stat-card glass-card" onClick={() => { if (setSelectedPage) setSelectedPage('sales'); else navigate('/sales');}}>
-                    <FaShoppingBasket className="icon sales" />
+                <div className="stat-card glass-card" onClick={() => {
+                    if (setSelectedPage) setSelectedPage('sales'); else navigate('/sales');
+                }}>
+                    <i className="fa-duotone fa-solid fa-cart-xmark icon sales"></i>
                     <div>
                         <p>Number of Sales</p>
                         <h3>{dashboardData.countOfSales}</h3>
                     </div>
                 </div>
-                <div className="stat-card glass-card" onClick={() => { if (setSelectedPage) setSelectedPage('sales'); else navigate('/sales');}}>
-                    <FaBoxes className="icon units" />
+                <div className="stat-card glass-card" onClick={() => {
+                    if (setSelectedPage) setSelectedPage('sales'); else navigate('/sales');
+                }}>
+
+                    <i className="fa-duotone fa-solid fa-boxes-stacked icon units"></i>
                     <div>
                         <p>Total Units Sold</p>
                         <h3>{dashboardData.totalUnitsSold}</h3>
                     </div>
                 </div>
-                <div className="stat-card glass-card" onClick={() => { if (setSelectedPage) setSelectedPage('sales'); else navigate('/sales');}}>
-                    <FaRupeeSign className="icon tax" />
+                <div className="stat-card glass-card" onClick={() => {
+                    if (setSelectedPage) setSelectedPage('sales'); else navigate('/sales');
+                }}>
+
+                    <i className="fa-duotone fa-solid fa-indian-rupee-sign icon tax"></i>
                     <div>
                         <p>Tax Collected</p>
                         <h3>₹{dashboardData.taxCollected?.toLocaleString()}</h3>
                     </div>
                 </div>
-                <div className="stat-card glass-card" onClick={() => { if (setSelectedPage) setSelectedPage('products'); else navigate('/products');}}>
-                    <FaBan className="icon stock" />
+                <div className="stat-card glass-card" onClick={() => {
+                    if (setSelectedPage) setSelectedPage('products'); else navigate('/products');
+                }}>
+
+                    <i className="fa-duotone fa-solid fa-ban icon stock"></i>
                     <div>
                         <p>Out of Stock Products</p>
                         <h3>{dashboardData.outOfStockCount}</h3>
@@ -845,15 +856,16 @@ const DashboardPage = ({ setSelectedPage }) => {
                                     alignItems: "center",
                                 }}
                             >
-                                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                    <h3 style={{ margin: 0 }}>Goals</h3>
+                                <div style={{display: "flex", alignItems: "center", gap: "8px"}}>
+                                     <h3
+                                    style={{margin: 0}}>Goals</h3>
                                     {goalData.fromDate && goalData.toDate && (
-                                        <span style={{ fontSize: "0.8rem", color: "#888" }}>
+                                        <span style={{fontSize: "0.8rem", color: "#888"}}>
                 ({goalData.fromDate} - {goalData.toDate})
               </span>
                                     )}
                                 </div>
-                                <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                                <div style={{display: "flex", gap: "10px", alignItems: "center" }}>
                                     <button
                                         className="btn small-btn"
                                         onClick={async () => {
@@ -891,10 +903,10 @@ const DashboardPage = ({ setSelectedPage }) => {
                         <div className="quick-shortcuts glass-card">
                             <h3 className="card-header">Quick Shortcuts</h3>
                             <div className="shortcuts-container">
-                                <button className="btn" onClick={() => { if (setSelectedPage) setSelectedPage('billing'); else navigate('/billing'); }}>New Sale</button>
-                                <button className="btn" onClick={() => { if (setSelectedPage) setSelectedPage('reports'); else navigate('/reports'); }}>Reports</button>
-                                <button className="btn" onClick={() => { if (setSelectedPage) setSelectedPage('profile'); else navigate('/profile'); }}>Profile</button>
-                                <button className="btn" onClick={() => { if (setSelectedPage) setSelectedPage('notifications'); else navigate('/notifications'); }}>Notifications</button>
+                                <button className="btn" onClick={() => { if (setSelectedPage) setSelectedPage('billing'); else navigate('/billing'); }}><i class="fa-duotone fa-solid fa-cart-plus" style={{paddingRight:'7px'}}></i>New Sale</button>
+                                <button className="btn" onClick={() => { if (setSelectedPage) setSelectedPage('reports'); else navigate('/reports'); }}><i class="fa-duotone fa-solid fa-file-spreadsheet" style={{paddingRight:'7px'}}></i>Reports</button>
+                                <button className="btn" onClick={() => { if (setSelectedPage) setSelectedPage('profile'); else navigate('/profile'); }}><i class="fa-duotone fa-solid fa-user" style={{paddingRight:'7px'}}></i>Profile</button>
+                                <button className="btn" onClick={() => { if (setSelectedPage) setSelectedPage('notifications'); else navigate('/notifications'); }}><i class="fa-duotone fa-solid fa-bell" style={{paddingRight:'7px'}}></i>Alerts</button>
 
                             </div>
                         </div>

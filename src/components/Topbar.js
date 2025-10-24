@@ -165,7 +165,7 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage }) => {
             <div
                 ref={notifDropdownRef}
                 className="topbar-icon-wrapper" // Added class
-                style={{ position: 'relative' }} // Needed for badge positioning
+                style={{position: 'relative'}} // Needed for badge positioning
                 onMouseEnter={() => {
                     setIsNotiHovered(true);
                     setNotifDropdownOpen(true);
@@ -181,6 +181,7 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage }) => {
                 }}
                 onClick={handleNotifClick} // Navigate on click
             >
+                {/*<Bell size={28} weight="duotone" />*/}
                 <Bell size={28} weight="duotone" />
                 {unseenCount > 0 && (
                     <span className="notification-badge">
@@ -313,7 +314,7 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage }) => {
                                 setIsUserDropdownOpen(false); // Close on click
                             }}
                         >
-                            <User size={28} weight="duotone" />
+                            <i className="fa-duotone fa-thin fa-user" style={{fontSize:"22px"}}></i>
                             <span>Shop and Profile</span>
                         </div>
 
@@ -325,7 +326,7 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage }) => {
                                 setIsUserDropdownOpen(false); // Close on click
                             }}
                         >
-                            <Gear size={28} weight="duotone" />
+                            <i className="fa-duotone fa-regular fa-gear" style={{fontSize:"22px"}}></i>
                             <span>Settings</span>
                         </div>
 
@@ -337,7 +338,8 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage }) => {
                                 setIsUserDropdownOpen(false); // Close on click
                             }}
                         >
-                            <SignOut size={28} weight="duotone" color="#e80a0d"/> {/* Specific color for logout */}
+                            <i className="fa-duotone fa-regular fa-right-from-bracket" style={{fontSize:"22px", color:"#e80a0d"}}></i>
+
                             <span>Logout</span>
                         </div>
                     </div>

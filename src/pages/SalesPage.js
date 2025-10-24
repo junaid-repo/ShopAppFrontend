@@ -306,6 +306,30 @@ const SalesPage = () => {
     }
     };
 
+    // This helper function creates the smart pagination array
+    const getPaginationItems = (currentPage, totalPages) => {
+        // Total number of page links to show
+        const totalPageNumbersToShow = 7; // e.g., [1, '...', 4, 5, 6, '...', 10]
+
+        // If total pages are 7 or less, just show all of them
+        if (totalPages <= totalPageNumbersToShow) {
+            return [...Array(totalPages)].map((_, i) => i + 1);
+        }
+
+        // Case 1: Current page is near the start
+        if (currentPage <= 4) {
+            return [1, 2, 3, 4, 5, '...', totalPages];
+        }
+
+        // Case 2: Current page is near the end
+        if (currentPage >= totalPages - 3) {
+            return [1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+        }
+
+        // Case 3: Current page is in the middle
+        return [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages];
+    };
+
     // 🟢 API CALL needed here when user clicks a row
     const handleRowClick = async (saleId) => {
 
@@ -327,7 +351,7 @@ const SalesPage = () => {
         }
 
     };
-
+    const paginationItems = getPaginationItems(currentPage, totalPages);
     const handleSendReminder = async (saleId) => {
         try {
             // This assumes a POST request to an endpoint like /api/shop/send-reminder/{invoiceId}
@@ -355,7 +379,7 @@ const SalesPage = () => {
     return (
         <div className="page-container">
             <Toaster position="top-center" toastOptions={{
-                duration: 8000,
+                duration: 1000,
                 style: {
                     background: 'lightgreen',
                     color: 'var(--text-color)',
@@ -513,22 +537,36 @@ const SalesPage = () => {
             {totalPages > 1 && (
                 <div className="pagination">
                     <div className="pagination-controls">
-                    <button onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1}>
-                        &laquo;  Prev
-                    </button>
-                    {[...Array(totalPages)].map((_, idx) => (
-                        <button
-                            key={idx}
-                            className={currentPage === idx + 1 ? 'active' : ''}
-                            onClick={() => setCurrentPage(idx + 1)}
-                        >
-                            {idx + 1}
+                        <button onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1}>
+                            &laquo; Prev
                         </button>
-                    ))}
-                    <button onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages}>
-                        Next &raquo;
-                    </button>
-                </div>
+
+                        {paginationItems.map((item, index) => {
+                            // If the item is '...', render it as a non-clickable span
+                            if (typeof item === 'string') {
+                                return (
+                                    <span key={index} className="pagination-ellipsis">
+                                        {item}
+                                    </span>
+                                );
+                            }
+
+                            // Otherwise, it's a page number, so render a button
+                            return (
+                                <button
+                                    key={index}
+                                    className={currentPage === item ? 'active' : ''}
+                                    onClick={() => setCurrentPage(item)}
+                                >
+                                    {item}
+                                </button>
+                            );
+                        })}
+
+                        <button onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages}>
+                            Next &raquo;
+                        </button>
+                    </div>
                 </div>
             )}
 

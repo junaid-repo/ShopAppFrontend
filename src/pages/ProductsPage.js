@@ -607,7 +607,7 @@ const ProductsPage = () => {
     return (
         <div className="page-container">
             <Toaster position="top-center" toastOptions={{
-                duration: 8000,
+                duration: 1000,
                 style: {
                     background: 'lightgreen',
                     color: 'var(--text-color)',
@@ -666,9 +666,9 @@ const ProductsPage = () => {
 
                     {/* Group for primary actions */}
                     <div className="actions-group-left">
-                        <button type="button" className="btn" onClick={() => setIsModalOpen(true)}>Add Product</button>
-                        <button type="button" className="btn" onClick={() => setIsCsvModalOpen(true)}>Upload CSV</button>
-                        <button type="button" className="btn" onClick={handleExportCSV}>Export CSV</button>
+                        <button type="button" className="btn" onClick={() => setIsModalOpen(true)}><i class="fa-duotone fa-solid fa-grid-2-plus" style={{marginRight: "3px"}}></i>Add Product</button>
+                        <button type="button" className="btn" onClick={() => setIsCsvModalOpen(true)}><i class="fa-duotone fa-solid fa-arrow-up-from-square" style={{marginRight: "5px"}}></i>Upload CSV</button>
+                        <button type="button" className="btn" onClick={handleExportCSV}><i class="fa-duotone fa-solid fa-file-export" style={{marginRight: "5px"}}></i>Export CSV</button>
                     </div>
 
                     <div ref={columnsRef} className="columns-dropdown-container">
@@ -815,11 +815,14 @@ const ProductsPage = () => {
                                     <td>
                                         <div className="action-icons">
                             <span
-                                onClick={(e) => { e.stopPropagation(); handleEditClick(product); }}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditClick(product);
+                                }}
                                 className="action-icon edit"
                                 title="Edit Product"
                             >
-                                <MdEdit size={18} />
+                                <i className="fa-duotone fa-solid fa-pen-to-square"></i>
                             </span>
                                             <span
                                                 onClick={(e) => {
@@ -831,7 +834,7 @@ const ProductsPage = () => {
                                                 className="action-icon delete"
                                                 title="Delete Product"
                                             >
-                                <MdDelete size={18} />
+                                <i className="fa-duotone fa-solid fa-trash"></i>
                             </span>
                                         </div>
                                     </td>

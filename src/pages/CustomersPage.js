@@ -208,6 +208,29 @@
             }
             handleCloseUpdateModal();
         };
+
+        const getPaginationItems = (currentPage, totalPages) => {
+            // Total number of page links to show
+            const totalPageNumbersToShow = 7; // e.g., [1, '...', 4, 5, 6, '...', 10]
+
+            // If total pages are 7 or less, just show all of them
+            if (totalPages <= totalPageNumbersToShow) {
+                return [...Array(totalPages)].map((_, i) => i + 1);
+            }
+
+            // Case 1: Current page is near the start
+            if (currentPage <= 4) {
+                return [1, 2, 3, 4, 5, '...', totalPages];
+            }
+
+            // Case 2: Current page is near the end
+            if (currentPage >= totalPages - 3) {
+                return [1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+            }
+
+            // Case 3: Current page is in the middle
+            return [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages];
+        };
     
     
         // ✅ 3. MODIFIED: The handleDeleteCustomer function
@@ -312,15 +335,49 @@
                 setSelectedPage(route);
             }
         };
-    
-    
+
+
+        // --- REPLACE YOUR OLD PAGINATION COMPONENT WITH THIS ---
+
         const Pagination = () => {
             if (totalPages <= 1) return null;
+
+            // Call the helper function
+            const paginationItems = getPaginationItems(currentPage, totalPages);
+
             return (
                 <div className="pagination">
-                    <button onClick={() => setCurrentPage(p => p - 1)} disabled={currentPage === 1}>&laquo; Prev</button>
-                    <span>Page {currentPage} of {totalPages}</span>
-                    <button onClick={() => setCurrentPage(p => p + 1)} disabled={currentPage === totalPages}>Next &raquo;</button>
+                    <div className="pagination-controls">
+                        <button onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1}>
+                            &laquo; Prev
+                        </button>
+
+                        {paginationItems.map((item, index) => {
+                            // If the item is '...', render it as a non-clickable span
+                            if (typeof item === 'string') {
+                                return (
+                                    <span key={index} className="pagination-ellipsis">
+                                    {item}
+                                </span>
+                                );
+                            }
+
+                            // Otherwise, it's a page number, so render a button
+                            return (
+                                <button
+                                    key={index}
+                                    className={currentPage === item ? 'active' : ''}
+                                    onClick={() => setCurrentPage(item)}
+                                >
+                                    {item}
+                                </button>
+                            );
+                        })}
+
+                        <button onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages}>
+                            Next &raquo;
+                        </button>
+                    </div>
                 </div>
             );
         };
@@ -328,7 +385,7 @@
         return (
             <div className="page-container">
                 <Toaster position="top-center" toastOptions={{
-                    duration: 8000,
+                    duration: 2000,
                     style: {
                         background: 'lightgreen',
                         color: 'var(--text-color)',
@@ -376,7 +433,7 @@
                                 <button className="btn btn-icon" onClick={handleToggleSelectMode} title="Select Multiple">
                                     <FaCheckDouble />
                                 </button>
-                                <button className="btn add-customer-btn" onClick={() => setIsModalOpen(true)}>New Customer</button>
+                                <button className="btn add-customer-btn" onClick={() => setIsModalOpen(true)}><i className="fa-duotone fa-solid fa-user-plus" style={{paddingLeft:"1px", paddingRight: "3px"}}></i>New Customer</button>
                             </>
                         )}
                     </div>
@@ -400,15 +457,16 @@
                                             <div style={{ marginTop: "20px" }}>
                                                 <h4 style={{ marginBottom: "10px" }}>{customer.city}, {customer.state}</h4>
                                                 <p className="customer-info">
-                                                    <Envelope size={iconSize} weight="duotone" color={iconColor} className="icon" /> {customer.email}
+                                                    {/*<Envelope size={iconSize} weight="duotone" color={iconColor} className="icon" /> {customer.email}*/}
+                                                    <i className="fa-duotone fa-solid fa-at"></i> {customer.email}
                                                 </p>
                                                 <p className="customer-info spaced">
-                                                    <Phone size={iconSize} weight="duotone" color={iconColor} className="icon" /> {customer.phone}
+                                                    <i className="fa-duotone fa-regular fa-phone"></i> {customer.phone}
                                                 </p>
 
                                             </div>
                                             <p className="customer-info money">
-                                                <Money size={iconSize} weight="duotone" color={iconColor} className="icon" /> ₹{customer.totalSpent?.toLocaleString('en-IN')}
+                                                <i className="fa-duotone fa-solid fa-chart-mixed-up-circle-dollar"></i>₹{customer.totalSpent?.toLocaleString('en-IN')}
                                             </p>
                                             <button
                                                 onClick={(e) => {
@@ -418,13 +476,16 @@
                                                 className="edit-btn"
                                                 title="Edit Customer"
                                             >
-                                                <MdEdit size={18} />
+                                                <i className="fa-duotone fa-solid fa-pen-to-square"></i>
                                             </button>
                                             <button
                                                 className="delete-btn"
-                                                onClick={(e) => { e.stopPropagation(); handleDeleteCustomer(customer.id, customer.name) }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDeleteCustomer(customer.id, customer.name)
+                                                }}
                                             >
-                                                <MdDelete />
+                                                <i className="fa-duotone fa-solid fa-trash"></i>
                                             </button>
                                         </div>
                                     );
@@ -487,18 +548,21 @@
                                                 <td>
                                                     <div className="action-icons">
                                 <span
-                                    onClick={(e) => { e.stopPropagation(); handleEditClick(customer); }}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleEditClick(customer);
+                                    }}
                                     className="action-icon edit"
                                     title="Edit Customer"
                                 >
-                                    <MdEdit size={18} />
+                                    <i className="fa-duotone fa-solid fa-pen-to-square"></i>
                                 </span>
                                                         <span
                                                             onClick={(e) => { e.stopPropagation(); handleDeleteCustomer(customer.id, customer.name); }}
                                                             className="action-icon delete"
                                                             title="Delete Customer"
                                                         >
-                                    <MdDelete size={18} />
+                                    <i class="fa-duotone fa-solid fa-trash"></i>
                                 </span>
                                                     </div>
                                                 </td>

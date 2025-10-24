@@ -6,7 +6,8 @@ import { useSearchKey } from "../context/SearchKeyContext";
 import { useAlert } from '../context/AlertContext';
 import axios from 'axios'; // <-- ADDED for API calls
 import toast, {Toaster} from 'react-hot-toast';
-import { FaPaperPlane, FaMoneyBill, FaCreditCard } from 'react-icons/fa'; // <-- ADDED for reminder icon
+import { FaPaperPlane, FaMoneyBill, FaCreditCard} from 'react-icons/fa'; // <-- ADDED for reminder icon
+
 import {
     MdClose,
     MdNotifications,
@@ -204,7 +205,12 @@ const PaymentsPage = ({ setSelectedPage }) => {
 
     // try to load saved filters from localStorage and use them as initial values
 
-
+// This "map" links the method string to the icon's JSX
+    const methodIcons = {
+        'UPI': <i className="fa-solid fa-qrcode"></i>,
+        'CARD': <i className="fa-duotone fa-solid fa-credit-card"></i>,
+        'CASH': <i className="fa-duotone fa-solid fa-money-bills"></i>
+    };
 
 
     // helper to normalize a date string from payment and the input date values
@@ -421,7 +427,7 @@ const PaymentsPage = ({ setSelectedPage }) => {
     return (
         <div className="page-container">
             <Toaster position="top-center" toastOptions={{
-                duration: 8000,
+                duration: 2000,
                 style: {
                     background: 'lightgreen',
                     color: 'var(--text-color)',
@@ -560,7 +566,10 @@ const PaymentsPage = ({ setSelectedPage }) => {
                                 const colors = ["#4caf50", "#ffb300", "#2196f3", "#9c27b0", "#f44336", "#00bcd4"];
                                 return entries.map(([method, count], idx) => (
                                     <div key={method} className="mode-row">
-                                        <div className="mode-label">{method}</div>
+                                        <div className="mode-label">
+                                            {methodIcons[method]}  {/* <-- This gets the icon */}
+                                            {method}               {/* This adds the text (e.g., "UPI") */}
+                                        </div>
                                         <div className="mode-bar-wrapper">
                                             <div className="mode-bar-inner" style={{ width: `${Math.max((count / max) * 100, 6)}%`, background: colors[idx % colors.length] }} />
                                         </div>
@@ -697,7 +706,7 @@ const PaymentsPage = ({ setSelectedPage }) => {
                                                     transition: 'all 0.2s ease'
                                                 }}
                                             >
-                                                <FaCreditCard size={18} color="#00796b" />
+                                                <i className="fa-duotone fa-solid fa-credit-card" style={{fontSize:'17px'}}></i>
                                             </button>
                                         )}
                                     </td>
