@@ -26,6 +26,15 @@ import {
 import { useLocation } from 'react-router-dom';
 import {useSearchKey} from "../context/SearchKeyContext";
 
+const useDebounce = (value, delay) => {
+    const [debouncedValue, setDebouncedValue] = useState(value);
+    useEffect(() => {
+        const handler = setTimeout(() => setDebouncedValue(value), delay);
+        return () => clearTimeout(handler);
+    }, [value, delay]);
+    return debouncedValue;
+};
+
 const SalesPage = () => {
     const { showAlert } = useAlert();
     const [sales, setSales] = useState([]);
@@ -49,8 +58,51 @@ const SalesPage = () => {
     const [currentPaymentOrder, setCurrentPaymentOrder] = useState(null); // Will hold {id, total, paid}
     const [payingAmount, setPayingAmount] = useState(""); // Input is a string
     const [isUpdatingPayment, setIsUpdatingPayment] = useState(false); // For loading state
-
+    const debouncedSearchTerm = useDebounce(searchTerm, 500); // Debounce local search input
     const [hoveredReminderBtnId, setHoveredReminderBtnId] = useState(null);
+
+    const fetchSales = useCallback(async (termToSearch, page = 1) => { // Added page parameter
+        // If no term is explicitly passed, default to the current searchTerm state
+        const finalSearchTerm = termToSearch !== undefined ? termToSearch : searchTerm;
+
+        try {
+            const response = await axios.get(`${apiUrl}/api/shop/get/sales`, {
+                params: {
+                    // Use page - 1 for backend's 0-based index
+                    page: page - 1,
+                    size: pageSize,
+                    search: finalSearchTerm || '', // Use the determined search term
+                    sort: sortConfig.key,
+                    dir: sortConfig.direction,
+                },
+                withCredentials: true,
+            });
+
+            setSales(Array.isArray(response.data.content) ? response.data.content : []);
+            setTotalPages(response.data.totalPages || 0); // Default totalPages to 0
+            setCurrentPage(page);
+
+        } catch (error) {
+            console.error("Error fetching sales:", error);
+            toast.error("Something went wrong while fetching sales. Please try again.");
+
+            // --- THIS IS THE FIX ---
+            // Reset sales to an empty array on ANY error (including token expiry)
+            setSales([]);
+            setTotalPages(0); // Also reset total pages
+            setCurrentPage(1); // Optionally reset to page 1
+            // --- END OF FIX ---
+
+            // You might want more specific error handling for 401/403
+            if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+                toast.error("Your session may have expired. Please log in again.");
+                // Potentially trigger a logout here or redirect to login
+                // e.g., onLogout(); // If you have a logout function available
+            }
+        }
+        // Add ALL dependencies fetchSales relies on (except searchTerm, as it's handled internally)
+    }, [apiUrl, pageSize, sortConfig.key, sortConfig.direction, setSales, setTotalPages, setCurrentPage, searchTerm]);
+
 
     const config = useConfig();
     var apiUrl = "";
@@ -110,38 +162,54 @@ const SalesPage = () => {
             setSearchKey('');
         };
     }, [setSearchKey]);
-
     // Sync search bar with global search key
     useEffect(() => {
+        // If context provides a searchKey AND it's different from the current local term
         if (searchKey && searchKey !== searchTerm) {
-            setSearchTerm(searchKey);
+            console.log("Context search key detected:", searchKey); // Debugging
+            setSearchTerm(searchKey); // Update the local input state
+            // --- Call fetchSales DIRECTLY, resetting to page 1 ---
+            fetchSales(searchKey, 1);
         }
-    }, [searchKey]);
+        // Watch for changes in searchKey and the stable fetchSales function
+    }, [searchKey, fetchSales]); // Added fetchSales
 
+    // Hook: Handles fetching based on DEBOUNCED local input OR page changes OR initial load
     useEffect(() => {
-        const fetchSales = async () => {
-            try {
-                const response = await axios.get(`${apiUrl}/api/shop/get/sales`, {
-                    params: {
-                        page: currentPage - 1,
-                        size: pageSize,
-                        search: searchTerm || '', // ✅ sent to backend
-                        sort: sortConfig.key,
-                        dir: sortConfig.direction,
-                    },
-                    withCredentials: true,
-                });
+        // Condition 1: If context search just ran (searchKey matches the debounced term), skip this fetch
+        // This prevents fetching twice when navigating via context search.
+        if (searchKey && searchKey === debouncedSearchTerm) {
+            console.log("Skipping debounce fetch because context search likely just ran.");
+            return;
+        }
 
-                setSales(response.data.content);
-                setTotalPages(response.data.totalPages); // ✅ Fix typo here too (was `totalePages`)
-            } catch (error) {
-                console.error("Error fetching sales:", error);
-                showAlert("Something went wrong while fetching sales.");
-            }
-        };
+        // Condition 2: If we are not skipping, proceed to fetch
+        console.log("Fetching sales for:", debouncedSearchTerm || "(no search term)", "Page:", currentPage);
 
-        fetchSales();
-    }, [apiUrl, currentPage, pageSize, searchTerm, sortConfig]); // refetch when sort changes
+        // Fetch using the debounced term (which is '' on initial load) and current page
+        fetchSales(debouncedSearchTerm, currentPage);
+
+        // Watch the debounced term, the current page, the stable fetchSales function, and searchKey
+    }, [debouncedSearchTerm, currentPage, fetchSales, searchKey]);
+
+
+    // --- (Optional) Hook: Handles URL parameter search ---
+    // Keep this if you need to load search from URL on initial mount
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const key = params.get('searchKey');
+        // Check if key exists and is different from context key and local search term
+        if (key && key !== searchKey && key !== searchTerm) {
+            console.log("URL search key detected:", key); // Debugging
+            setSearchTerm(key);
+            // Call fetchSales DIRECTLY, resetting to page 1
+            fetchSales(key, 1);
+        }
+        // Add dependencies
+    }, [location.search, fetchSales, searchKey, searchTerm]);
+
+
+
 
     // Toggle sorting when user clicks a column header
     const toggleSort = (key) => {

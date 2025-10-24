@@ -178,6 +178,7 @@
     font-weight: 600;
     color: var(--primary-color);
     border-bottom: 1px solid var(--border-color);
+
 }
 
 .notification-dropdown-empty {
@@ -200,11 +201,11 @@
 }
 
 .notification-dropdown-item.unread {
-    background: var(--primary-color-light);
+    background: var(--body-bg);
     font-weight: 600;
 }
 .notification-dropdown-item.unread:hover {
-    background-color: var(--primary-color-light);
+    background-color: var(--body-bg);
 }
 
 .notification-title {

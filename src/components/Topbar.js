@@ -344,7 +344,6 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage }) => {
                                      }}
                                 >
                                     <div className="notification-title">{n.title}</div>
-                                    <div className="notification-subject">{n.subject}</div>
                                     <div className="notification-time">{getRelativeTime(n.createdAt)}</div>
                                 </div>
                             ))
