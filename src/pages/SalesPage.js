@@ -374,6 +374,37 @@ const SalesPage = () => {
     }
     };
 
+    const handleSendInvoice = async (saleId) => {
+        if (!saleId) {
+            showAlert("Order Reference number is not available.", "error");
+            return;
+        }
+
+
+        try {
+            // I'm assuming a POST request to an endpoint like this.
+            // Adjust the URL and method (GET/POST) as needed.
+            const response = await fetch(`${apiUrl}/api/shop/send-invoice-email/${saleId}`, {
+                method: 'POST', // or 'GET' if that's how you set it up
+                credentials: 'include',
+            });
+
+            if (!response.ok) {
+                // Try to get a meaningful error message from the backend
+                const errorData = await response.text();
+                throw new Error(errorData || `Failed to send invoice: ${response.statusText}`);
+            }
+
+            // If successful
+            toast.success("Invoice sent successfully!", "success");
+
+
+        } catch (error) {
+            console.error("Error sending invoice email:", error);
+            showAlert(`Could not send invoice: ${error.message}`, "error");
+        }
+    };
+
     // This helper function creates the smart pagination array
     const getPaginationItems = (currentPage, totalPages) => {
         // Total number of page links to show
@@ -504,7 +535,7 @@ const SalesPage = () => {
 
                         {/* This key 'status' should be verified against your backend model */}
                         <th>Status</th>
-
+                        <th>Send</th>
 
                         <th>Invoice</th>
                         <th>Remind</th>
@@ -539,7 +570,31 @@ const SalesPage = () => {
                                 </td>
                                 <td>
                                     <button
-                                        className="download-btn"
+                                        className="action-icons"
+                                        title="Send Invoice via mail"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleSendInvoice(sale.id);
+                                        }}
+                                        style={{
+                                            cursor: "pointer",
+                                            borderRadius: "6px",
+                                            padding: "6px",
+                                            marginRight: "8px",
+                                            display: "inline-flex",
+                                            backgroundColor: "var(--primary-color-light)",
+                                            alignItems: "center",
+                                            border: "var(--border-color) solid 1px",
+                                            justifyContent: "center",
+                                        }}
+                                    >
+                                        <i className="fa-duotone fa-solid fa-paper-plane" style={{fontSize:"18px", color:"var(--text-color)"}}></i>
+
+                                    </button>
+                                </td>
+                                <td>
+                                    <button
+                                        className="action-icons"
                                         title="Download Invoice"
                                         onClick={(e) => {
                                             e.stopPropagation();
@@ -551,11 +606,13 @@ const SalesPage = () => {
                                             padding: "6px",
                                             marginRight: "8px",
                                             display: "inline-flex",
+                                            backgroundColor: "var(--primary-color-light)",
                                             alignItems: "center",
+                                            border: "var(--border-color) solid 1px",
                                             justifyContent: "center",
                                         }}
                                     >
-                                        <MdDownload size={18} color="var(--primary-color)" />
+                                        <i className="fa-duotone fa-solid fa-download" style={{fontSize:"18px", color:"var(--text-color)"}}></i>
                                     </button>
                                 </td>
                                 <td>
@@ -585,7 +642,7 @@ const SalesPage = () => {
                                                 opacity: isRemindHovered ? 0.8 : 1
                                             }}
                                         >
-                                            <FaPaperPlane size={18} color="var(--primary-color)" />
+                                            <i className="fa-duotone fa-solid fa-bell-plus" style={{fontSize: "20px"}}></i>
                                             <span style={{ fontWeight: "bold", fontSize: "0.9em", color: "var(--text-color)" }}>
                                 {sale.reminderCount || 0}
                             </span>

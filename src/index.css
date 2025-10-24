@@ -542,7 +542,7 @@ body.dark-theme .time-range-selector select:focus {
 
 /* Download Button */
 .download-btn {
-    background: linear-gradient(135deg, rgba(84, 255, 89, 0.45), rgba(84, 255, 89, 0.45));
+    background: linear-gradient(135deg, rgba(84, 255, 89, 0.45), rgba(62, 119, 64, 0.45));
     color: white;
     border: none;
     border-radius: 50%;

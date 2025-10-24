@@ -25,8 +25,47 @@ import { useSearchKey } from "./context/SearchKeyContext";
 import { Toaster } from 'react-hot-toast';
 import { AlertProvider } from './context/AlertContext';
 import AlertDialog from './components/AlertDialog';
+import axios from 'axios';
 
 const queryClient = new QueryClient();
+
+
+axios.interceptors.response.use(
+    (response) => {
+        // If response is successful (2xx), just return it
+        return response;
+    },
+    (error) => {
+        // Check if the error response exists and has a 401 status
+        if (error.response && error.response.status === 401) {
+            console.warn('Unauthorized (401). Token likely expired. Logging out.');
+            // Display toast only once to avoid duplicates if multiple calls fail
+            if (!window.location.pathname.includes('/login')) { // Avoid showing on login page itself
+                alert('Your session has expired. Please log in again.');
+            }
+
+            // --- Trigger Logout ---
+            // 1. Clear relevant storage (adjust key if needed)
+            localStorage.removeItem('userToken'); // Example: Adjust if you use a different key
+            // Clear theme preference on logout as well?
+            localStorage.removeItem('theme');
+
+            // 2. Redirect to login - Forces a full page reload
+            // Add a small delay to allow the toast message to be seen briefly
+            setTimeout(() => {
+                if (!window.location.pathname.includes('/login')) { // Prevent redirect loop if already on login
+                    window.location.href = '/login';
+                }
+            }, 1500); // 1.5 second delay
+
+            // Prevent the error from propagating further in this case
+            return Promise.resolve({ data: null, __handledByInterceptor__: true });
+        }
+
+        // If it's not a 401, pass the error along to the component's catch block
+        return Promise.reject(error);
+    }
+);
 
 function App() {
     const [user, setUser] = useState(null);
