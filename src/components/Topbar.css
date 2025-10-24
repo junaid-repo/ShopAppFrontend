@@ -1,5 +1,14 @@
-
 /* src/components/Topbar.css */
+
+/* --- Centering Styles --- */
+/* This empty spacer balances the button container */
+.topbar-spacer {
+    /* Adjust this width to match your button container's width */
+    /* You may need to experiment (e.g., 200px, 250px) */
+    /* Let's try matching the padding/gap of the buttons */
+    flex-basis: 220px; /* Start with a value, adjust if needed */
+    flex-shrink: 0;
+}
 
 /* Container for the buttons */
 .topbar-buttons-container {
@@ -12,6 +21,9 @@
     background: var(--glass-card); /* Use your theme variable */
     backdrop-filter: blur(10px);
     border: 0px solid var(--border-color); /* Use your theme variable */
+    flex-shrink: 0; /* Prevent shrinking */
+    flex-basis: 220px; /* Match the spacer */
+    justify-content: flex-end; /* Align icons to the right within this container */
 }
 
 /* General style for icon wrappers */
@@ -24,7 +36,6 @@
     padding: 8px;
     background: var(--primary-color-light); /* Use your theme variable */
     transition: all 0.25s ease;
-    /* Removed inline transform, apply hover effects via CSS if preferred */
 }
 .topbar-icon-wrapper:hover {
     transform: translateY(-5px);
@@ -32,7 +43,106 @@
 }
 
 
-/* Notification Badge */
+/* --- Global Search Bar Styles (Updated) --- */
+.global-search-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex-grow: 1; /* Takes up the middle space */
+    max-width: 500px;
+    margin: 0 20px; /* Keeps space on the sides */
+}
+
+.global-search-input {
+    width: 100%;
+    padding: 10px 15px 10px 40px;
+    font-size: 1rem;
+
+    /* 2. Squarish Search Bar */
+    border-radius: 10px; /* Reduced */
+
+    /* 4. Visibility */
+    border: 1px solid var(--border-color); /* Make border visible */
+    background-color: var(--background-color); /* Solid background */
+    /* Add a subtle shadow to make it pop slightly */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+
+    color: var(--text-color);
+    transition: all 0.2s ease-in-out;
+}
+
+.global-search-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background-color: var(--background-color);
+    box-shadow: 0 0 8px var(--primary-color-light); /* Adjusted focus shadow */
+}
+
+.global-search-container .search-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-color-secondary);
+    font-size: 1.1rem;
+    pointer-events: none;
+}
+
+/* 3. Squarish Dropdown & Padding */
+.search-results-dropdown {
+    position: absolute;
+    top: 110%;
+    left: 0;
+    right: 0;
+    background: var(--glass-bg);
+    border: 1px solid var(--border-color);
+    border-bottom-left-radius: 25px; /* Reduced */
+    border-bottom-right-radius: 25px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    max-height: 400px;
+    overflow-y: auto;
+    z-index: 2000;
+    padding: 8px 0; /* Added top/bottom padding */
+}
+/* Individual result item */
+.search-result-item {
+    padding: 12px 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: space-between; /* <-- ADDED: Pushes content apart */
+}
+.search-result-item:not(:last-child) {
+    border-bottom: 1px solid var(--border-color-light);
+}
+
+.search-result-item:hover {
+    background-color: var(--primary-color-light, rgba(0, 0, 0, 0.05)); /* Use consistent hover */
+}
+
+/* Style for "Suresh" */
+.search-result-item strong {
+    font-weight: 600;
+    color: var(--text-color);
+    /* Prevent the strong tag from growing too much */
+    flex-grow: 1;
+    text-align: left; /* Keep the name left-aligned within its space */
+    margin-right: 10px; /* Add some space before the type */
+}
+
+/* Style for "(in Customer)" */
+.search-result-item .search-result-type {
+    font-size: 0.75rem;
+    color: #888; /* <-- UPDATED: Changed to a greyish color */
+    font-style: italic;
+    flex-shrink: 0; /* Prevent the type from shrinking */
+    text-align: right; /* Ensure it stays right-aligned */
+}
+/* --- End Global Search Bar Styles --- */
+
+
+/* --- Existing Notification Styles (Unchanged) --- */
 .notification-badge {
     position: absolute;
     top: 5px;
@@ -49,36 +159,35 @@
     font-weight: bold;
 }
 
-/* Notification Dropdown */
 .notification-dropdown {
     position: absolute;
-    top: 50px; /* Adjust as needed */
+    top: 50px;
     right: 0;
     min-width: 320px;
-    background: var(--modal-bg); /* Use theme variable */
-    border: 1px solid var(--border-color); /* Use theme variable */
+    background: var(--modal-bg);
+    border: 1px solid var(--border-color);
     border-radius: 18px;
     box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2), 0 8px 16px rgba(0, 0, 0, 0.15);
     z-index: 100;
     padding: 0.5rem 0;
-    animation: fadeInDropdown 0.2s ease-out; /* Add animation */
+    animation: fadeInDropdown 0.2s ease-out;
 }
 
 .notification-dropdown-header {
     padding: 0.5rem 1rem;
     font-weight: 600;
-    color: var(--primary-color); /* Use theme variable */
-    border-bottom: 1px solid var(--border-color); /* Lighter border */
+    color: var(--primary-color);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .notification-dropdown-empty {
     padding: 0.75rem 1rem;
-    color: var(--text-color); /* Use theme variable */
+    color: var(--text-color);
 }
 
 .notification-dropdown-item {
-    padding: 0.75rem 1rem; /* Increased padding */
-    border-bottom: 1px solid var(--border-color); /* Lighter border */
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-color);
     cursor: pointer;
     transition: background-color 0.15s ease;
 }
@@ -87,45 +196,44 @@
 }
 
 .notification-dropdown-item:hover {
-    background-color: var(--hover-bg-color); /* Add a theme variable for hover */
+    background-color: var(--hover-bg-color);
 }
 
 .notification-dropdown-item.unread {
-    background: var(--primary-color-light); /* Use theme variable */
+    background: var(--primary-color-light);
     font-weight: 600;
 }
 .notification-dropdown-item.unread:hover {
-    background-color: var(--primary-color-light); /* Slightly darker hover for unread */
+    background-color: var(--primary-color-light);
 }
 
 .notification-title {
     font-size: 1rem;
     font-weight: bold;
-    color: var(--text-color); /* Use theme variable */
+    color: var(--text-color);
 }
 
 .notification-subject {
     font-size: 0.9rem;
     opacity: 0.8;
-    color: var(--text-color); /* Use theme variable */
+    color: var(--text-color);
 }
 
 .notification-time {
     font-size: 0.8rem;
-    color: var(--text-color); /* Use theme variable */
+    color: var(--text-color);
     margin-top: 2px;
-    text-align: right; /* Align time to the right */
+    text-align: right;
 }
 
 .notification-dropdown-actions {
     display: flex;
     justify-content: flex-end;
     padding: 0.5rem 1rem;
-    border-top: 1px solid var(--border-color); /* Lighter border */
+    border-top: 1px solid var(--border-color);
 }
 
 .btn-clear-notif {
-    /* Style your clear button */
     font-size: 0.9rem;
     padding: 0.4rem 1rem;
     background: transparent;
@@ -139,7 +247,7 @@
 }
 
 
-/* User Profile Trigger */
+/* --- Existing User Profile Styles (Unchanged) --- */
 .user-profile-trigger {
     display: flex;
     align-items: center;
@@ -147,47 +255,42 @@
     cursor: pointer;
     padding: 6px 12px 6px 6px;
     border-radius: 999px; /* Pill shape */
-    background: var(--primary-color-light); /* Use theme variable */
-    border: 1px solid var(--border-color); /* Lighter border */
+    background: var(--primary-color-light);
+    border: 1px solid var(--border-color);
     transition: all 0.25s ease;
-    /* Removed inline transform */
 }
 .user-profile-trigger:hover {
-    transform: translateY(-5px); /* Apply hover effect */
+    transform: translateY(-5px);
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
-
 
 .user-profile-pic {
     width: 34px;
     height: 34px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid var(--primary-color); /* Add border */
+    border: 2px solid var(--primary-color);
 }
 
 .user-profile-name {
     font-weight: 600;
     font-size: 1rem;
-    color: var(--text-color); /* Use theme variable */
+    color: var(--text-color);
 }
 
-
-/* User Dropdown */
 .user-dropdown {
     position: absolute;
-    top: calc(100% + 5px); /* Position below the trigger */
+    top: calc(100% + 5px);
     right: 0;
     min-width: 220px;
-    /* --- Request 2: Background & Radius --- */
-    background: var(--body-bg); /* Match icon background */
-    border-radius: 25px; /* Increased radius */
+    background: var(--body-bg);
+    border-radius: 25px;
     border: 1px solid var(--border-color);
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
     z-index: 100;
     padding: 0.5rem 0;
     animation: fadeInDropdown 0.2s ease-out;
-    overflow: hidden; /* Needed for border-radius clipping */
+    overflow: hidden;
 }
 
 .user-dropdown-item {
@@ -199,14 +302,11 @@
     font-size: 1rem;
     color: var(--text-color);
     transition: background-color 0.15s ease;
-    /* Remove default borders between items if any */
     border-bottom: none;
 }
 
-/* --- Request 3: Consistent Hover Background --- */
 .user-dropdown-item:hover {
-    /* Use a slightly darker shade or a standard hover color */
-    background-color: var(--hover-bg-color, rgba(0, 0, 0, 0.05)); /* Default subtle grey */
+    background-color: var(--hover-bg-color, rgba(0, 0, 0, 0.05));
 }
 
 .user-dropdown-item svg {
@@ -222,10 +322,8 @@
     font-weight: 500;
 }
 .user-dropdown-item.logout:hover {
-    /* Keep specific logout hover if desired, or remove for full consistency */
     background-color: rgba(232, 10, 13, 0.1);
 }
-
 
 /* Redundant Logout Button Wrapper (if you keep it) */
 .logout-button-wrapper {
@@ -235,7 +333,6 @@
 .logout-button-wrapper:hover {
     background: rgba(232, 10, 13, 0.2);
 }
-
 
 /* Dropdown Animation */
 @keyframes fadeInDropdown {

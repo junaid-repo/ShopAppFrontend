@@ -510,15 +510,16 @@
                                         <th className="sortable-header" onClick={() => handleSort('gstNumber')}>
                                             GST Number {sortConfig.key === 'gstNumber' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
                                         </th>
-                                        <th className="sortable-header" onClick={() => handleSort('state')}>
+                                        {/*<th className="sortable-header" onClick={() => handleSort('state')}>
                                             State {sortConfig.key === 'state' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
-                                        </th>
+                                        </th>*/}
                                         <th className="sortable-header" onClick={() => handleSort('city')}>
                                             City {sortConfig.key === 'city' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
                                         </th>
                                         <th className="sortable-header" onClick={() => handleSort('totalSpent')}>
                                             Total Spent {sortConfig.key === 'totalSpent' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
                                         </th>
+                                        <th>Sales</th>
                                         {/* --- MODIFICATION 5: Add the new Created Date column --- */}
                                         <th className="sortable-header" onClick={() => handleSort('createdDate')}>
                                             Created Date {sortConfig.key === 'createdDate' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
@@ -533,16 +534,32 @@
                                             <tr
                                                 key={customer.id}
                                                 className={`${isSelected ? 'selected' : ''} ${deletingCustomerId === customer.id ? 'deleting' : ''}`}
-                                                onClick={() => isSelectMode ? handleSelectCustomer(customer.id) : handleTakeAction(customer.name)}
+                                                onClick={() => isSelectMode ? handleSelectCustomer(customer.id) : ''}
                                             >
-                                                {isSelectMode && <td><input type="checkbox" checked={isSelected} className="styled-checkbox" readOnly /></td>}
+                                                {isSelectMode && <td><input type="checkbox" checked={isSelected}
+                                                                            className="styled-checkbox" readOnly/></td>}
                                                 <td>{customer.name}</td>
                                                 <td>{customer.email}</td>
                                                 <td>{customer.phone}</td>
                                                 <td>{customer.gstNumber}</td>
-                                                <td>{customer.state}</td>
+                                                {/*<td>{customer.state}</td>*/}
                                                 <td>{customer.city}</td>
                                                 <td>₹{customer.totalSpent?.toLocaleString('en-IN')}</td>
+                                                <td>
+                                                    <div className="action-icons">
+                                <span
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleTakeAction(customer.name)
+                                    }}
+                                    className="action-icon edit"
+                                    title="View Sales"
+                                >
+                                    <i className="fa-duotone fa-solid fa-cart-shopping-fast"></i>
+                                </span>
+
+                                                    </div>
+                                                </td>
                                                 {/* --- MODIFICATION 6: Render the formatted createdDate --- */}
                                                 <td>{formatDate(customer.createdDate)}</td>
                                                 <td>
@@ -558,11 +575,14 @@
                                     <i className="fa-duotone fa-solid fa-pen-to-square"></i>
                                 </span>
                                                         <span
-                                                            onClick={(e) => { e.stopPropagation(); handleDeleteCustomer(customer.id, customer.name); }}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleDeleteCustomer(customer.id, customer.name);
+                                                            }}
                                                             className="action-icon delete"
                                                             title="Delete Customer"
                                                         >
-                                    <i class="fa-duotone fa-solid fa-trash"></i>
+                                    <i className="fa-duotone fa-solid fa-trash"></i>
                                 </span>
                                                     </div>
                                                 </td>
@@ -575,21 +595,19 @@
                         )
                     )}
                 </div>
-    
-                <Pagination />
-    
-    
-    
-    
+
+                <Pagination/>
+
+
                 <Modal title="Add New Customer" show={isModalOpen} onClose={() => setIsModalOpen(false)}>
                     <form onSubmit={handleAddCustomer}>
                         <div className="form-group">
                             <label>Full Name</label>
-                            <input type="text" required value={name} onChange={(e) => setName(e.target.value)} />
+                            <input type="text" required value={name} onChange={(e) => setName(e.target.value)}/>
                         </div>
                         <div className="form-group">
                             <label>Email</label>
-                            <input type="email"  value={email} onChange={(e) => setEmail(e.target.value)} />
+                            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}/>
                         </div>
                         <div className="form-group">
                             <label>Phone Number</label>

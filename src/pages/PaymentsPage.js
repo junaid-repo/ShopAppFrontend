@@ -619,9 +619,9 @@ const PaymentsPage = ({ setSelectedPage }) => {
                             const isUpdateHovered = hoveredButton === `${payment.id}-update`;
 
                             return (
-                                <tr key={payment.id} onClick={() => handleTakeAction(payment.saleId)}>
+                                <tr key={payment.id}>
                                     <td>{payment.id}</td>
-                                    <td>{payment.saleId}</td>
+                                    <td onClick={() => handleTakeAction(payment.saleId)}>{payment.saleId}</td>
                                     <td>{formatDate(payment.date)}</td>
                                     <td>{payment.method}</td>
                                     <td>₹{payment.amount.toLocaleString()}</td>
