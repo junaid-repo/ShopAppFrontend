@@ -53,6 +53,8 @@ const SettingsPage = () => {
         allowNoStockBilling: false,
         hideNoStockProducts: false,
         serialNumberPattern: '',
+        showPartialPaymentOption: true,
+        showRemarksOnSummarySide: true,
     });
     const [originalBillingSettings, setOriginalBillingSettings] = useState({});
     const isBillingDirty = JSON.stringify(billingSettings) !== JSON.stringify(originalBillingSettings);
@@ -64,6 +66,12 @@ const SettingsPage = () => {
         showPaymentStatus: false,
         removeTerms: false,
         showCustomerGstin: false,
+        showTotalDiscountPercentage: false,
+        showIndividualDiscountPercentage:false,
+        showShopPanOnInvoice:true,
+        showSupportInfoOnInvoice:true,
+        showRateColumn:true,
+        showHsnColumn:true,
     });
     const [originalInvoiceSettings, setOriginalInvoiceSettings] = useState({});
     const isInvoiceDirty = JSON.stringify(invoiceSettings) !== JSON.stringify(originalInvoiceSettings);
@@ -259,7 +267,7 @@ const SettingsPage = () => {
     // --- Main Render ---
     return (<div className="settings-page">
         <Toaster position="top-center" toastOptions={{
-            duration: 1000,
+            duration: 2000,
             style: {
                 background: 'lightgreen',
                 color: 'var(--text-color)',
@@ -280,37 +288,38 @@ const SettingsPage = () => {
                     className={`tab-btn ${activeTab === 'templates' ? 'active' : ''}`}
                     onClick={() => setActiveTab('templates')}
                 >
-                    <Invoice weight="duotone" /> Templates {/* New Icon */}
-                </button>
-                <button
-                    className={`tab-btn ${activeTab === 'ui' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('ui')}
-                >
-                    <PaintBrush weight="duotone" /> UI
-                </button>
-                <button
-                    className={`tab-btn ${activeTab === 'billing' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('billing')}
-                >
-                    <ShoppingCart weight="duotone" /> Billing
+                    <i className="fa-duotone fa-solid fa-ballot-check"></i>Templates {/* New Icon */}
                 </button>
                 <button
                     className={`tab-btn ${activeTab === 'invoice' ? 'active' : ''}`}
                     onClick={() => setActiveTab('invoice')}
                 >
-                    <Receipt weight="duotone" /> Invoice
+                    <i className="fa-duotone fa-solid fa-file-invoice"></i> Invoice
                 </button>
+                <button
+                    className={`tab-btn ${activeTab === 'ui' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('ui')}
+                >
+                    <i className="fa-duotone fa-solid fa-paint-roller"></i> UI
+                </button>
+                <button
+                    className={`tab-btn ${activeTab === 'billing' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('billing')}
+                >
+                    <i className="fa-duotone fa-solid fa-calculator"></i> Billing
+                </button>
+
                 <button
                     className={`tab-btn ${activeTab === 'schedulers' ? 'active' : ''}`}
                     onClick={() => setActiveTab('schedulers')}
                 >
-                    <Timer weight="duotone" /> Schedulers
+                    <i className="fa-duotone fa-solid fa-stopwatch"></i> Schedulers
                 </button>
                 <button
                     className={`tab-btn ${activeTab === 'account' ? 'active' : ''}`}
                     onClick={() => setActiveTab('account')}
                 >
-                    <User weight="duotone" /> Account
+                    <i className="fa-duotone fa-solid fa-user-tie"></i> Account
                 </button>
             </div>
 
@@ -428,7 +437,25 @@ const SettingsPage = () => {
                                     checked={billingSettings.hideNoStockProducts}
                                     onChange={(e) => setBillingSettings({ ...billingSettings, hideNoStockProducts: e.target.checked })}
                                 />
-                                <label>Hide out of stock products from product list when Billing</label>
+                                <label>Hide out of stock products from product list</label>
+                            </div>
+                        </div>
+                        <div className="setting-item">
+                            <div className="setting-toggle">
+                                <ToggleSwitch
+                                    checked={billingSettings.showPartialPaymentOption}
+                                    onChange={(e) => setBillingSettings({ ...billingSettings, showPartialPaymentOption: e.target.checked })}
+                                />
+                                <label>Show Partial Payment Option on Billing Page</label>
+                            </div>
+                        </div>
+                        <div className="setting-item">
+                            <div className="setting-toggle">
+                                <ToggleSwitch
+                                    checked={billingSettings.showRemarksOnSummarySide}
+                                    onChange={(e) => setBillingSettings({ ...billingSettings, showRemarksOnSummarySide: e.target.checked })}
+                                />
+                                <label>Show remarks option on Summary Side</label>
                             </div>
                         </div>
                         <div className="setting-item">
@@ -452,61 +479,129 @@ const SettingsPage = () => {
                 )}
 
                 {/* ====== INVOICE TAB PANE ====== */}
-                {activeTab === 'invoice' && (
-                    <div className="tab-pane">
-                        {/* ... Invoice settings content ... */}
-                        <div className="setting-item">
-                            <div className="setting-toggle">
-                                <ToggleSwitch
-                                    checked={invoiceSettings.addDueDate}
-                                    onChange={(e) => setInvoiceSettings({ ...invoiceSettings, addDueDate: e.target.checked })}
-                                />
-                                <label>Add Due Date option on invoice</label>
-                            </div>
+                {activeTab === 'invoice' && (<div className="tab-pane">
+
+                    {/* Header Section */}
+                    <h5 className="setting-section-header">Header</h5>
+                    <div className="setting-item">
+                        <div className="setting-toggle">
+                            <ToggleSwitch
+                                checked={invoiceSettings.showShopPanOnInvoice}
+                                onChange={(e) => setInvoiceSettings({ ...invoiceSettings, showShopPanOnInvoice: e.target.checked })}
+                            />
+                            <label>Show Shop Pan</label>
                         </div>
-                        <div className="setting-item">
-                            <div className="setting-toggle">
-                                <ToggleSwitch
-                                    checked={invoiceSettings.combineAddresses}
-                                    onChange={(e) => setInvoiceSettings({ ...invoiceSettings, combineAddresses: e.target.checked })}
-                                />
-                                <label>Combine Ship To and Bill To as 'Bill To'</label>
-                            </div>
-                        </div>
-                        <div className="setting-item">
-                            <div className="setting-toggle">
-                                <ToggleSwitch
-                                    checked={invoiceSettings.showPaymentStatus}
-                                    onChange={(e) => setInvoiceSettings({ ...invoiceSettings, showPaymentStatus: e.target.checked })}
-                                />
-                                <label>Add Payment Received and Payment Due in the Invoice</label>
-                            </div>
-                        </div>
-                        <div className="setting-item">
-                            <div className="setting-toggle">
-                                <ToggleSwitch
-                                    checked={invoiceSettings.removeTerms}
-                                    onChange={(e) => setInvoiceSettings({ ...invoiceSettings, removeTerms: e.target.checked })}
-                                />
-                                <label>Remove Terms and Conditions from the invoice</label>
-                            </div>
-                        </div>
-                        <div className="setting-item">
-                            <div className="setting-toggle">
-                                <ToggleSwitch
-                                    checked={invoiceSettings.showCustomerGstin}
-                                    onChange={(e) => setInvoiceSettings({ ...invoiceSettings, showCustomerGstin: e.target.checked })}
-                                />
-                                <label>Show Customer GSTIN on invoice</label>
-                            </div>
-                        </div>
-                        {isInvoiceDirty && (
-                            <div className="save-button-container">
-                                <button className="btn" onClick={handleSaveInvoiceSettings}>Save Invoice Settings</button>
-                            </div>
-                        )}
                     </div>
-                )}
+
+                    {/* Customer Details Section */}
+                    <h5 className="setting-section-header">Customer Details</h5>
+                    <div className="setting-item">
+                        <div className="setting-toggle">
+                            <ToggleSwitch
+                                checked={invoiceSettings.combineAddresses}
+                                onChange={(e) => setInvoiceSettings({ ...invoiceSettings, combineAddresses: e.target.checked })}
+                            />
+                            <label>Combine Ship To and Bill To as 'Bill To'</label>
+                        </div>
+                    </div>
+                    <div className="setting-item">
+                        <div className="setting-toggle">
+                            <ToggleSwitch
+                                checked={invoiceSettings.showCustomerGstin}
+                                onChange={(e) => setInvoiceSettings({ ...invoiceSettings, showCustomerGstin: e.target.checked })}
+                            />
+                            <label>Show Customer GSTIN on invoice</label>
+                        </div>
+                    </div>
+
+                    {/* Items List Section */}
+                    <h5 className="setting-section-header">Items List</h5>
+                    <div className="setting-item">
+                        <div className="setting-toggle">
+                            <ToggleSwitch
+                                checked={invoiceSettings.showIndividualDiscountPercentage}
+                                onChange={(e) => setInvoiceSettings({ ...invoiceSettings, showIndividualDiscountPercentage: e.target.checked })}
+                            />
+                            <label>Show Items discount</label>
+                        </div>
+                    </div>
+                    <div className="setting-item">
+                        <div className="setting-toggle">
+                            <ToggleSwitch
+                                checked={invoiceSettings.showHsnColumn}
+                                onChange={(e) => setInvoiceSettings({ ...invoiceSettings, showHsnColumn: e.target.checked })}
+                            />
+                            <label>Show Hsn Column</label>
+                        </div>
+                    </div>
+                    <div className="setting-item">
+                        <div className="setting-toggle">
+                            <ToggleSwitch
+                                checked={invoiceSettings.showRateColumn}
+                                onChange={(e) => setInvoiceSettings({ ...invoiceSettings, showRateColumn: e.target.checked })}
+                            />
+                            <label>Show Rate Column</label>
+                        </div>
+                    </div>
+
+                    {/* Total Summary Section */}
+                    <h5 className="setting-section-header">Total Summary</h5>
+                    <div className="setting-item">
+                        <div className="setting-toggle">
+                            <ToggleSwitch
+                                checked={invoiceSettings.showTotalDiscountPercentage}
+                                onChange={(e) => setInvoiceSettings({ ...invoiceSettings, showTotalDiscountPercentage: e.target.checked })}
+                            />
+                            <label>Show Total discount</label>
+                        </div>
+                    </div>
+                    <div className="setting-item">
+                        <div className="setting-toggle">
+                            <ToggleSwitch
+                                checked={invoiceSettings.showPaymentStatus}
+                                onChange={(e) => setInvoiceSettings({ ...invoiceSettings, showPaymentStatus: e.target.checked })}
+                            />
+                            <label>Add Payment Received and Payment Due in the Invoice</label>
+                        </div>
+                    </div>
+                    <div className="setting-item">
+                        <div className="setting-toggle">
+                            <ToggleSwitch
+                                checked={invoiceSettings.addDueDate}
+                                onChange={(e) => setInvoiceSettings({ ...invoiceSettings, addDueDate: e.target.checked })}
+                            />
+                            <label>Add Due Date option on invoice</label>
+                        </div>
+                    </div>
+
+                    {/* Footer Section */}
+                    <h5 className="setting-section-header">Footer</h5>
+                    <div className="setting-item">
+                        <div className="setting-toggle">
+                            <ToggleSwitch
+                                checked={invoiceSettings.removeTerms}
+                                onChange={(e) => setInvoiceSettings({ ...invoiceSettings, removeTerms: e.target.checked })}
+                            />
+                            <label>Remove Terms and Conditions from the invoice</label>
+                        </div>
+                    </div>
+                    <div className="setting-item">
+                        <div className="setting-toggle">
+                            <ToggleSwitch
+                                checked={invoiceSettings.showSupportInfoOnInvoice}
+                                onChange={(e) => setInvoiceSettings({ ...invoiceSettings, showSupportInfoOnInvoice: e.target.checked })}
+                            />
+                            <label>Show Support Info</label>
+                        </div>
+                    </div>
+
+                    {/* Save Button */}
+                    {isInvoiceDirty && (
+                        <div className="save-button-container">
+                            <button className="btn" onClick={handleSaveInvoiceSettings}>Save Invoice Settings</button>
+                        </div>
+                    )}
+                </div>)}
 
                 {/* ====== SCHEDULERS TAB PANE ====== */}
                 {activeTab === 'schedulers' && (

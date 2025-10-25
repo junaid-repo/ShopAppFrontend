@@ -4,18 +4,19 @@
     max-width: 800px;
     margin: 0 auto;
     padding: 1.5rem 2rem;
+
 }
 
 /* --- NEW: Tab Navigation --- */
 .settings-tab-nav {
     display: flex;
     /* This border separates the tabs from the content */
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 0px solid var(--border-color);
     margin-bottom: 0; /* Removed margin */
 }
 
 .settings-tab-nav button {
-    padding: 10px 20px;
+    padding: 10px 35px;
     border: 0px solid transparent;
     /* --- Request 3: Unselected tab color --- */
     background: var(--primary-color-light); /* Greyish background */
@@ -27,12 +28,12 @@
     font-weight: 500;
     color: var(--text-color-secondary);
     display: flex;
-    align-items: center;
+    align-items: start;
     gap: 8px;
     border-radius: 8px 8px 0 0;
     transition: all 0.2s ease-in-out;
     /* --- Request 4: Add bottom border to unselected tabs --- */
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 0px solid var(--border-color);
 }
 
 .settings-tab-nav button:hover {
@@ -46,7 +47,8 @@
     color: var(--primary-color);
     background: var(--glass-bg);
     font-weight: 600;
-    border: 1px solid var(--border-color);
+    border: 3px solid var(--border-color);
+    border-bottom: 0px solid transparent;
     /* --- Request 4: Remove bottom border to blend --- */
 
     border-top-color: var(--border-color);
@@ -60,7 +62,7 @@
     /* --- Request 3: Content pane color (matches active tab) --- */
     background: var(--glass-bg);
     /* --- Request 4: Remove top border to blend --- */
-    border: 2px solid var(--border-color);
+    border: 3px solid var(--border-color);
     border-radius: 0 0 12px 12px; /* Rounded bottom corners */
     border-top: none;
     padding: 1rem; /* Add some internal padding */
@@ -256,3 +258,30 @@ input:checked + .slider:before {
     background: var(--primary-color-light);
     color: var(--text-color);
 }
+
+
+
+
+
+
+.setting-section-header {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #555;
+
+    letter-spacing: 0.5px;
+    margin-top: 1.75rem;
+margin-bottom: 0.75rem;
+padding: 8px 12px;
+border-radius: 5px;
+
+text-align: right;
+
+background: linear-gradient(to left, #f5f5f5, #ffffff);
+border-bottom: 1px solid #eee;
+}
+
+
+   .tab-pane > .setting-section-header:first-child {
+       margin-top: 0;
+   }

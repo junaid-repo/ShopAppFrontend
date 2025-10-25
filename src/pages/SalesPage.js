@@ -379,6 +379,8 @@ const SalesPage = () => {
             showAlert("Order Reference number is not available.", "error");
             return;
         }
+        if (!window.confirm("Send the invoice to customer via email?")) return;
+
 
 
         try {
@@ -478,7 +480,7 @@ const SalesPage = () => {
     return (
         <div className="page-container">
             <Toaster position="top-center" toastOptions={{
-                duration: 1000,
+                duration: 2000,
                 style: {
                     background: 'lightgreen',
                     color: 'var(--text-color)',

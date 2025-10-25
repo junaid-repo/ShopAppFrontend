@@ -63,6 +63,8 @@ const BillingPage = ({ setSelectedPage }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isPrinting, setIsPrinting] = useState(false);
     const [isSendingEmail, setIsSendingEmail] = useState(false); // <-- ADD THIS
+    const [showPartialBilling, setShowPartialBilling] = useState(false);
+    const [showRemarks, setShowRemarks] = useState(false);
 
     const statesList = getIndianStates();
     const config = useConfig();
@@ -399,6 +401,14 @@ const BillingPage = ({ setSelectedPage }) => {
             lastSearchedTerm.current = null; // Reset if search is cleared
         }
     }, [debouncedSearchTerm, fetchProductsFromAPI, loadProducts])
+
+    useEffect(() => {
+        const partialBillingSetting = localStorage.getItem('doParitalBilling') === 'true';
+        const remarksSetting = localStorage.getItem('showRemarksOptions') === 'true';
+
+        setShowPartialBilling(partialBillingSetting);
+        setShowRemarks(remarksSetting);
+    }, []); // Empty dependency array ensures this runs only once on mount
 
     // --- Event Handlers ---
 
@@ -916,59 +926,66 @@ const BillingPage = ({ setSelectedPage }) => {
                         {/* --- MODIFICATION 1: Add Paying and Remaining Fields --- */}
                         {/* I've changed the className from "form-group" to "payment-input-group"
     to avoid conflicts. I also corrected alignItems and adjusted the input width. */}
-                        <div className="payment-input-group" style={{
-                            display: 'flex',
-                            alignItems: 'center', // <-- Corrected from 'left'
-                            justifyContent: 'space-between',
-                            margin: '1rem 0 0.5rem 0',
-                            gap: '10px' // <-- Added a bit more gap
-                        }}>
-                            <label style={{ fontWeight: 500, color: 'var(--primary-color)', whiteSpace: 'nowrap' }}>
-                                Paying:
-                            </label>
-                            <input
-                                type="number"
-                                value={payingAmount}
-                                onChange={(e) => setPayingAmount(parseFloat(e.target.value) || 0)}
-                                style={{
-                                    width: '40%', // <-- This will fill the remaining space
-                                    padding: '10px',
-                                    borderRadius: '15px', // <-- Matched your other inputs
-                                    border: '3px solid var(--border-color)',
-                                    background: 'var(--input-bg)',
-                                    color: 'var(--text-color)',
-                                    fontSize: '1rem',
-                                    textAlign: 'right'
-                                }}
-                            />
-                        </div>
-                        <h5 className="remaining-total" style={{ margin: '0 0 1rem 0', textAlign: 'right', color: 'var(--primary-color)' }}>
-                            Due: <span>₹{remainingAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                        </h5>
+                        {showPartialBilling && (
+                            <>
+                                <div className="payment-input-group" style={{
+                                    display: 'flex',
+                                    alignItems: 'center', // <-- Corrected from 'left'
+                                    justifyContent: 'space-between',
+                                    margin: '1rem 0 0.5rem 0',
+                                    gap: '10px' // <-- Added a bit more gap
+                                }}>
+                                    <label style={{ fontWeight: 500, color: 'var(--primary-color)', whiteSpace: 'nowrap' }}>
+                                        Paying:
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={payingAmount}
+                                        onChange={(e) => setPayingAmount(parseFloat(e.target.value) || 0)}
+                                        style={{
+                                            width: '40%', // <-- This will fill the remaining space
+                                            padding: '10px',
+                                            borderRadius: '15px', // <-- Matched your other inputs
+                                            border: '3px solid var(--border-color)',
+                                            background: 'var(--input-bg)',
+                                            color: 'var(--text-color)',
+                                            fontSize: '1rem',
+                                            textAlign: 'right'
+                                        }}
+                                    />
+                                </div>
+                                <h5 className="remaining-total" style={{ margin: '0 0 1rem 0', textAlign: 'right', color: 'var(--primary-color)' }}>
+                                    Due: <span>₹{remainingAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                </h5>
+                            </>
+                        )}
+
                         {/* --- End of MODIFICATION 1 --- */}
 
 
-                        <div className="remarks-section" style={{ margin: '1rem 0' }}>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: 'var(--primary-color)' }}>
-                                Remarks:
-                            </label>
-                            <textarea
-                                value={remarks}
-                                onChange={(e) => setRemarks(e.target.value)}
-                                placeholder="Enter any remarks for this bill..."
-                                style={{
-                                    width: '100%',
-                                    minHeight: '60px',
-                                    padding: '10px',
-                                    borderRadius: '15px',
-                                    border: '1px solid var(--border-color)',
-                                    background: 'var(--glass-bg)',
-                                    resize: 'vertical',
-                                    fontSize: '1rem',
-                                    color: 'var(--text-color)'
-                                }}
-                            />
-                        </div>
+                        {showRemarks && (
+                            <div className="remarks-section" style={{ margin: '1rem 0' }}>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: 'var(--primary-color)' }}>
+                                    Remarks:
+                                </label>
+                                <textarea
+                                    value={remarks}
+                                    onChange={(e) => setRemarks(e.target.value)}
+                                    placeholder="Enter any remarks for this bill..."
+                                    style={{
+                                        width: '100%',
+                                        minHeight: '60px',
+                                        padding: '10px',
+                                        borderRadius: '15px',
+                                        border: '1px solid var(--border-color)',
+                                        background: 'var(--glass-bg)',
+                                        resize: 'vertical',
+                                        fontSize: '1rem',
+                                        color: 'var(--text-color)'
+                                    }}
+                                />
+                            </div>
+                        )}
 
                         <div className="payment-methods" style={{ marginTop: '1rem' }}>
                             <h5 style={{ marginBottom: '0.5rem', color: 'var(--primary-color)' }}>Payment Method:</h5>

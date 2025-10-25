@@ -607,7 +607,7 @@ const ProductsPage = () => {
     return (
         <div className="page-container">
             <Toaster position="top-center" toastOptions={{
-                duration: 1000,
+                duration: 2000,
                 style: {
                     background: 'lightgreen',
                     color: 'var(--text-color)',

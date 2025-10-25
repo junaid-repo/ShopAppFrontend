@@ -147,6 +147,8 @@ function App() {
                         // 3. Save auto-print setting to local storage for the billing page
                         localStorage.setItem('autoPrintInvoice', settingsData.ui.autoPrintInvoice);
                         localStorage.setItem('autoSendInvoice', settingsData.billing.autoSendInvoice);
+                        localStorage.setItem('doParitalBilling', settingsData.billing.showPartialPaymentOption);
+                        localStorage.setItem('showRemarksOptions', settingsData.billing.showRemarksOnSummarySide);
 
                     } else {
                         console.warn("Could not fetch user UI settings. Using defaults.");
