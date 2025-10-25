@@ -621,7 +621,7 @@ const PaymentsPage = ({ setSelectedPage }) => {
                             return (
                                 <tr key={payment.id}>
                                     <td>{payment.id}</td>
-                                    <td onClick={() => handleTakeAction(payment.saleId)}>{payment.saleId}</td>
+                                    <td onClick={() => handleTakeAction(payment.saleId)}   style={{cursor:"pointer", color:"darkgreen"}}>{payment.saleId}</td>
                                     <td>{formatDate(payment.date)}</td>
                                     <td>{payment.method}</td>
                                     <td>₹{payment.amount.toLocaleString()}</td>

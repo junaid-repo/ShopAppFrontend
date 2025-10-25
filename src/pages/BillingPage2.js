@@ -711,13 +711,14 @@ const BillingPage = ({ setSelectedPage }) => {
                             <div className="customer-actions" style={{ display: 'flex', gap: '10px' }}>
                                 <button className="btn" onClick={() => setIsModalOpen(true)}><i
                                     className="fa-duotone fa-solid fa-user-magnifying-glass" style={{paddingRight:"5px"}}></i>
-                                    {selectedCustomer ? `Change Customer` : 'Select Customer'}
+                                    {selectedCustomer ? `Change Customer` : 'Search Customer'}
                                 </button>
                                 <button className="btn" onClick={() => setIsNewCusModalOpen(true)}>
                                     <i className="fa-duotone fa-solid fa-user-plus"></i> Create Customer
                                 </button>
                                 {cart.length > 0 && (
-                                    <button className="btn btn-danger" onClick={handleNewBilling}>
+                                    <button className="btn btn-danger" onClick={handleNewBilling}><i
+                                        className="fa-duotone fa-solid fa-file-invoice" style={{paddingRight:"5px"}}></i>
                                         New Bill
                                     </button>
                                 )}
@@ -973,9 +974,10 @@ const BillingPage = ({ setSelectedPage }) => {
                             <h5 style={{ marginBottom: '0.5rem', color: 'var(--primary-color)' }}>Payment Method:</h5>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                 {[
-                                    { type: 'CASH', color: '#00aaff', icon: '💵', key: 'cash' },
-                                    { type: 'CARD', color: '#0077cc', icon: '💳', key: 'card' },
-                                    { type: 'UPI', color: '#3399ff', icon: '📱', key: 'upi' }
+                                    // 1. Updated the array to use Font Awesome icon classes
+                                    { type: 'CASH', icon: 'fa-duotone fa-money-bills', key: 'cash' },
+                                    { type: 'CARD', icon: 'fa-duotone fa-solid fa-credit-card', key: 'card' },
+                                    { type: 'UPI', icon: 'fa-duotone fa-solid  fa-qrcode', key: 'upi' }
                                 ].map(method => {
                                     const enabled = availableMethods?.[method.key];
 
@@ -986,8 +988,8 @@ const BillingPage = ({ setSelectedPage }) => {
                                             style={{
                                                 display: 'inline-flex',
                                                 alignItems: 'center',
-                                                justifyContent: 'flex-start', // Align items to the start
-                                                gap: '8px',
+                                                justifyContent: 'flex-start',
+                                                gap: '10px', // Adjusted gap slightly for the new layout
                                                 width: '370px',
                                                 padding: '0.45rem 0.75rem',
                                                 borderRadius: '20px',
@@ -1011,21 +1013,20 @@ const BillingPage = ({ setSelectedPage }) => {
                                                 opacity: enabled ? 1 : 0.6
                                             }}
                                         >
-                    <span
-                        style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            width: '20px',
-                            height: '20px',
-                            borderRadius: '50%',
-                            backgroundColor: method.color,
-                            color: 'white',
-                            fontSize: '0.85rem'
-                        }}
-                    >
-                                  {method.icon}
-                                </span>
+                                            {/* 2. Replaced the <span> with an <i> tag */}
+                                            <i
+                                                className={`fa-fw ${method.icon}`} // fa-fw ensures icons are fixed-width for alignment
+                                                style={{
+                                                    fontSize: '1.2rem', // Adjust icon size as needed
+                                                    // 3. Dynamic color styling for the icon
+                                                    color: enabled
+                                                        ? paymentMethod === method.type
+                                                            ? 'var(--primary-color)' // Selected color
+                                                            : 'var(--text-color)'   // Default enabled color
+                                                        : '#888', // Disabled color
+                                                }}
+                                            />
+
                                             <input
                                                 type="radio"
                                                 value={method.type}
@@ -1034,7 +1035,9 @@ const BillingPage = ({ setSelectedPage }) => {
                                                 disabled={!enabled}
                                                 style={{ accentColor: 'var(--primary-color)' }}
                                             />
-                                            <span style={{ marginLeft: '4px' }}>{method.type}</span>
+
+                                            {/* Removed the extra margin from this span, as the parent 'gap' handles it */}
+                                            <span>{method.type}</span>
                                         </label>
                                     );
                                 })}

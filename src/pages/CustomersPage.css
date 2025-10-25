@@ -153,7 +153,7 @@
 /* ✅ NEW: Added a hover effect for table rows that are not selected */
 .data-table tbody tr:not(.selected):hover {
     background-color: var(--primary-color-light); /* Uses your theme's glass color for a subtle highlight */
-    cursor: pointer;
+
 
 }
 
