@@ -8,6 +8,7 @@ import { getIndianStates } from "../utils/statesUtil";
 import { useAlert } from '../context/AlertContext';
 import toast, {Toaster} from 'react-hot-toast';
 import useHotkeys from '../hooks/useHotkeys'; // Adjust the path if needed
+import { FaChevronDown, FaTimes } from 'react-icons/fa'; // Import new icons
 
 // A simple debounce hook to prevent API calls on every keystroke
 const useDebounce = (value, delay) => {
@@ -79,6 +80,7 @@ const BillingPage = ({ setSelectedPage }) => {
     const debouncedCustomerSearchTerm = useDebounce(customerSearchTerm, 500);
     const [customerSearchResults, setCustomerSearchResults] = useState([]);
     const [isCustomerLoading, setIsCustomerLoading] = useState(false);
+    const [isShortcutListVisible, setIsShortcutListVisible] = useState(false); // <-- ADD THIS
 
     // --- NEW: Refs for Hotkeys ---
     const productSearchInputRef = useRef(null);
@@ -100,6 +102,21 @@ const BillingPage = ({ setSelectedPage }) => {
     const handleClosePreviewModal = useCallback(() => {
         setIsPreviewModalOpen(false);
     }, []); // Empty array means this function is created once
+
+    const shortcuts = [
+        { keys: ['F2'], description: 'Focus Product Search' },
+        { keys: ['Esc'], description: 'Close Product Search / Modals' },
+        { keys: ['Alt', 'E'], description: 'Open Search Customer Modal' },
+        { keys: ['Shift', 'Alt', 'E'], description: 'Open New Customer Modal' }, // Updated based on your code
+        { keys: ['Ctrl', 'Alt', 'N'], description: 'Start New Bill' },
+        { keys: ['Ctrl', 'Alt', 'D'], description: 'Focus First Discount Input' },
+        { keys: ['Alt', 'P'], description: 'Focus Paying Input' }, // Updated based on your code
+        { keys: ['Alt', 'M'], description: 'Focus Payment Methods' }, // Updated based on your code
+        { keys: ['Ctrl', 'Alt', 'P'], description: 'Open Preview Modal' },
+        { keys: ['Alt', 'Enter'], description: 'Process Payment' },
+        { keys: ['↑', '↓'], description: 'Navigate Search Lists' },
+        { keys: ['Enter'], description: 'Select Item in Search List' },
+    ];
 
     // --- Calculations ---
     const actualSubtotal = cart.reduce((total, item) => total + (item.listPrice || item.price) * item.quantity, 0);
@@ -809,6 +826,65 @@ const BillingPage = ({ setSelectedPage }) => {
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h2>Billing</h2>
+                <div style={{ position: 'absolute' }}> {/* Container for positioning */}
+                    <button
+                        onClick={() => setIsShortcutListVisible(!isShortcutListVisible)}
+                        style={{
+                            background: 'none',
+                            border: 'none',
+                            color: 'var(--text-color)',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            marginLeft: '10rem',
+                            alignItems: 'center',
+                            gap: '5px',
+                            fontStyle: 'italic',
+                            fontSize: '0.9rem',
+                            opacity: 0.8,
+                        }}
+                    >
+                        shortcut keys
+                        {isShortcutListVisible ? <FaTimes size={12} /> : <FaChevronDown size={12} />}
+                    </button>
+
+                    {/* --- NEW: Shortcut List Dropdown --- */}
+                    {isShortcutListVisible && (
+                        <div style={{
+                            position: 'absolute',
+                            top: '100%', // Position below the button
+                            left: 0,
+                            background: 'var(--modal-bg)', // Use modal background
+                            border: '1px solid var(--border-color)',
+                            borderRadius: '8px',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                            zIndex: 1100, // Ensure it's above other elements
+                            padding: '10px',
+                            minWidth: '250px', // Adjust width as needed
+                        }}>
+                            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                                {shortcuts.map((shortcut, index) => (
+                                    <li key={index} style={{
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        fontSize: '0.85rem',
+                                        padding: '6px 0',
+                                        borderBottom: index < shortcuts.length - 1 ? '1px dashed var(--border-color)' : 'none'
+                                    }}>
+                                        <span>{shortcut.description}</span>
+                                        <span style={{ display: 'flex', gap: '4px' }}>
+                                                {shortcut.keys.map(key => (
+                                                    <kbd key={key} className="shortcut-key"> {/* Use kbd tag and class */}
+                                                        {key}
+                                                    </kbd>
+                                                ))}
+                                            </span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+                </div>
             </div>
 
             <div className="billing-layout-new" style={{ display: 'flex', gap: '20px' }}>
@@ -825,7 +901,7 @@ const BillingPage = ({ setSelectedPage }) => {
                                     {selectedCustomer ? `Change Customer` : 'Search Customer'}
                                 </button>
                                 {/* --- UPDATED: Hint for shortcut --- */}
-                                <button className="btn" onClick={() => setIsNewCusModalOpen(true)} title="Alt + N">
+                                <button className="btn" onClick={() => setIsNewCusModalOpen(true)} title="Shift + Alt + E">
                                     <i className="fa-duotone fa-solid fa-user-plus"></i> Create Customer
                                 </button>
                                 {cart.length > 0 && (
