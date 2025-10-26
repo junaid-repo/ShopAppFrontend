@@ -5,6 +5,7 @@ import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 import Footer from "./Footer";
 import './MainLayout.css'; // <-- 1. Import the new CSS file
+import useHotkeys from '../hooks/useHotkeys';
 
 const MainLayout = ({ children, onLogout, toggleTheme, theme, selectedPage, setSelectedPage, pages, isAdmin }) => {
     const navigate = useNavigate();
@@ -26,6 +27,20 @@ const MainLayout = ({ children, onLogout, toggleTheme, theme, selectedPage, setS
             return next;
         });
     };
+
+    useHotkeys('d', () => setSelectedPage('dashboard'), { altKey: true });
+
+    // Alt + B -> Billing
+    useHotkeys('b', () => setSelectedPage('billing2'), { altKey: true });
+
+    // Alt + P -> Products
+    useHotkeys('i', () => setSelectedPage('products'), { altKey: true });
+
+    // Alt + C -> Customers
+    useHotkeys('c', () => setSelectedPage('customers'), { altKey: true });
+
+    // Alt + S -> Sales
+    useHotkeys('s', () => setSelectedPage('sales'), { altKey: true });
 
     // if storage changed elsewhere, keep it in sync
     useEffect(() => {

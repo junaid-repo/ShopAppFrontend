@@ -1,5 +1,5 @@
 // src/context/AlertContext.js
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 
 // 1. Create the context
 const AlertContext = createContext();
@@ -19,6 +19,26 @@ export const AlertProvider = ({ children }) => {
     const hideAlert = useCallback(() => {
         setAlert(null);
     }, []);
+
+    // --- ADD THIS useEffect HOOK ---
+    useEffect(() => {
+        // Function to handle the keydown event
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') {
+                hideAlert();
+            }
+        };
+
+        // Only add the event listener if the alert is visible
+        if (alert) {
+            document.addEventListener('keydown', handleKeyDown);
+        }
+
+        // Cleanup function: This runs when the alert state changes or the component unmounts
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [alert, hideAlert]); // Re-run this effect when 'alert' or 'hideAlert' changes
 
     const value = { alert, showAlert, hideAlert };
 

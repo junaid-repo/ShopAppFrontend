@@ -7,6 +7,7 @@ import { useConfig } from "./ConfigProvider";
 import { getIndianStates } from "../utils/statesUtil";
 import { useAlert } from '../context/AlertContext';
 import toast, {Toaster} from 'react-hot-toast';
+import useHotkeys from '../hooks/useHotkeys'; // Adjust the path if needed
 
 // A simple debounce hook to prevent API calls on every keystroke
 const useDebounce = (value, delay) => {
@@ -57,16 +58,16 @@ const BillingPage = ({ setSelectedPage }) => {
     const [gstNumber, setGstNumber] = useState("");
     const [customerState, setCustomerState] = useState("");
     const [shopState, setShopState] = useState("");
-    const [isSearchFocused, setIsSearchFocused] = useState(false); // NEW: Controls search results visibility
-    const searchContainerRef = useRef(null); // NEW: Ref for the search container
+    const [isSearchFocused, setIsSearchFocused] = useState(false);
+    const searchContainerRef = useRef(null);
     const lastSearchedTerm = useRef(null);
     // --- State for Product Search ---
     const [productSearchTerm, setProductSearchTerm] = useState("");
-    const debouncedSearchTerm = useDebounce(productSearchTerm, 300); // Debounce search input
+    const debouncedSearchTerm = useDebounce(productSearchTerm, 300);
     // State for Customer Search Modal
     const [searchTerm, setSearchTerm] = useState('');
     const [isPrinting, setIsPrinting] = useState(false);
-    const [isSendingEmail, setIsSendingEmail] = useState(false); // <-- ADD THIS
+    const [isSendingEmail, setIsSendingEmail] = useState(false);
     const [showPartialBilling, setShowPartialBilling] = useState(false);
     const [showRemarks, setShowRemarks] = useState(false);
 
@@ -79,6 +80,27 @@ const BillingPage = ({ setSelectedPage }) => {
     const [customerSearchResults, setCustomerSearchResults] = useState([]);
     const [isCustomerLoading, setIsCustomerLoading] = useState(false);
 
+    // --- NEW: Refs for Hotkeys ---
+    const productSearchInputRef = useRef(null);
+    const [highlightedIndex, setHighlightedIndex] = useState(-1);
+    const discountInputRef = useRef(null); // Ref for the first discount input
+    const remarksRef = useRef(null);
+    const paymentMethodRef = useRef(null); // Ref for the payment method container
+    const customerListRef = useRef(null);
+    const [highlightedCustomerIndex, setHighlightedCustomerIndex] = useState(-1); // <-- ADD THIS
+    const handleCloseSearchModal = useCallback(() => {
+        setIsModalOpen(false);
+        setHighlightedCustomerIndex(-1);
+    }, []); // Empty array means this function is created once
+
+    const handleCloseNewCustomerModal = useCallback(() => {
+        setIsNewCusModalOpen(false);
+    }, []); // Empty array means this function is created once
+
+    const handleClosePreviewModal = useCallback(() => {
+        setIsPreviewModalOpen(false);
+    }, []); // Empty array means this function is created once
+
     // --- Calculations ---
     const actualSubtotal = cart.reduce((total, item) => total + (item.listPrice || item.price) * item.quantity, 0);
     const sellingSubtotal = cart.reduce((total, item) => total + (item.sellingPrice * item.quantity), 0);
@@ -89,22 +111,134 @@ const BillingPage = ({ setSelectedPage }) => {
     }, 0);
     const total = sellingSubtotal - tax;
     const discountPercentage = actualSubtotal > 0 ? (((actualSubtotal - sellingSubtotal) / actualSubtotal) * 100).toFixed(2) : 0;
-
-    // --- NEW: State for Paying Amount ---
-
     const remainingAmount = sellingSubtotal - payingAmount;
 
-    // --- NEW: Effect to sync payingAmount with sellingSubtotal ---
+    // Effect to sync payingAmount with sellingSubtotal
     useEffect(() => {
         if (!isPayingAmountManuallySet) {
             setPayingAmount(sellingSubtotal);
         }
     }, [sellingSubtotal, isPayingAmountManuallySet, setPayingAmount]);
+    const handleNewBilling = () => {
+        clearBill();
+        setProductSearchTerm("");
+    };
+
+
+    const handlePreview = () => {
+        if (!selectedCustomer || cart.length === 0) {
+            showAlert('Please select a customer and add products.');
+            return;
+        }
+        setIsPreviewModalOpen(true);
+    };
+
+    // --- Payment Processing ---
+    const processPayment = async (paymentProviderPayload = {}) => {
+        if (!selectedCustomer || cart.length === 0) {
+            showAlert('Please select a customer and add products.');
+            return;
+        }
+        setLoading(true);
+
+        const cartForBackend = cart.map(item => {
+            const discountPercentage = item.discountPercentage || 0;
+            const listPrice = item.price;
+            const discountAmount = listPrice * (discountPercentage / 100);
+            const finalPricePerUnit = listPrice - discountAmount;
+
+            return {
+                ...item,
+                sellingPrice: finalPricePerUnit,
+                discountPercentage: discountPercentage,
+            };
+        });
+
+        const payload = {
+            selectedCustomer,
+            cart: cartForBackend,
+            sellingSubtotal,
+            discountPercentage,
+            tax,
+            paymentMethod,
+            remarks,
+            payingAmount: payingAmount,
+            remainingAmount: remainingAmount,
+            ...paymentProviderPayload
+        };
+
+        const endpoint = paymentMethod === 'CARD' ? '/api/razoray/verify-payment' : '/api/shop/do/billing';
+        const body = paymentMethod === 'CARD' ? JSON.stringify({ billingDetails: payload, ...paymentProviderPayload }) : JSON.stringify(payload);
+
+        try {
+            const res = await fetch(`${apiUrl}${endpoint}`, {
+                method: "POST",
+                credentials: 'include',
+                headers: { "Content-Type": "application/json" },
+                body,
+            });
+            const data = await res.json();
+            const newInvoiceNumber = data.invoiceNumber || 'N/A';
+            setOrderRef(newInvoiceNumber);
+
+            const autoPrint = localStorage.getItem('autoPrintInvoice') === 'true';
+
+            if (autoPrint && newInvoiceNumber !== 'N/A') {
+                handlePrintInvoice(newInvoiceNumber);
+            }
+
+            setPaidAmount(data.totalAmount || sellingSubtotal);
+            setShowPopup(true);
+            handleNewBilling();
+        } catch (err) {
+            console.error("Billing failed:", err);
+            showAlert("Billing failed.");
+        } finally {
+            setLoading(false);
+            setIsPreviewModalOpen(false);
+        }
+    };
+
+    // --- NEW: Keyboard navigation handler for product search ---
+    const handleSearchKeyDown = (e) => {
+        // If no products, do nothing
+        if (products.length === 0) return;
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault(); // Prevent cursor from moving in input
+            setHighlightedIndex(prevIndex =>
+                (prevIndex + 1) % products.length // Wrap around to the start
+            );
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault(); // Prevent cursor from moving in input
+            setHighlightedIndex(prevIndex =>
+                (prevIndex - 1 + products.length) % products.length // Wrap around to the end
+            );
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (highlightedIndex >= 0 && products[highlightedIndex]) {
+                const selectedProduct = products[highlightedIndex]; // Get product
+                handleAddProduct(selectedProduct); // Add to cart
+                setProductSearchTerm(''); // Clear search term
+                // --- UPDATE: Keep focus and ensure dropdown can show ---
+                setIsSearchFocused(true);
+                productSearchInputRef.current?.focus(); // Keep focus
+                setHighlightedIndex(-1); // Reset highlight
+            }
+        } else if (e.key === 'Escape') {
+            e.target.blur();
+            setIsSearchFocused(false);
+            setHighlightedIndex(-1);
+        }
+    };
+
+
+    // --- NEW: All Hotkeys ---
+
 
     // --- API Calls and Data Fetching ---
-
-    // Fetch customers list on initial load
-// NEW: Fetch customers dynamically for the search modal
+    // ... (your existing fetchCustomersForModal, useEffects, handlePrintInvoice, etc.)
+    // ... (no changes needed in this section)
     const fetchCustomersForModal = useCallback(async (searchTerm = '') => {
         if (!apiUrl) return;
         setIsCustomerLoading(true);
@@ -134,11 +268,53 @@ const BillingPage = ({ setSelectedPage }) => {
         }
     }, [apiUrl]);
 
+
+    // --- NEW: This function will be called by onClick OR Enter key ---
+    const handleCustomerSelect = (customer) => {
+        setSelectedCustomer(customer);
+        setIsModalOpen(false);
+        setCustomerSearchTerm('');
+        setHighlightedCustomerIndex(-1); // Reset highlight
+    };
+
+// --- NEW: Handles key presses on the customer search input ---
+    const handleCustomerSearchKeyDown = (e) => {
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            setHighlightedCustomerIndex(0); // Highlight the first item
+            customerListRef.current?.focus(); // Focus the list
+        }
+    };
+
+// --- NEW: Handles key presses on the customer list itself ---
+    const handleCustomerListKeyDown = (e) => {
+        if (customerSearchResults.length === 0) return;
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            setHighlightedCustomerIndex(prev =>
+                (prev + 1) % customerSearchResults.length
+            );
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            setHighlightedCustomerIndex(prev =>
+                (prev - 1 + customerSearchResults.length) % customerSearchResults.length
+            );
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (highlightedCustomerIndex >= 0) {
+                const customer = customerSearchResults[highlightedCustomerIndex];
+                handleCustomerSelect(customer);
+            }
+        }
+    };
+
 // NEW: useEffect to trigger the customer fetch when modal is open or search term changes
     useEffect(() => {
         // Only fetch if the modal is open
         if (isModalOpen) {
             fetchCustomersForModal(debouncedCustomerSearchTerm);
+            setHighlightedCustomerIndex(-1);
         }
     }, [isModalOpen, debouncedCustomerSearchTerm, fetchCustomersForModal]);
 
@@ -252,11 +428,17 @@ const BillingPage = ({ setSelectedPage }) => {
 
     // --- NEW: Product Search API Call ---
     const fetchProductsFromAPI = useCallback((q = '') => {
-        if (!apiUrl || !q) {
-            loadProducts([]); // Clear results if search is empty
+        // --- ADDED: Explicit check for apiUrl ---
+        if (!apiUrl) return;
+
+        // --- ADDED: Clear results if search query is empty ---
+        if (!q) {
+            loadProducts([]); // Clear results immediately
             return;
         }
-        const params = new URLSearchParams({ q, limit: 5 }); // Limit results for dropdown
+
+        // --- Existing Fetch Logic ---
+        const params = new URLSearchParams({ q, limit: 5 });
         fetch(`${apiUrl}/api/shop/get/forGSTBilling/withCache/productsList?${params.toString()}`, {
             method: "GET",
             credentials: 'include',
@@ -268,8 +450,7 @@ const BillingPage = ({ setSelectedPage }) => {
                 loadProducts(items);
             })
             .catch(err => console.error("Error fetching products:", err));
-    }, [apiUrl, loadProducts]);
-
+    }, [apiUrl, loadProducts]); // Dependencies are correct
     // Add this function inside your BillingPage component  const response = await fetch(`${apiUrl}/api/shop/get/invoice/${invoiceNumber}`, {
     // Replace your existing handlePrintInvoice function with this one
     const handlePrintInvoice = async (invoiceNumber) => {
@@ -393,19 +574,14 @@ const BillingPage = ({ setSelectedPage }) => {
 
     // Effect to trigger search when debounced term changes
     useEffect(() => {
-        // Prevent re-fetching if the search term hasn't actually changed
-        if (debouncedSearchTerm === lastSearchedTerm.current) {
-            return;
-        }
+        // Let fetchProductsFromAPI handle both searching and clearing
+        fetchProductsFromAPI(debouncedSearchTerm);
 
-        if (debouncedSearchTerm) {
-            lastSearchedTerm.current = debouncedSearchTerm; // Mark this term as "searched"
-            fetchProductsFromAPI(debouncedSearchTerm);
-        } else {
-            loadProducts([]);
-            lastSearchedTerm.current = null; // Reset if search is cleared
-        }
-    }, [debouncedSearchTerm, fetchProductsFromAPI, loadProducts])
+        // Always reset the highlight index when the search term changes
+        setHighlightedIndex(-1);
+
+        // --- UPDATED: Removed loadProducts from dependencies ---
+    }, [debouncedSearchTerm, fetchProductsFromAPI]);
 
     useEffect(() => {
         const partialBillingSetting = localStorage.getItem('doParitalBilling') === 'true';
@@ -416,18 +592,13 @@ const BillingPage = ({ setSelectedPage }) => {
     }, []); // Empty dependency array ensures this runs only once on mount
 
     // --- Event Handlers ---
-
-    // NEW: Handle adding a product with a stock check
-    // Replace your existing handleAddProduct function
-    // Replace your existing handleAddProduct function with this version
-
     const handleAddProduct = (p) => {
         addProduct({
             ...p,
-            listPrice: p.price, // This is the original price from the backend
-            sellingPrice: p.price, // Initially, selling price is the same
+            listPrice: p.price,
+            sellingPrice: p.price,
             costPrice: p.costPrice,
-            discountPercentage: '' // Default discount is 0
+            discountPercentage: ''
         });
     };
 
@@ -435,7 +606,6 @@ const BillingPage = ({ setSelectedPage }) => {
         const item = cart.find(i => i.id === itemId);
         if (!item) return;
 
-        // If the input is empty, treat the discount as 0 for calculation.
         if (percentage === '') {
             updateCartItem(itemId, { discountPercentage: '', sellingPrice: item.listPrice });
             return;
@@ -443,10 +613,8 @@ const BillingPage = ({ setSelectedPage }) => {
 
         const discount = parseFloat(percentage);
 
-        // If the input isn't a valid number or is out of range,
-        // just update the input's text without breaking the calculations.
         if (isNaN(discount) || discount < 0 || discount > 100) {
-            updateCartItem(itemId, { discountPercentage: percentage }); // Update only the display value
+            updateCartItem(itemId, { discountPercentage: percentage });
             return;
         }
 
@@ -455,13 +623,11 @@ const BillingPage = ({ setSelectedPage }) => {
     };
     const handleDecrementQty = (item) => {
         if (item.quantity <= 1) {
-            return; // Don't allow quantity to go below 1
+            return;
         }
         updateCartItem(item.id, { quantity: item.quantity - 1 });
     };
 
-    // --- MODIFICATION 3 ---
-    // Add this new handler to increment quantity with a stock check.
     const handleIncrementQty = (item) => {
         if (item.quantity >= item.stock) {
             showAlert('Cannot add more than available stock.');
@@ -470,21 +636,16 @@ const BillingPage = ({ setSelectedPage }) => {
         updateCartItem(item.id, { quantity: item.quantity + 1 });
     };
 
-
-
-
-
-    // NEW: Handle changing the selling price directly in the cart
     const handleSellingPriceChange = (itemId, newPrice) => {
         const price = parseFloat(newPrice);
         updateCartItem(itemId, { sellingPrice: isNaN(price) ? 0 : price });
     };
 
-    // --- NEW: useEffect to handle clicks outside the search component ---
     useEffect(() => {
         function handleClickOutside(event) {
             if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
-                setIsSearchFocused(false); // Close results if click is outside
+                setIsSearchFocused(false);
+                setHighlightedIndex(-1);
             }
         }
         document.addEventListener("mousedown", handleClickOutside);
@@ -520,111 +681,17 @@ const BillingPage = ({ setSelectedPage }) => {
         }
     };
 
-    const handleNewBilling = () => {
-        clearBill();
-        setProductSearchTerm("");
-    };
 
-    const handlePreview = () => {
-        if (!selectedCustomer || cart.length === 0) {
-            showAlert('Please select a customer and add products.');
-            return;
-        }
-        setIsPreviewModalOpen(true);
-    };
-
-    // --- Payment Processing ---
-    const processPayment = async (paymentProviderPayload = {}) => {
-        if (!selectedCustomer || cart.length === 0) {
-            showAlert('Please select a customer and add products.');
-            return;
-        }
-        setLoading(true);
-
-        // --- FIX: Create a new cart object for the backend with the final calculated price ---
-        const cartForBackend = cart.map(item => {
-            // --- FIX: Default null discountPercentage to 0 ---
-            const discountPercentage = item.discountPercentage || 0;
-
-            // Calculate the final price per unit based on the corrected percentage
-            const listPrice = item.price; // The original price
-            const discountAmount = listPrice * (discountPercentage / 100);
-            const finalPricePerUnit = listPrice - discountAmount;
-
-            // Return a new object for the payload
-            return {
-                ...item,
-                sellingPrice: finalPricePerUnit, // Overwrite sellingPrice with the final calculated price
-                discountPercentage: discountPercentage, // Ensure the backend receives 0 instead of null
-            };
-        });
-
-        // --- MODIFICATION 2: Add payingAmount and remainingAmount to payload ---
-        const payload = {
-            selectedCustomer,
-            cart: cartForBackend, // <-- Use the newly created cart object
-            sellingSubtotal,
-            discountPercentage,
-            tax,
-            paymentMethod,
-            remarks,
-            payingAmount: payingAmount, // <-- ADDED
-            remainingAmount: remainingAmount, // <-- ADDED
-            ...paymentProviderPayload // Include Razorpay IDs if any
-        };
-
-        const endpoint = paymentMethod === 'CARD' ? '/api/razoray/verify-payment' : '/api/shop/do/billing';
-        const body = paymentMethod === 'CARD' ? JSON.stringify({ billingDetails: payload, ...paymentProviderPayload }) : JSON.stringify(payload);
-
-        try {
-            const res = await fetch(`${apiUrl}${endpoint}`, {
-                method: "POST",
-                credentials: 'include',
-                headers: { "Content-Type": "application/json" },
-                body,
-            });
-            const data = await res.json();
-
-            // --- START: NEW AUTOPRINT LOGIC ---
-
-            // 1. Get the invoice number from the response
-            const newInvoiceNumber = data.invoiceNumber || 'N/A';
-            setOrderRef(newInvoiceNumber); // Set state for the popup
-
-            // 2. Get the auto-print setting from localStorage
-            // We check against 'true' because localStorage stores strings
-            const autoPrint = localStorage.getItem('autoPrintInvoice') === 'true';
-
-            // 3. If auto-print is on and we have a valid invoice number, call print
-            if (autoPrint && newInvoiceNumber !== 'N/A') {
-                handlePrintInvoice(newInvoiceNumber);
-            }
-
-            // --- END: NEW AUTOPRINT LOGIC ---
-
-
-            setPaidAmount(data.totalAmount || sellingSubtotal); // You might want to change this to data.payingAmount if backend returns it
-            setShowPopup(true);
-            handleNewBilling();
-        } catch (err) {
-            console.error("Billing failed:", err);
-            showAlert("Billing failed.");
-        } finally {
-            setLoading(false);
-            setIsPreviewModalOpen(false);
-        }
-    };
 
     const HandleCardProcessPayment = async () => {
         setLoading(true);
-        // --- Use payingAmount for Razorpay, not sellingSubtotal ---
         const amountToPay = payingAmount > 0 ? payingAmount : sellingSubtotal;
 
         const orderResponse = await fetch(`${apiUrl}/api/razorpay/create-order`, {
             method: "POST",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ amount: amountToPay * 100, currency: "INR" }), // Use amountToPay
+            body: JSON.stringify({ amount: amountToPay * 100, currency: "INR" }),
         });
 
         if (!orderResponse.ok) {
@@ -635,7 +702,7 @@ const BillingPage = ({ setSelectedPage }) => {
         const orderData = await orderResponse.json();
 
         const options = {
-            key: "rzp_test_RM94Bh3gUaJSjZ", // Replace with your key
+            key: "rzp_test_RM94Bh3gUaJSjZ",
             order_id: orderData.id,
             name: "Your Shop Name",
             description: "Billing Transaction",
@@ -670,6 +737,41 @@ const BillingPage = ({ setSelectedPage }) => {
         }
     };
 
+    const isModalActive = isModalOpen || isNewCusModalOpen || isPreviewModalOpen;
+
+    // 1. F2 to search (Escape is handled on the input's onKeyDown)
+    useHotkeys('F2', () => productSearchInputRef.current?.focus(), {}, !isModalActive);
+
+    // 2. Alt+E to search customer, Escape to close
+    useHotkeys('e', () => setIsModalOpen(true), { altKey: true }, !isModalActive);
+    //useHotkeys('Escape', () => setIsModalOpen(false), {}, isModalOpen);
+
+    // 3. Alt+N to new customer, Escape to close
+    useHotkeys('e', () => setIsNewCusModalOpen(true), {shiftKey:true, altKey: true }, !isModalActive);
+   // useHotkeys('Escape', () => setIsNewCusModalOpen(false), {}, isNewCusModalOpen);
+
+    // 4. Ctrl+Alt+N for New Billing
+    useHotkeys('n', handleNewBilling, { ctrlKey: true, altKey: true }, !isModalActive);
+
+    // 5. Ctrl+Alt+D to first discount input
+    useHotkeys('d', () => discountInputRef.current?.focus(), { ctrlKey: true, altKey: true }, !isModalActive);
+
+    // 6. Ctrl+Alt+R to remarks
+    useHotkeys('p', () => remarksRef.current?.focus(), {  altKey: true }, !isModalActive);
+
+    // 7. Alt+P to payment methods
+    useHotkeys('m', () => paymentMethodRef.current?.focus(), { altKey: true }, !isModalActive);
+
+    // 8. Ctrl+Alt+P to preview
+    useHotkeys('p', handlePreview, { ctrlKey: true, altKey: true }, !isModalActive);
+   // useHotkeys('Escape', () => setIsPreviewModalOpen(false), {}, isPreviewModalOpen);
+
+    // 9. Alt+Enter to process payment
+    useHotkeys('Enter', handleProcessPayment, { altKey: true }, !isModalActive && cart.length > 0);
+
+    // --- (End of Hotkeys) ---
+
+
     // --- Render ---
     return (
         <div className="billing-page">
@@ -685,7 +787,6 @@ const BillingPage = ({ setSelectedPage }) => {
                     width: '80%',
                     zIndex: 1050,
                     borderRadius: '20px',
-                    // Background color changes based on notification type
                     backgroundColor: notification.type === 'error' ? '#d9534f' : '#f0ad4e',
                     boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
                 }}>
@@ -705,34 +806,31 @@ const BillingPage = ({ setSelectedPage }) => {
                     fontSize: '16px',
                 },
             }}   reverseOrder={false} />
-            {/* Page Header */}
+
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h2>Billing</h2>
             </div>
 
-
-
-
-            {/* --- Layout: Main Content (Left) and Summary (Right) --- */}
             <div className="billing-layout-new" style={{ display: 'flex', gap: '20px' }}>
 
-                {/* --- 2. Main Content Area (3/4 width) --- */}
                 <div className="current-bill-section" style={{ flex: 4 }}>
                     <div className="glass-card" style={{ padding: '1rem' }}>
 
-                        {/* --- NEW HEADER with Buttons Moved to the Right --- */}
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                             <h3 style={{ margin: 0 }}>Current Bill</h3>
                             <div className="customer-actions" style={{ display: 'flex', gap: '10px' }}>
-                                <button className="btn" onClick={() => setIsModalOpen(true)}><i
+                                {/* --- UPDATED: Hint for shortcut --- */}
+                                <button className="btn" onClick={() => setIsModalOpen(true)} title="Alt + E"><i
                                     className="fa-duotone fa-solid fa-user-magnifying-glass" style={{paddingRight:"5px"}}></i>
                                     {selectedCustomer ? `Change Customer` : 'Search Customer'}
                                 </button>
-                                <button className="btn" onClick={() => setIsNewCusModalOpen(true)}>
+                                {/* --- UPDATED: Hint for shortcut --- */}
+                                <button className="btn" onClick={() => setIsNewCusModalOpen(true)} title="Alt + N">
                                     <i className="fa-duotone fa-solid fa-user-plus"></i> Create Customer
                                 </button>
                                 {cart.length > 0 && (
-                                    <button className="btn btn-danger" onClick={handleNewBilling}><i
+                                    // --- UPDATED: Hint for shortcut ---
+                                    <button className="btn btn-danger" onClick={handleNewBilling} title="Ctrl + Alt + N"><i
                                         className="fa-duotone fa-solid fa-file-invoice" style={{paddingRight:"5px"}}></i>
                                         New Bill
                                     </button>
@@ -747,27 +845,38 @@ const BillingPage = ({ setSelectedPage }) => {
                             </p>
                         )}
 
-                        {/* --- MOVED & UPDATED Product Search Component --- */}
                         <div className="product-search-container" ref={searchContainerRef} style={{ marginTop: '1rem', position: 'relative' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', border: '1px solid var(--border-color)', borderRadius: '20px', padding: '0.2rem 1rem' }}>
                                 <FaSearch style={{ color: 'var(--text-color)' }} />
                                 <input
                                     type="text"
-                                    placeholder="Search for products to add..."
+                                    ref={productSearchInputRef}
+                                    // --- UPDATED: Hint for shortcut ---
+                                    placeholder="Search for products to add... (F2)"
                                     value={productSearchTerm}
                                     onChange={(e) => setProductSearchTerm(e.target.value)}
-                                    onFocus={() => setIsSearchFocused(true)} // Show results on focus
+                                    onFocus={() => setIsSearchFocused(true)}
+                                    // --- NEW: onKeyDown for Escape key ---
+                                    onKeyDown={handleSearchKeyDown}
                                     style={{ width: '100%', padding: '10px', background: 'transparent', border: 'none', color: 'var(--text-color)', fontSize: '1rem', outline: 'none' }}
                                 />
                             </div>
-                            {/* Search Results Dropdown - now closes on blur */}
+
                             {isSearchFocused && debouncedSearchTerm && (
                                 <div className="search-results" style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100, background: 'var(--glass-bg)', border: '1px solid var(--border-color)', borderRadius: '8px', maxHeight: '300px', overflowY: 'auto', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-                                    {products.length > 0 ? products.map(p => (
+                                    {products.length > 0 ? products.map((p, index) => (
                                         <div
                                             key={p.id}
-                                            className="search-result-item" // <-- ADD THIS CLASSNAME
-                                            onClick={() => handleAddProduct(p)}
+                                            className="search-result-item"
+                                            onClick={() => {
+                                                handleAddProduct(p); // Add to cart
+                                                setProductSearchTerm(''); // Clear search term
+                                                // --- UPDATE: Keep focus and ensure dropdown can show ---
+                                                setIsSearchFocused(true);
+                                                productSearchInputRef.current?.focus(); // Keep focus
+                                                setHighlightedIndex(-1); // Reset highlight
+                                            }}
+                                            onMouseEnter={() => setHighlightedIndex(index)}
                                             style={{
                                                 display: 'flex',
                                                 justifyContent: 'space-between',
@@ -775,7 +884,8 @@ const BillingPage = ({ setSelectedPage }) => {
                                                 padding: '8px 12px',
                                                 borderBottom: '1px solid var(--border-color-light)',
                                                 cursor: 'pointer',
-                                                transition: 'background-color 0.2s ease' // Optional: Adds a smooth transition
+                                                transition: 'background-color 0.2s ease',
+                                                backgroundColor: index === highlightedIndex ? 'var(--primary-color-light)' : 'transparent'
                                             }}
                                         >
                                             <div>
@@ -784,16 +894,12 @@ const BillingPage = ({ setSelectedPage }) => {
                                                     Price: ₹{p.price} | Tax: {p.tax}% | Stock: {p.stock}
                                                 </div>
                                             </div>
-                                            {/* <button className="btn small-btn" onClick={() => handleAddProduct(p)}>
-                                                <FaPlus /> Add
-                                            </button>*/}
                                         </div>
                                     )) : <div style={{padding: '1rem', textAlign: 'center', color: '#888'}}>No products found.</div>}
                                 </div>
                             )}
                         </div>
 
-                        {/* --- Cart Table (now inside the main card) --- */}
                         <div className="cart-items" style={{ marginTop: '1rem' }}>
                             {cart.length === 0 ? (
                                 <p style={{ textAlign: 'center', color: '#888' }}>No items in cart. Use the search bar above to add products.</p>
@@ -806,7 +912,8 @@ const BillingPage = ({ setSelectedPage }) => {
                                             <th>HSN</th>
                                             <th>List Price </th>
                                             <th>Qty</th>
-                                            <th>Discount%</th>
+                                            {/* --- UPDATED: Hint for shortcut --- */}
+                                            <th>Discount% (Ctrl+Alt+D)</th>
                                             <th>Base Price </th>
                                             <th>Tax </th>
                                             <th>Selling </th>
@@ -815,7 +922,7 @@ const BillingPage = ({ setSelectedPage }) => {
                                         </tr>
                                         </thead>
                                         <tbody>
-                                        {cart.map(item => {
+                                        {cart.map((item, index) => { // --- UPDATED: Added index ---
                                             const taxRate = item.tax / 100;
                                             const basePrice = item.sellingPrice / (1 + taxRate);
                                             const totalTaxAmount = (item.sellingPrice - basePrice) * item.quantity;
@@ -823,15 +930,13 @@ const BillingPage = ({ setSelectedPage }) => {
                                             const totalSellingPrice = item.sellingPrice * item.quantity;
                                             const totalListPrice = (item.listPrice || item.price);
 
-                                            // --- MODIFICATION: Define the conditional style for the selling price cell ---
                                             const sellingPriceCellStyle = {
                                                 verticalAlign: 'middle',
-                                                transition: 'background-color 0.3s ease' // Optional: for a smooth color change
+                                                transition: 'background-color 0.3s ease'
                                             };
 
-                                            // If the selling price per item is less than its cost, add a faint red background.
                                             if (item.sellingPrice < item.costPrice) {
-                                                sellingPriceCellStyle.backgroundColor = '#e8a2ad'; // A faint red color
+                                                sellingPriceCellStyle.backgroundColor = '#e8a2ad';
                                             }
 
                                             return (
@@ -852,6 +957,8 @@ const BillingPage = ({ setSelectedPage }) => {
                                                     </td>
                                                     <td style={{ verticalAlign: 'middle', width: '90px' }}>
                                                         <input
+                                                            // --- NEW: Conditional ref for the first item ---
+                                                            ref={index === 0 ? discountInputRef : null}
                                                             type="text"
                                                             value={item.discountPercentage}
                                                             onChange={(e) => handleDiscountChange(item.id, e.target.value)}
@@ -881,18 +988,17 @@ const BillingPage = ({ setSelectedPage }) => {
                                                         })()}
                                                     </td>
 
-                                                    {/* --- MODIFICATION: The style object is applied here --- */}
                                                     <td style={sellingPriceCellStyle}>
                                                         {totalSellingPrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                     </td>
 
                                                     <td style={{ verticalAlign: 'middle' }}>
-                    <textarea
-                        value={item.details || ''}
-                        onChange={(e) => updateCartItem(item.id, { details: e.target.value })}
-                        placeholder="Add details..."
-                        style={{ width: '100%', minHeight: '40px', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-color)',  backgroundColor: 'var(--glass-card)' }}
-                    />
+                                                        <textarea
+                                                            value={item.details || ''}
+                                                            onChange={(e) => updateCartItem(item.id, { details: e.target.value })}
+                                                            placeholder="Add details..."
+                                                            style={{ width: '100%', minHeight: '40px', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-color)',  backgroundColor: 'var(--glass-card)' }}
+                                                        />
                                                     </td>
                                                     <td style={{ verticalAlign: 'middle' }}>
                                                         <button className="remove-btn" onClick={() => removeProduct(item.id)}>
@@ -910,13 +1016,12 @@ const BillingPage = ({ setSelectedPage }) => {
                     </div>
                 </div>
 
-                {/* --- 3. Summary Section (1/4 width) --- */}
                 <div className="summary-section glass-card" style={{ flex: 1, padding: '1rem', height: 'fit-content' }}>
                     <h3 style={{ textAlign: 'center', marginTop: 0 }}>Summary</h3>
                     <div className="invoice-summary">
                         <p>Total without GST: <span>₹{total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></p>
                         <p className="tax">GST: <span>₹{tax.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></p>
-                        {/* --- ADD THIS NEW DIV FOR THE TAX BREAKDOWN --- */}
+
                         <div className="tax-breakdown" style={{ fontSize: '0.85em', color: '#666', borderLeft: '2px solid var(--border-color)', paddingLeft: '10px', marginLeft: '5px' }}>
                             {Object.entries(groupedTaxes).map(([key, value]) => (
                                 <p key={key} style={{ margin: '2px 0', color: "var(--tiny-text-color)", display: 'flex', justifyContent: 'space-between' }}>
@@ -928,32 +1033,30 @@ const BillingPage = ({ setSelectedPage }) => {
                         <p className="discount">Discount: <span>{discountPercentage}%</span></p>
                         <h4 className="subtotal-selling">Final Total: <span>₹{sellingSubtotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></h4>
 
-                        {/* --- MODIFICATION 1: Add Paying and Remaining Fields --- */}
-                        {/* I've changed the className from "form-group" to "payment-input-group"
-    to avoid conflicts. I also corrected alignItems and adjusted the input width. */}
                         {showPartialBilling && (
                             <>
                                 <div className="payment-input-group" style={{
                                     display: 'flex',
-                                    alignItems: 'center', // <-- Corrected from 'left'
+                                    alignItems: 'center',
                                     justifyContent: 'space-between',
                                     margin: '1rem 0 0.5rem 0',
-                                    gap: '10px' // <-- Added a bit more gap
+                                    gap: '10px'
                                 }}>
                                     <label style={{ fontWeight: 500, color: 'var(--primary-color)', whiteSpace: 'nowrap' }}>
-                                        Paying:
+                                        Paying:  (Ctrl+Alt+R)
                                     </label>
                                     <input
                                         type="number"
+                                        ref={remarksRef}
                                         value={payingAmount}
                                         onChange={(e) => {
                                             setPayingAmount(parseFloat(e.target.value) || 0);
                                             setIsPayingAmountManuallySet(true);
                                         }}
                                         style={{
-                                            width: '40%', // <-- This will fill the remaining space
+                                            width: '40%',
                                             padding: '10px',
-                                            borderRadius: '15px', // <-- Matched your other inputs
+                                            borderRadius: '15px',
                                             border: '3px solid var(--border-color)',
                                             background: 'var(--input-bg)',
                                             color: 'var(--text-color)',
@@ -968,15 +1071,16 @@ const BillingPage = ({ setSelectedPage }) => {
                             </>
                         )}
 
-                        {/* --- End of MODIFICATION 1 --- */}
-
 
                         {showRemarks && (
                             <div className="remarks-section" style={{ margin: '1rem 0' }}>
                                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: 'var(--primary-color)' }}>
+                                    {/* --- UPDATED: Hint for shortcut --- */}
                                     Remarks:
                                 </label>
                                 <textarea
+                                    // --- NEW: Add ref ---
+
                                     value={remarks}
                                     onChange={(e) => setRemarks(e.target.value)}
                                     placeholder="Enter any remarks for this bill..."
@@ -995,11 +1099,16 @@ const BillingPage = ({ setSelectedPage }) => {
                             </div>
                         )}
 
-                        <div className="payment-methods" style={{ marginTop: '1rem' }}>
-                            <h5 style={{ marginBottom: '0.5rem', color: 'var(--primary-color)' }}>Payment Method:</h5>
+                        {/* --- UPDATED: Add ref, tabIndex, and hint --- */}
+                        <div
+                            ref={paymentMethodRef}
+                            tabIndex="-1" // Makes the div focusable
+                            className="payment-methods"
+                            style={{ marginTop: '1rem', outline: 'none' }} // outline:none removes focus ring
+                        >
+                            <h5 style={{ marginBottom: '0.5rem', color: 'var(--primary-color)' }}>Payment Method: (Alt+P)</h5>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                 {[
-                                    // 1. Updated the array to use Font Awesome icon classes
                                     { type: 'CASH', icon: 'fa-duotone fa-money-bills', key: 'cash' },
                                     { type: 'CARD', icon: 'fa-duotone fa-solid fa-credit-card', key: 'card' },
                                     { type: 'UPI', icon: 'fa-duotone fa-solid  fa-qrcode', key: 'upi' }
@@ -1014,7 +1123,7 @@ const BillingPage = ({ setSelectedPage }) => {
                                                 display: 'inline-flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'flex-start',
-                                                gap: '10px', // Adjusted gap slightly for the new layout
+                                                gap: '10px',
                                                 width: '370px',
                                                 padding: '0.45rem 0.75rem',
                                                 borderRadius: '20px',
@@ -1038,17 +1147,15 @@ const BillingPage = ({ setSelectedPage }) => {
                                                 opacity: enabled ? 1 : 0.6
                                             }}
                                         >
-                                            {/* 2. Replaced the <span> with an <i> tag */}
                                             <i
-                                                className={`fa-fw ${method.icon}`} // fa-fw ensures icons are fixed-width for alignment
+                                                className={`fa-fw ${method.icon}`}
                                                 style={{
-                                                    fontSize: '1.2rem', // Adjust icon size as needed
-                                                    // 3. Dynamic color styling for the icon
+                                                    fontSize: '1.2rem',
                                                     color: enabled
                                                         ? paymentMethod === method.type
-                                                            ? 'var(--primary-color)' // Selected color
-                                                            : 'var(--text-color)'   // Default enabled color
-                                                        : '#888', // Disabled color
+                                                            ? 'var(--primary-color)'
+                                                            : 'var(--text-color)'
+                                                        : '#888',
                                                 }}
                                             />
 
@@ -1060,8 +1167,6 @@ const BillingPage = ({ setSelectedPage }) => {
                                                 disabled={!enabled}
                                                 style={{ accentColor: 'var(--primary-color)' }}
                                             />
-
-                                            {/* Removed the extra margin from this span, as the parent 'gap' handles it */}
                                             <span>{method.type}</span>
                                         </label>
                                     );
@@ -1071,14 +1176,17 @@ const BillingPage = ({ setSelectedPage }) => {
 
                     </div>
                     <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        {/* --- UPDATED: Hint for shortcut --- */}
                         <button
                             className="process-payment-btn"
                             onClick={handleProcessPayment}
                             disabled={loading || cart.length === 0}
+                            title="Alt + Enter"
                         >
                             {loading ? 'Processing...' : 'Process Payment'}
                         </button>
-                        <button className="btn" onClick={handlePreview} disabled={cart.length === 0}>
+                        {/* --- UPDATED: Hint for shortcut --- */}
+                        <button className="btn" onClick={handlePreview} disabled={cart.length === 0} title="Ctrl + Alt + P">
                             Preview
                         </button>
                     </div>
@@ -1086,25 +1194,42 @@ const BillingPage = ({ setSelectedPage }) => {
             </div>
 
             {/* --- Modals --- */}
-            <Modal title="Select Customer" show={isModalOpen} onClose={() => setIsModalOpen(false)}>
+            <Modal title="Select Customer (Alt+E)" show={isModalOpen} onClose={handleCloseSearchModal}>
+                {/* ... (rest of modal) ... */}
                 <input
                     type="text"
                     placeholder="Search by name or phone..."
                     value={customerSearchTerm}
+                    onKeyDown={handleCustomerSearchKeyDown} // <-- ADD THIS HANDLER
                     onChange={(e) => setCustomerSearchTerm(e.target.value)}
                     style={{ width: '100%', padding: '10px', marginBottom: '15px', borderRadius: '20px', border: '1px solid var(--border-color)', background: 'var(--input-bg)', color: 'var(--text-color)' }}
                 />
-                <ul className="customer-modal-list">
+                <ul
+                    className="customer-modal-list"
+                    ref={customerListRef} // <-- ADD REF
+                    tabIndex="0" // <-- MAKES THE LIST FOCUSABLE
+                    onKeyDown={handleCustomerListKeyDown} // <-- ADD KEY HANDLER
+                    style={{ outline: 'none' }} // <-- Hides focus ring from the list
+                >
                     {isCustomerLoading ? (
                         <li style={{ textAlign: 'center' }}>Loading...</li>
                     ) : customerSearchResults.length > 0 ? (
-                        customerSearchResults.map(c => (
+
+                        // --- ADD 'index' to your map ---
+                        customerSearchResults.map((c, index) => (
                             <li
                                 key={c.id}
-                                onClick={() => {
-                                    setSelectedCustomer(c);
-                                    setIsModalOpen(false);
-                                    setCustomerSearchTerm(''); // Reset search after selection
+
+                                // --- UPDATE onClick ---
+                                onClick={() => handleCustomerSelect(c)}
+
+                                // --- ADD onMouseEnter ---
+                                onMouseEnter={() => setHighlightedCustomerIndex(index)}
+
+                                // --- ADD STYLE for highlight ---
+                                style={{
+                                    backgroundColor: index === highlightedCustomerIndex ? 'var(--primary-color-light)' : 'transparent',
+                                    cursor: 'pointer'
                                 }}
                             >
                                 <span>{c.name}</span>
@@ -1117,7 +1242,8 @@ const BillingPage = ({ setSelectedPage }) => {
                     )}
                 </ul>
             </Modal>
-            <Modal title="Add New Customer" show={isNewCusModalOpen} onClose={() => setIsNewCusModalOpen(false)}>
+            <Modal title="Add New Customer (Shift+Alt+E)" show={isNewCusModalOpen} onClose={handleCloseNewCustomerModal}>
+                {/* ... (rest of modal) ... */}
                 <form onSubmit={handleAddCustomer}>
                     <div className="form-group">
                         <label>Full Name</label>
@@ -1136,7 +1262,6 @@ const BillingPage = ({ setSelectedPage }) => {
                             required
                             value={phone}
                             onChange={(e) => setPhone(e.target.value)}
-                            // --- Validation Attributes Added Below ---
                             maxLength="10"
                             pattern="[5-9][0-9]{9}"
                             title="Phone number must be 10 digits and start with 5, 6, 7, 8, or 9"
@@ -1165,7 +1290,8 @@ const BillingPage = ({ setSelectedPage }) => {
 
                 </form>
             </Modal>
-            <Modal title="Order Summary" show={isPreviewModalOpen} onClose={() => setIsPreviewModalOpen(false)}>
+            <Modal title="Order Summary (Ctrl+Alt+P)" show={isPreviewModalOpen} onClose={handleClosePreviewModal}>
+                {/* ... (rest of modal) ... */}
                 <div className="order-summary" style={{ padding: '10px' }}>
                     <div style={{ marginBottom: '20px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
                         <h3 style={{ color: 'var(--primary-color)', marginBottom: '10px' }}>Customer Details</h3>
@@ -1215,7 +1341,6 @@ const BillingPage = ({ setSelectedPage }) => {
                             <strong>₹{sellingSubtotal.toLocaleString()}</strong>
                         </div>
 
-                        {/* --- I've also added the Paying/Remaining to the preview modal --- */}
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '1.1em', paddingTop: '10px', borderTop: '1px solid var(--border-color-light)' }}>
                             <strong>Paying:</strong>
                             <strong>₹{payingAmount.toLocaleString()}</strong>
@@ -1243,6 +1368,7 @@ const BillingPage = ({ setSelectedPage }) => {
                     onClick={handleProcessPayment}
                     disabled={loading}
                     style={{ position: "relative", padding: "0.75rem 2rem" }}
+                    title="Alt + Enter"
                 >
                     Process Payment
                 </button>
@@ -1280,7 +1406,6 @@ const BillingPage = ({ setSelectedPage }) => {
                             Processing Payment...
                         </h2>
 
-                        {/* Spinner */}
                         <div
                             style={{
                                 width: "50px",
@@ -1294,7 +1419,6 @@ const BillingPage = ({ setSelectedPage }) => {
                             className="spinner"
                         ></div>
 
-                        {/* Spinner Animation */}
                         <style>
                             {`
                                     @keyframes spin {
@@ -1313,129 +1437,102 @@ const BillingPage = ({ setSelectedPage }) => {
                 </div>
             )}
 
-            {showPopup && (
-                <div
-                    style={{
-                        position: 'fixed',
-                        top: 0, left: 0, right: 0, bottom: 0,
-                        background: 'rgba(0,0,0,0.5)',
+            {/* --- UPDATED: Use the Modal component for the success popup --- */}
+            <Modal
+                title="✅ Payment Successful"
+                show={showPopup}
+                onClose={() => setShowPopup(false)} // Modal handles Escape key
+            >
+                {/* --- Children for the Modal --- */}
+                <div style={{ textAlign: 'center' }}> {/* Center content */}
+                    <p style={{ fontSize: '1.1rem', margin: '0.5rem 0' }}>
+                        Order Reference: <strong>{orderRef}</strong>
+                    </p>
+                    <p style={{ fontSize: '1.1rem', margin: '0.5rem 0' }}>
+                        Amount Paid: <strong>₹{paidAmount.toLocaleString()}</strong>
+                    </p>
+
+                    {remainingAmount > 0 && (
+                        <p style={{ fontSize: '1.1rem', margin: '0.5rem 0', color: '#d9534f' }}>
+                            Amount Remaining: <strong>₹{remainingAmount.toLocaleString()}</strong>
+                        </p>
+                    )}
+
+                    {/* Button Container */}
+                    <div style={{
                         display: 'flex',
                         justifyContent: 'center',
-                        alignItems: 'center',
-                        zIndex: 2000,
-                        animation: 'fadeIn 0.3s ease'
-                    }}
-                >
-                    <div
-                        style={{
-                            background: 'var(--glass-bg)',
-                            padding: '2rem',
-                            borderRadius: '25px',
-                            width: '90%',
-                            maxWidth: '600px',
-                            boxShadow: '0 8px 30px var(--shadow-color)',
-                            color: 'var(--text-color)',
-                            border: '1px solid var(--border-color)',
-                            textAlign: 'center',
-                            animation: 'slideIn 0.3s ease',
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <h2 style={{ color: 'var(--primary-color)', marginBottom: '1rem', fontSize: '1.8rem' }}>
-                            ✅ Payment Successful
-                        </h2>
-                        <p style={{ fontSize: '1.1rem', margin: '0.5rem 0' }}>
-                            Order Reference: <strong>{orderRef}</strong>
-                        </p>
-                        <p style={{ fontSize: '1.1rem', margin: '0.5rem 0' }}>
-                            {/* This now shows the amount that was actually paid */}
-                            Amount Paid: <strong>₹{paidAmount.toLocaleString()}</strong>
-                        </p>
+                        gap: '0.75rem',
+                        marginTop: '1.5rem',
+                        flexWrap: 'wrap'
+                    }}>
+                        {/* Close Button (Now handled by Modal's default close button, but we can keep one here too) */}
+                        <button
+                            style={{
+                                padding: '0.75rem 1.5rem',
+                                borderRadius: '25px',
+                                border: '1px solid var(--border-color)',
+                                background: 'transparent',
+                                color: 'var(--text-color)',
+                                fontSize: '1rem',
+                                cursor: 'pointer',
+                            }}
+                            onClick={() => setShowPopup(false)}
+                        >
+                            Close
+                        </button>
 
-                        {/* This will show the remaining balance if any */}
-                        {remainingAmount > 0 && (
-                            <p style={{ fontSize: '1.1rem', margin: '0.5rem 0', color: '#d9534f' }}>
-                                Amount Remaining: <strong>₹{remainingAmount.toLocaleString()}</strong>
-                            </p>
-                        )}
-
-
-                        {/* --- NEW Button Container --- */}
-                        <div style={{
-                            display: 'flex',
-                            justifyContent: 'center',
-                            gap: '0.75rem',  // <-- Adjusted gap
-                            marginTop: '1.5rem',
-                            flexWrap: 'wrap'
-                        }}>
+                        {/* Email Button */}
+                        {localStorage.getItem('autoSendInvoice') !== 'true' && (
                             <button
                                 style={{
                                     padding: '0.75rem 1.5rem',
                                     borderRadius: '25px',
-                                    border: '1px solid var(--border-color)',
+                                    border: '1px solid var(--primary-color)',
                                     background: 'transparent',
-                                    color: 'var(--text-color)',
-                                    fontSize: '1rem',
-                                    cursor: 'pointer',
-                                }}
-                                onClick={() => setShowPopup(false)}
-                            >
-                                Close
-                            </button>
-
-                            {/* --- UPDATED: Email Button --- */}
-                            {localStorage.getItem('autoSendInvoice') !== 'true' && (
-                                <button
-                                    style={{
-                                        padding: '0.75rem 1.5rem',
-                                        borderRadius: '25px',
-                                        border: '1px solid var(--primary-color)',
-                                        background: 'transparent',
-                                        color: 'var(--primary-color)',
-                                        fontSize: '1rem',
-                                        cursor: 'pointer',
-                                        transition: 'all 0.2s ease',
-                                        opacity: isSendingEmail ? 0.7 : 1,
-                                        // --- Add flex properties for icon ---
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '0.5rem'
-                                    }}
-                                    onClick={() => handleSendEmail(orderRef)}
-                                    disabled={isSendingEmail}
-                                >
-                                    <FaPaperPlane
-                                        size={20} />
-                                    {isSendingEmail ? 'Sending...' : 'Send to Email'}
-                                </button>
-                            )}
-                            <button
-                                style={{
-                                    padding: '0.75rem 1.5rem',
-                                    borderRadius: '25px',
-                                    border: 'none',
-                                    backgroundColor: 'var(--primary-color)',
-                                    color: 'white',
+                                    color: 'var(--primary-color)',
                                     fontSize: '1rem',
                                     cursor: 'pointer',
                                     transition: 'all 0.2s ease',
-                                    opacity: isPrinting ? 0.7 : 1,
-                                    // --- Add flex properties for icon ---
+                                    opacity: isSendingEmail ? 0.7 : 1,
                                     display: 'flex',
                                     alignItems: 'center',
                                     gap: '0.5rem'
                                 }}
-                                onClick={() => handlePrintInvoice(orderRef)}
-                                disabled={isPrinting}
+                                onClick={() => handleSendEmail(orderRef)}
+                                disabled={isSendingEmail}
                             >
-                                <FaPrint size={20} />
-                                {isPrinting ? 'Loading...' : 'Print Invoice'}
+                                <FaPaperPlane size={20} />
+                                {isSendingEmail ? 'Sending...' : 'Send to Email'}
                             </button>
+                        )}
 
-                        </div>
+                        {/* Print Button */}
+                        <button
+                            style={{
+                                padding: '0.75rem 1.5rem',
+                                borderRadius: '25px',
+                                border: 'none',
+                                backgroundColor: 'var(--primary-color)',
+                                color: 'white',
+                                fontSize: '1rem',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease',
+                                opacity: isPrinting ? 0.7 : 1,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem'
+                            }}
+                            onClick={() => handlePrintInvoice(orderRef)}
+                            disabled={isPrinting}
+                        >
+                            <FaPrint size={20} />
+                            {isPrinting ? 'Loading...' : 'Print Invoice'}
+                        </button>
                     </div>
                 </div>
-            )}
+                {/* --- End of Children --- */}
+            </Modal>
         </div>
     );
 };

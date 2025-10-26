@@ -858,7 +858,7 @@ const DashboardPage = ({ setSelectedPage }) => {
                             >
                                 <div style={{display: "flex", alignItems: "center", gap: "8px"}}>
                                      <h3
-                                    style={{margin: 0}}>Goals</h3>
+                                    style={{margin: 0}}>Target</h3>
                                     {goalData.fromDate && goalData.toDate && (
                                         <span style={{fontSize: "0.8rem", color: "#888"}}>
                 ({goalData.fromDate} - {goalData.toDate})
@@ -903,7 +903,7 @@ const DashboardPage = ({ setSelectedPage }) => {
                         <div className="quick-shortcuts glass-card">
                             <h3 className="card-header">Quick Shortcuts</h3>
                             <div className="shortcuts-container">
-                                <button className="btn" onClick={() => { if (setSelectedPage) setSelectedPage('billing'); else navigate('/billing'); }}><i class="fa-duotone fa-solid fa-cart-plus" style={{paddingRight:'7px'}}></i>New Sale</button>
+                                <button className="btn" onClick={() => { if (setSelectedPage) setSelectedPage('billing2'); else navigate('/billing2'); }}><i class="fa-duotone fa-solid fa-cart-plus" style={{paddingRight:'7px'}}></i>New Sale</button>
                                 <button className="btn" onClick={() => { if (setSelectedPage) setSelectedPage('reports'); else navigate('/reports'); }}><i class="fa-duotone fa-solid fa-file-spreadsheet" style={{paddingRight:'7px'}}></i>Reports</button>
                                 <button className="btn" onClick={() => { if (setSelectedPage) setSelectedPage('profile'); else navigate('/profile'); }}><i class="fa-duotone fa-solid fa-user" style={{paddingRight:'7px'}}></i>Profile</button>
                                 <button className="btn" onClick={() => { if (setSelectedPage) setSelectedPage('notifications'); else navigate('/notifications'); }}><i class="fa-duotone fa-solid fa-bell" style={{paddingRight:'7px'}}></i>Alerts</button>
