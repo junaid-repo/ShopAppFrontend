@@ -1,5 +1,5 @@
 // src/components/Topbar.js
-import React, { useState, useEffect, useRef, useCallback } from "react"; // Added useCallback
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
     Bell,
@@ -12,9 +12,9 @@ import {
 } from "@phosphor-icons/react";
 import "./Topbar.css"
 import { useConfig } from "../pages/ConfigProvider";
-import { useSearchKey } from "../context/SearchKeyContext"; // <-- 1. IMPORT useSearchKey
+import { useSearchKey } from "../context/SearchKeyContext";
 
-// --- 2. ADD A DEBOUNCE HOOK (copied from your CustomersPage.js) ---
+// --- Debounce Hook (Existing) ---
 const useDebounce = (value, delay) => {
     const [debouncedValue, setDebouncedValue] = useState(value);
     useEffect(() => {
@@ -25,8 +25,9 @@ const useDebounce = (value, delay) => {
 };
 
 
-const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage }) => {
-    // --- Original State ---
+// 1. ADD 'isCollapsed' and 'toggleSidebar' to the props
+const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage, isCollapsed, toggleSidebar }) => {
+    // --- Original State (Existing) ---
     const [userName, setUserName] = useState("");
     const [profilePic, setProfilePic] = useState(null);
     const [notifications, setNotifications] = useState([]);
@@ -44,7 +45,7 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage }) => {
     const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
     const userDropdownRef = useRef(null);
 
-    // --- 3. ADD NEW STATE FOR GLOBAL SEARCH ---
+    // --- Global Search State (Existing) ---
     const { setSearchKey } = useSearchKey();
     const [globalSearchTerm, setGlobalSearchTerm] = useState("");
     const [searchResults, setSearchResults] = useState([]);
@@ -52,6 +53,41 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage }) => {
     const [isDropdownVisible, setIsDropdownVisible] = useState(false);
     const debouncedSearchTerm = useDebounce(globalSearchTerm, 300);
     const searchDropdownRef = useRef(null);
+
+    // 2. --- NEW: Logic copied from Sidebar.js to color the toggle button ---
+    const [isDark, setIsDark] = useState(() =>
+        typeof document !== 'undefined' && document.body.classList.contains('dark-theme')
+    );
+
+    useEffect(() => {
+        const update = () => {
+            try {
+                setIsDark(document.body.classList.contains('dark-theme'));
+            } catch (e) {}
+        };
+        update();
+        const obs = new MutationObserver(update);
+        try {
+            obs.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+        } catch (e) {}
+
+        // Also listen for storage changes (if theme is toggled in another tab)
+        const storageHandler = (e) => {
+            if (e.key === 'theme') update();
+        };
+        window.addEventListener('storage', storageHandler);
+
+        return () => {
+            obs.disconnect();
+            window.removeEventListener('storage', storageHandler);
+        };
+    }, []);
+
+    // Use the exact color logic from your Sidebar.js
+    const collapsedIconColor = isDark ? '#ffffff' : '#353aad' || '#00aaff';
+    const toggleColor = collapsedIconColor;
+    // --- END OF NEW LOGIC ---
+
 
     // --- Original useEffect (Profile Fetch) ---
     useEffect(() => {
@@ -78,7 +114,7 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage }) => {
         })();
     }, [apiUrl]);
 
-    // --- Original fetchUnseenNotifications (as a const) ---
+    // --- Original fetchUnseenNotifications ---
     const fetchUnseenNotifications = async () => {
         if (!apiUrl) return;
         try {
@@ -103,31 +139,26 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage }) => {
     }, [apiUrl]);
 
 
-    // --- 4. NEW useEffect FOR FETCHING SEARCH RESULTS ---
+    // --- Original useEffect (Search Fetch) ---
     useEffect(() => {
-        // If the search term is empty, clear results and hide dropdown
         if (!debouncedSearchTerm) {
             setSearchResults([]);
             setIsDropdownVisible(false);
             return;
         }
-
         const fetchSearch = async () => {
+            // ... (rest of search fetch logic)
             setIsSearchLoading(true);
             setIsDropdownVisible(true);
-
             try {
-                // Call your new global search API
                 const res = await fetch(`${apiUrl}/api/shop/getGlobalSearchTerms?term=${debouncedSearchTerm}&limit=7`, {
                     credentials: "include",
                 });
-
                 if (res.ok) {
                     const data = await res.json();
-                    console.log("The search result ",data);
                     setSearchResults(data);
                 } else {
-                    setSearchResults([]); // Clear on error
+                    setSearchResults([]);
                 }
             } catch (err) {
                 console.error("Global search failed", err);
@@ -135,12 +166,11 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage }) => {
             }
             setIsSearchLoading(false);
         };
-
         fetchSearch();
-    }, [debouncedSearchTerm, apiUrl]); // Re-run when debounced term changes
+    }, [debouncedSearchTerm, apiUrl]);
 
 
-    // --- 5. MODIFY "Click Outside" useEffect TO INCLUDE SEARCH DROPDOWN ---
+    // --- Original "Click Outside" useEffect (Modified) ---
     useEffect(() => {
         const handleClick = (e) => {
             if (notifDropdownOpen && notifDropdownRef.current && !notifDropdownRef.current.contains(e.target)) {
@@ -149,17 +179,16 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage }) => {
             if (isUserDropdownOpen && userDropdownRef.current && !userDropdownRef.current.contains(e.target)) {
                 setIsUserDropdownOpen(false);
             }
-            // Add this new check for the search dropdown
             if (isDropdownVisible && searchDropdownRef.current && !searchDropdownRef.current.contains(e.target)) {
                 setIsDropdownVisible(false);
             }
         };
         document.addEventListener('mousedown', handleClick);
         return () => document.removeEventListener('mousedown', handleClick);
-    }, [notifDropdownOpen, isUserDropdownOpen, isDropdownVisible]); // <-- Add dependency
+    }, [notifDropdownOpen, isUserDropdownOpen, isDropdownVisible]);
 
 
-    // --- Original handleLogout ---
+    // --- Original Handlers (handleLogout, getRelativeTime, etc.) ---
     const handleLogout = async () => {
         if (!window.confirm("Do you really want to log out?")) return;
         onLogout();
@@ -171,8 +200,8 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage }) => {
         navigate("/login", { replace: true });
     };
 
-    // --- Original getRelativeTime ---
     const getRelativeTime = (dateString) => {
+        // ... (rest of function)
         const now = new Date();
         const date = new Date(dateString);
         const diff = Math.floor((now - date) / 1000);
@@ -183,7 +212,6 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage }) => {
     };
 
 
-    // --- Original handleClearNotifications ---
     const handleClearNotifications = async (e) => {
         e.stopPropagation();
         try {
@@ -196,7 +224,6 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage }) => {
         } catch (err) {}
     };
 
-    // --- Original handleNotifClick ---
     const handleNotifClick = () => {
         setNotifDropdownOpen(false);
         if (setSelectedPage) {
@@ -206,212 +233,216 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage }) => {
         }
     };
 
-    // --- 6. NEW HANDLER FOR WHEN A SEARCH RESULT IS CLICKED ---
-    // --- 6. NEW HANDLER FOR WHEN A SEARCH RESULT IS CLICKED ---
     const handleResultClick = (result) => {
-        // 1. Map API sourceType to your page's route name
         const typeToRoute = {
             'CUSTOMER': 'customers',
             'PRODUCT': 'products',
             'SALES': 'sales'
-            // Add any other types your API returns
         };
-        // Use map key access: result['sourceType']
         const route = typeToRoute[result['sourceType'].toUpperCase()];
-
         if (route) {
-            // 2. Set the global search key (this is the context search)
-            // Use map key access: result['displayName']
             setSearchKey(result['displayName']);
-
-            // 3. Navigate to the correct page
             if (setSelectedPage) {
                 setSelectedPage(route);
             } else {
-                navigate(`/${route}`); // Fallback navigation
+                navigate(`/${route}`);
             }
         }
-
-        // 4. Clear and close the search bar
         setGlobalSearchTerm("");
         setSearchResults([]);
         setIsDropdownVisible(false);
     };
 
+    // 3. --- UPDATED JSX STRUCTURE ---
+    // Remove inline styles and the 'topbar-spacer' div
+    // Add 3-column layout: topbar-left, topbar-center, topbar-right
+    return (
+        <header className="topbar">
 
-    return (<header
-        className="topbar"
-        style={{
-            display: "flex",
-            justifyContent: "space-between", // This will now create 3 columns
-            alignItems: "center",
-            position: "relative",
-            zIndex: 1000,
-        }}
-    >
-        {/* --- 1. ADD THIS SPACER DIV --- */}
-        {/* This empty div will push the search bar to the middle */}
-        <div className="topbar-spacer"></div>
-
-        {/* --- 2. GLOBAL SEARCH BAR (No changes to this part) --- */}
-        <div className="global-search-container" ref={searchDropdownRef}>
-            <i className="fa-duotone fa-solid fa-search search-icon"></i>
-            <input
-                type="text"
-                placeholder="Search customers, products, orders..."
-                className="global-search-input"
-                value={globalSearchTerm}
-                onChange={(e) => setGlobalSearchTerm(e.target.value)}
-                onFocus={() => {
-                    // Show dropdown on focus only if there are already results
-                    if (searchResults.length > 0) setIsDropdownVisible(true);
-                }}
-            />
-
-            {isDropdownVisible && (
-                <div className="search-results-dropdown">
-                    {isSearchLoading ? (
-                        <div className="search-result-item">Loading...</div>
-                    ) : searchResults.length === 0 && debouncedSearchTerm ? (
-                        <div className="search-result-item">No results found.</div>
-                    ) : (
-                        searchResults.map((result, index) => (
-                            <div
-                                key={result['sourceId'] ? (result['sourceId'] + result['sourceType']) : index}
-                                className="search-result-item"
-                                onMouseDown={() => handleResultClick(result)}
-                            >
-                                <strong>{result['displayName']}</strong>
-                                <span className="search-result-type">
-                                     {result['sourceType'].charAt(0) + result['sourceType'].slice(1).toLowerCase()}
-                                </span>
-                            </div>
-                        ))
-                    )}
-                </div>
-            )}
-        </div>
-
-        {/* --- 3. EXISTING BUTTON CONTAINER (No changes to this part) --- */}
-        <div
-            className="glass-card2 topbar-buttons-container"
-        >
-            {/* ... (all your existing icons: Bell, Moon/Sun, User) ... */}
-            {/* 🔔 Notifications */}
-            <div
-                ref={notifDropdownRef}
-                className="topbar-icon-wrapper"
-                style={{position: 'relative'}}
-                onMouseEnter={() => {
-                    setIsNotiHovered(true);
-                    setNotifDropdownOpen(true);
-                }}
-                onMouseLeave={() => {
-                    setTimeout(() => {
-                        if (!notifDropdownHover) {
-                            setIsNotiHovered(false);
-                            setNotifDropdownOpen(false);
-                        }
-                    }, 600);
-                }}
-                onClick={handleNotifClick}
-            >
-                <Bell size={28} weight="duotone" />
-                {unseenCount > 0 && (
-                    <span className="notification-badge">
-                        {unseenCount}
-                    </span>
-                )}
-                {notifDropdownOpen && (
+            {/* --- NEW: TOPBAR LEFT (Toggle + Logo) --- */}
+            <div className="topbar-left">
+                {/* This button was moved from Sidebar.js */}
+                <button
+                    onClick={toggleSidebar}
+                    aria-label="Toggle sidebar"
+                    className="sidebar-toggle-btn"
+                    style={{
+                        background: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: '6px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                    }}
+                >
+                    {/* This is the hamburger icon from Sidebar.js */}
                     <div
-                        className="notification-dropdown"
-                        onMouseEnter={() => setNotifDropdownHover(true)}
-                        onMouseLeave={() => {
-                            setNotifDropdownHover(false);
-                            setNotifDropdownOpen(false);
+                        style={{
+                            width: '22px',
+                            height: '14px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'space-between'
                         }}
                     >
-                        <div className="notification-dropdown-header">Notifications</div>
-                        {notifications.length === 0 ? (
-                            <div className="notification-dropdown-empty">No new notifications.</div>
-                        ) : (
-                            notifications.slice(0, 5).map(n => (
-                                <div key={n.id}
-                                     className={`notification-dropdown-item ${!n.seen ? 'unread' : ''}`}
-                                     onClick={(e) => {
-                                         e.stopPropagation();
-                                         handleNotifClick();
-                                     }}
-                                >
-                                    <div className="notification-title">{n.title}</div>
-                                    <div className="notification-time">{getRelativeTime(n.createdAt)}</div>
-                                </div>
-                            ))
-                        )}
-                        <div className="notification-dropdown-actions">
-                            <button className="btn btn-clear-notif" onClick={handleClearNotifications}>Clear</button>
-                        </div>
+                    <span
+                        style={{
+                            display: 'block',
+                            height: '2px',
+                            background: toggleColor, // Uses the new color logic
+                            borderRadius: '2px',
+                            opacity: 0.95
+                        }}
+                    />
+                        <span
+                            style={{
+                                display: 'block',
+                                height: '2px',
+                                background: toggleColor, // Uses the new color logic
+                                borderRadius: '2px',
+                                opacity: 0.85
+                            }}
+                        />
+                        <span
+                            style={{
+                                display: 'block',
+                                height: '2px',
+                                background: toggleColor, // Uses the new color logic
+                                borderRadius: '2px',
+                                opacity: 0.75
+                            }}
+                        />
                     </div>
-                )}
+                </button>
+
+                {/* This logo was moved from Sidebar.js */}
+                <h1 className="logo">{isCollapsed ? '' : 'Clear Bill'}</h1>
             </div>
 
-            {/* 🌙 / ☀️ Theme Toggle */}
-            <div
-                className="topbar-icon-wrapper"
-                onClick={toggleTheme}
-                onMouseEnter={() => setIsThemeHovered(true)}
-                onMouseLeave={() => setIsThemeHovered(false)}
-                style={{ transform: isThemeHovered ? "translateY(-5px)" : "translateY(0)"}}
-            >
-                {theme === "light" ? (
-                    <Moon size={28} weight="duotone" />
-                ) : (
-                    <Sun size={28} weight="duotone" />
-                )}
-            </div>
-
-            {/* 👤 User Info Wrapper */}
-            <div
-                ref={userDropdownRef}
-                className="user-profile-wrapper"
-                style={{ position: 'relative' }}
-                onMouseEnter={() => {
-                    clearTimeout(window.userDropdownTimeout);
-                    setIsUserDropdownOpen(true);
-                }}
-                onMouseLeave={() => {
-                    window.userDropdownTimeout = setTimeout(() => {
-                        setIsUserDropdownOpen(false);
-                    }, 300);
-                }}
-            >
-                <div
-                    className="user-profile-trigger"
-                    onClick={() => setSelectedPage("profile")}
-                    onMouseEnter={() => setIsHovered(true)}
-                    onMouseLeave={() => setIsHovered(false)}
-                    style={{ transform: isHovered ? "translateY(-5px)" : "translateY(0)" }}
-                >
-                    {profilePic ? (
-                        <img
-                            src={profilePic}
-                            alt="Profile"
-                            className="user-profile-pic"
-                        />
-                    ) : (
-                        <UserCircle
-                            size={36}
-                            weight="duotone"
-                        />
+            {/* --- TOPBAR CENTER (Global Search) --- */}
+            <div className="topbar-center">
+                <div className="global-search-container" ref={searchDropdownRef}>
+                    <i className="fa-duotone fa-solid fa-search search-icon"></i>
+                    <input
+                        type="text"
+                        placeholder="Search customers, products, orders..."
+                        className="global-search-input"
+                        value={globalSearchTerm}
+                        onChange={(e) => setGlobalSearchTerm(e.target.value)}
+                        onFocus={() => {
+                            if (searchResults.length > 0) setIsDropdownVisible(true);
+                        }}
+                    />
+                    {isDropdownVisible && (
+                        <div className="search-results-dropdown">
+                            {isSearchLoading ? (
+                                <div className="search-result-item">Loading...</div>
+                            ) : searchResults.length === 0 && debouncedSearchTerm ? (
+                                <div className="search-result-item">No results found.</div>
+                            ) : (
+                                searchResults.map((result, index) => (
+                                    <div
+                                        key={result['sourceId'] ? (result['sourceId'] + result['sourceType']) : index}
+                                        className="search-result-item"
+                                        onMouseDown={() => handleResultClick(result)}
+                                    >
+                                        <strong>{result['displayName']}</strong>
+                                        <span className="search-result-type">
+                                         {result['sourceType'].charAt(0) + result['sourceType'].slice(1).toLowerCase()}
+                                    </span>
+                                    </div>
+                                ))
+                            )}
+                        </div>
                     )}
-                    <span className="user-profile-name">
-                        {userName || "Guest"}
-                    </span>
                 </div>
+            </div>
 
-                {isUserDropdownOpen && (
+            {/* --- TOPBAR RIGHT (Icons + User Menu) --- */}
+            <div className="topbar-right">
+                <div
+                    className="glass-card2 topbar-buttons-container"
+                >
+                    {/* 🔔 Notifications */}
                     <div
-                        className="user-dropdown"
+                        ref={notifDropdownRef}
+                        className="topbar-icon-wrapper"
+                        style={{position: 'relative'}}
+                        onMouseEnter={() => {
+                            setIsNotiHovered(true);
+                            setNotifDropdownOpen(true);
+                        }}
+                        onMouseLeave={() => {
+                            setTimeout(() => {
+                                if (!notifDropdownHover) {
+                                    setIsNotiHovered(false);
+                                    setNotifDropdownOpen(false);
+                                }
+                            }, 600);
+                        }}
+                        onClick={handleNotifClick}
+                    >
+                        <Bell size={28} weight="duotone" />
+                        {unseenCount > 0 && (
+                            <span className="notification-badge">
+                            {unseenCount}
+                        </span>
+                        )}
+                        {notifDropdownOpen && (
+                            <div
+                                className="notification-dropdown"
+                                onMouseEnter={() => setNotifDropdownHover(true)}
+                                onMouseLeave={() => {
+                                    setNotifDropdownHover(false);
+                                    setNotifDropdownOpen(false);
+                                }}
+                            >
+                                {/* ... (rest of notification dropdown) ... */}
+                                <div className="notification-dropdown-header">Notifications</div>
+                                {notifications.length === 0 ? (
+                                    <div className="notification-dropdown-empty">No new notifications.</div>
+                                ) : (
+                                    notifications.slice(0, 5).map(n => (
+                                        <div key={n.id}
+                                             className={`notification-dropdown-item ${!n.seen ? 'unread' : ''}`}
+                                             onClick={(e) => {
+                                                 e.stopPropagation();
+                                                 handleNotifClick();
+                                             }}
+                                        >
+                                            <div className="notification-title">{n.title}</div>
+                                            <div className="notification-time">{getRelativeTime(n.createdAt)}</div>
+                                        </div>
+                                    ))
+                                )}
+                                <div className="notification-dropdown-actions">
+                                    <button className="btn btn-clear-notif" onClick={handleClearNotifications}>Clear</button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* 🌙 / ☀️ Theme Toggle */}
+                    <div
+                        className="topbar-icon-wrapper"
+                        onClick={toggleTheme}
+                        onMouseEnter={() => setIsThemeHovered(true)}
+                        onMouseLeave={() => setIsThemeHovered(false)}
+                        style={{ transform: isThemeHovered ? "translateY(-5px)" : "translateY(0)"}}
+                    >
+                        {theme === "light" ? (
+                            <Moon size={28} weight="duotone" />
+                        ) : (
+                            <Sun size={28} weight="duotone" />
+                        )}
+                    </div>
+
+                    {/* 👤 User Info Wrapper */}
+                    <div
+                        ref={userDropdownRef}
+                        className="user-profile-wrapper"
+                        style={{ position: 'relative' }}
                         onMouseEnter={() => {
                             clearTimeout(window.userDropdownTimeout);
                             setIsUserDropdownOpen(true);
@@ -421,61 +452,99 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage }) => {
                                 setIsUserDropdownOpen(false);
                             }, 300);
                         }}
-                        style={{
-                            position: "absolute",
-                            top: "100%",
-                            right: 0,
-                            background: "var(--background-color)",
-                            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                            borderRadius: "25px",
-                            marginTop: "6px",
-                            padding: "8px 0",
-                            zIndex: 2000,
-                            minWidth: "250px",
-                            transition: "opacity 0.2s ease-in-out",
-                        }}
                     >
-
-                        {/* Shop and Profile Item */}
                         <div
-                            className="user-dropdown-item"
-                            onClick={() => {
-                                setSelectedPage("profile");
-                                setIsUserDropdownOpen(false);
-                            }}
+                            className="user-profile-trigger"
+                            onClick={() => setSelectedPage("profile")}
+                            onMouseEnter={() => setIsHovered(true)}
+                            onMouseLeave={() => setIsHovered(false)}
+                            style={{ transform: isHovered ? "translateY(-5px)" : "translateY(0)" }}
                         >
-                            <i className="fa-duotone fa-thin fa-user" style={{fontSize:"22px"}}></i>
-                            <span>Shop and Profile</span>
+                            {profilePic ? (
+                                <img
+                                    src={profilePic}
+                                    alt="Profile"
+                                    className="user-profile-pic"
+                                />
+                            ) : (
+                                <UserCircle
+                                    size={36}
+                                    weight="duotone"
+                                />
+                            )}
+                            <span className="user-profile-name">
+                            {userName || "Guest"}
+                        </span>
                         </div>
 
-                        {/* Settings Item */}
-                        <div
-                            className="user-dropdown-item"
-                            onClick={() => {
-                                setSelectedPage("settings");
-                                setIsUserDropdownOpen(false);
-                            }}
-                        >
-                            <i className="fa-duotone fa-regular fa-gear" style={{fontSize:"22px"}}></i>
-                            <span>Settings</span>
-                        </div>
+                        {isUserDropdownOpen && (
+                            <div
+                                className="user-dropdown"
+                                onMouseEnter={() => {
+                                    clearTimeout(window.userDropdownTimeout);
+                                    setIsUserDropdownOpen(true);
+                                }}
+                                onMouseLeave={() => {
+                                    window.userDropdownTimeout = setTimeout(() => {
+                                        setIsUserDropdownOpen(false);
+                                    }, 300);
+                                }}
+                                style={{
+                                    position: "absolute",
+                                    top: "100%",
+                                    right: 0,
+                                    background: "var(--background-color)",
+                                    // ... (rest of inline styles)
+                                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                                    borderRadius: "25px",
+                                    marginTop: "6px",
+                                    padding: "8px 0",
+                                    zIndex: 2000,
+                                    minWidth: "250px",
+                                    transition: "opacity 0.2s ease-in-out",
+                                }}
+                            >
+                                {/* Shop and Profile Item */}
+                                <div
+                                    className="user-dropdown-item"
+                                    onClick={() => {
+                                        setSelectedPage("profile");
+                                        setIsUserDropdownOpen(false);
+                                    }}
+                                >
+                                    <i className="fa-duotone fa-thin fa-user" style={{fontSize:"22px"}}></i>
+                                    <span>Shop and Profile</span>
+                                </div>
 
-                        {/* Logout Item */}
-                        <div
-                            className="user-dropdown-item logout"
-                            onClick={() => {
-                                handleLogout();
-                                setIsUserDropdownOpen(false);
-                            }}
-                        >
-                            <i className="fa-duotone fa-regular fa-right-from-bracket" style={{fontSize:"22px", color:"#e80a0d"}}></i>
-                            <span>Logout</span>
-                        </div>
+                                {/* Settings Item */}
+                                <div
+                                    className="user-dropdown-item"
+                                    onClick={() => {
+                                        setSelectedPage("settings");
+                                        setIsUserDropdownOpen(false);
+                                    }}
+                                >
+                                    <i className="fa-duotone fa-regular fa-gear" style={{fontSize:"22px"}}></i>
+                                    <span>Settings</span>
+                                </div>
+
+                                {/* Logout Item */}
+                                <div
+                                    className="user-dropdown-item logout"
+                                    onClick={() => {
+                                        handleLogout();
+                                        setIsUserDropdownOpen(false);
+                                    }}
+                                >
+                                    <i className="fa-duotone fa-regular fa-right-from-bracket" style={{fontSize:"22px", color:"#e80a0d"}}></i>
+                                    <span>Logout</span>
+                                </div>
+                            </div>
+                        )}
                     </div>
-                )}
+                </div>
             </div>
-        </div>
-    </header>);
+        </header>);
 };
 
 export default Topbar;

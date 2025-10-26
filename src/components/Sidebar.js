@@ -18,7 +18,7 @@ const iconColors = {
     chat: "#353aad"
 };
 
-const Sidebar = ({ isCollapsed = false, toggleSidebar, selectedPage, setSelectedPage }) => {
+const Sidebar = ({ isCollapsed = false,  selectedPage, setSelectedPage }) => {
     const [isDark, setIsDark] = useState(() =>
         typeof document !== 'undefined' && document.body.classList.contains('dark-theme')
     );
@@ -97,69 +97,7 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar, selectedPage, setSelected
 
     return (
         <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
-            <div
-                className="sidebar-header"
-                style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: isCollapsed ? 'center' : 'flex-start',
-                    gap: '8px'
-                }}
-            >
-                <button
-                    onClick={toggleSidebar}
-                    aria-label="Toggle sidebar"
-                    className="sidebar-toggle-btn"
-                    style={{
-                        background: 'transparent',
-                        border: 'none',
-                        cursor: 'pointer',
-                        padding: '6px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                    }}
-                >
-                    <div
-                        style={{
-                            width: '22px',
-                            height: '14px',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            justifyContent: 'space-between'
-                        }}
-                    >
-            <span
-                style={{
-                    display: 'block',
-                    height: '2px',
-                    background: toggleColor,
-                    borderRadius: '2px',
-                    opacity: 0.95
-                }}
-            />
-                        <span
-                            style={{
-                                display: 'block',
-                                height: '2px',
-                                background: toggleColor,
-                                borderRadius: '2px',
-                                opacity: 0.85
-                            }}
-                        />
-                        <span
-                            style={{
-                                display: 'block',
-                                height: '2px',
-                                background: toggleColor,
-                                borderRadius: '2px',
-                                opacity: 0.75
-                            }}
-                        />
-                    </div>
-                </button>
-                <h1 className="logo">{isCollapsed ? '' : 'Clear Bill'}</h1>
-            </div>
+
 
 
             <nav className="sidebar-nav">
@@ -170,7 +108,7 @@ const Sidebar = ({ isCollapsed = false, toggleSidebar, selectedPage, setSelected
                     title="Dashboard"
                     style={buttonStyleFor('dashboard')}
                 >
-                    <i className="fa-duotone fa-solid fa-gauge-simple-high" style={{ marginRight:"15px", fontSize: '20px' }} ></i>
+                    <i className="fa-duotone fa-solid fa-gauge-simple-high"></i>
                    {/* <Gauge
                         weight="duotone"
                         style={{

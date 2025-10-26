@@ -7,7 +7,7 @@ const Footer = ({ setSelectedPage }) => {
     };
 
     return (
-        <footer style={{
+        <footer className="footer" style={{
             borderTop: '1px solid var(--border-color, #e6e6e6)',
             background: 'var(--footer-bg, transparent)',
             padding: '6px 16px',

@@ -4,8 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 import Footer from "./Footer";
+import './MainLayout.css'; // <-- 1. Import the new CSS file
 
-// 1. Accept the new `isAdmin` prop
 const MainLayout = ({ children, onLogout, toggleTheme, theme, selectedPage, setSelectedPage, pages, isAdmin }) => {
     const navigate = useNavigate();
 
@@ -46,19 +46,36 @@ const MainLayout = ({ children, onLogout, toggleTheme, theme, selectedPage, setS
     };
 
     return (
-        <div className={`app-container ${isCollapsed ? 'collapsed' : ''}`}>
-            {/* 2. Pass the `isAdmin` prop down to the Sidebar */}
-            <Sidebar
+        // 2. This class now controls the *entire* app layout
+        <div className={`app-layout ${isCollapsed ? 'collapsed' : ''}`}>
+
+            {/* 3. Topbar is now at the top, outside of any other container. */}
+            {/* We pass 'isCollapsed' and 'toggleSidebar' to it. */}
+            <Topbar
+                onLogout={handleLogout}
+                toggleTheme={toggleTheme}
+                theme={theme}
                 isCollapsed={isCollapsed}
-                toggleSidebar={toggleSidebar}
-                selectedPage={selectedPage}
+                toggleSidebar={toggleSidebar} // <-- Pass toggle function
                 setSelectedPage={setSelectedPage}
-                isAdmin={isAdmin}
             />
-            <div className="main-content">
-                <Topbar onLogout={handleLogout} toggleTheme={toggleTheme} theme={theme} isCollapsed={isCollapsed} setSelectedPage={setSelectedPage} />
-                <main>{(pages && selectedPage && pages[selectedPage]) ? pages[selectedPage] : children}</main>
-                <Footer setSelectedPage={setSelectedPage} />
+
+            {/* 4. This new 'content-area' holds the Sidebar and Main Content */}
+            <div className="content-area">
+
+                {/* 5. Sidebar no longer needs 'toggleSidebar' prop */}
+                <Sidebar
+                    isCollapsed={isCollapsed}
+                    selectedPage={selectedPage}
+                    setSelectedPage={setSelectedPage}
+                    isAdmin={isAdmin}
+                />
+
+                {/* 6. 'main-content' no longer contains Topbar */}
+                <div className="main-content">
+                    <main>{(pages && selectedPage && pages[selectedPage]) ? pages[selectedPage] : children}</main>
+                    <Footer setSelectedPage={setSelectedPage} />
+                </div>
             </div>
         </div>
     );
