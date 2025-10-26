@@ -843,7 +843,7 @@ const BillingPage = ({ setSelectedPage }) => {
                             opacity: 0.8,
                         }}
                     >
-                        shortcut keys
+                        Shortcut keys
                         {isShortcutListVisible ? <FaTimes size={12} /> : <FaChevronDown size={12} />}
                     </button>
 
@@ -989,7 +989,7 @@ const BillingPage = ({ setSelectedPage }) => {
                                             <th>List Price </th>
                                             <th>Qty</th>
                                             {/* --- UPDATED: Hint for shortcut --- */}
-                                            <th>Discount% (Ctrl+Alt+D)</th>
+                                            <th>Discount%</th>
                                             <th>Base Price </th>
                                             <th>Tax </th>
                                             <th>Selling </th>
@@ -1119,7 +1119,7 @@ const BillingPage = ({ setSelectedPage }) => {
                                     gap: '10px'
                                 }}>
                                     <label style={{ fontWeight: 500, color: 'var(--primary-color)', whiteSpace: 'nowrap' }}>
-                                        Paying:  (Ctrl+Alt+R)
+                                        Paying:
                                     </label>
                                     <input
                                         type="number"
@@ -1182,7 +1182,7 @@ const BillingPage = ({ setSelectedPage }) => {
                             className="payment-methods"
                             style={{ marginTop: '1rem', outline: 'none' }} // outline:none removes focus ring
                         >
-                            <h5 style={{ marginBottom: '0.5rem', color: 'var(--primary-color)' }}>Payment Method: (Alt+P)</h5>
+                            <h5 style={{ marginBottom: '0.5rem', color: 'var(--primary-color)' }}>Payment Method:</h5>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                 {[
                                     { type: 'CASH', icon: 'fa-duotone fa-money-bills', key: 'cash' },
