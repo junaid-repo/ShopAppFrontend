@@ -9,6 +9,8 @@ export const BillingProvider = ({ children }) => {
     const [cart, setCart] = useState([]);
     const [paymentMethod, setPaymentMethod] = useState('CASH');
     const [products, setProducts] = useState([]); // store products with stock
+    const [payingAmount, setPayingAmount] = useState(0);
+    const [isPayingAmountManuallySet, setIsPayingAmountManuallySet] = useState(false);
 
     // --- All context functions are now wrapped in useCallback ---
 
@@ -50,6 +52,8 @@ export const BillingProvider = ({ children }) => {
         setSelectedCustomer(null);
         setCart([]);
         setPaymentMethod('CASH');
+        setPayingAmount(0);
+        setIsPayingAmountManuallySet(false);
     }, []);
 
     // --- The context value is wrapped in useMemo for performance ---
@@ -65,12 +69,20 @@ export const BillingProvider = ({ children }) => {
         clearBill,
         products,
         loadProducts,
-        updateCartItem
+        updateCartItem,
+        // --- Add these four new values ---
+        payingAmount,
+        setPayingAmount,
+        isPayingAmountManuallySet,
+        setIsPayingAmountManuallySet
     }), [
         selectedCustomer,
         cart,
         paymentMethod,
         products,
+        // --- Add the 4 new values to the dependency array ---
+        payingAmount,
+        isPayingAmountManuallySet,
         addProduct,
         removeProduct,
         clearBill,

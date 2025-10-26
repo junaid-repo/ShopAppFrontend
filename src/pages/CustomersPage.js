@@ -471,12 +471,12 @@
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    handleEditClick(customer);
+                                                    handleTakeAction(customer.name)
                                                 }}
-                                                className="edit-btn"
-                                                title="Edit Customer"
+                                                className="viewsales-btn"
+                                                title="View Sales"
                                             >
-                                                <i className="fa-duotone fa-solid fa-pen-to-square"></i>
+                                                <i className="fa-duotone fa-solid fa-cart-shopping-fast"></i>
                                             </button>
                                             <button
                                                 className="delete-btn"
@@ -487,6 +487,17 @@
                                             >
                                                 <i className="fa-duotone fa-solid fa-trash"></i>
                                             </button>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleEditClick(customer);
+                                                }}
+                                                className="edit-btn"
+                                                title="Edit Customer"
+                                            >
+                                                <i className="fa-duotone fa-solid fa-pen-to-square"></i>
+                                            </button>
+
                                         </div>
                                     );
                                 })}

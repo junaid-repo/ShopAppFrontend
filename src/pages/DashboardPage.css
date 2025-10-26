@@ -140,6 +140,24 @@
     align-items: center;
     justify-content: center;
 }
+.viewsales-btn {
+    position: absolute;
+    right: 5.5rem;
+    bottom: 1.1rem;
+    background-color: #e0f7fa;
+    color: #00796b;
+    border: none;
+    border-radius: 20%;
+    padding: 0.4rem;
+    cursor: pointer;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.viewsales-btn:hover{
+    background-color: #acd6db;
+}
 .edit-btn:hover {
     background-color: #acd6db;
 }

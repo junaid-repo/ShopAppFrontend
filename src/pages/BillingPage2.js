@@ -30,7 +30,11 @@ const BillingPage = ({ setSelectedPage }) => {
         cart, addProduct, removeProduct,
         paymentMethod, setPaymentMethod,
         clearBill, products, loadProducts,
-        updateCartItem
+        updateCartItem,
+        payingAmount,
+        setPayingAmount,
+        isPayingAmountManuallySet,
+        setIsPayingAmountManuallySet
     } = useBilling();
 
     // --- Component State ---
@@ -87,14 +91,15 @@ const BillingPage = ({ setSelectedPage }) => {
     const discountPercentage = actualSubtotal > 0 ? (((actualSubtotal - sellingSubtotal) / actualSubtotal) * 100).toFixed(2) : 0;
 
     // --- NEW: State for Paying Amount ---
-    const [payingAmount, setPayingAmount] = useState(sellingSubtotal);
+
     const remainingAmount = sellingSubtotal - payingAmount;
 
     // --- NEW: Effect to sync payingAmount with sellingSubtotal ---
     useEffect(() => {
-        setPayingAmount(sellingSubtotal);
-    }, [sellingSubtotal]);
-
+        if (!isPayingAmountManuallySet) {
+            setPayingAmount(sellingSubtotal);
+        }
+    }, [sellingSubtotal, isPayingAmountManuallySet, setPayingAmount]);
 
     // --- API Calls and Data Fetching ---
 
@@ -941,7 +946,10 @@ const BillingPage = ({ setSelectedPage }) => {
                                     <input
                                         type="number"
                                         value={payingAmount}
-                                        onChange={(e) => setPayingAmount(parseFloat(e.target.value) || 0)}
+                                        onChange={(e) => {
+                                            setPayingAmount(parseFloat(e.target.value) || 0);
+                                            setIsPayingAmountManuallySet(true);
+                                        }}
                                         style={{
                                             width: '40%', // <-- This will fill the remaining space
                                             padding: '10px',
