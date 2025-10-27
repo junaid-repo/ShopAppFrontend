@@ -1,10 +1,20 @@
 // src/components/Modal.js
-import React, { useEffect, useRef } from 'react';
-import { FaTimes } from 'react-icons/fa';
-// import './Modal.css'; // Your modal CSS
+import React, { useEffect, useRef } from 'react'; // No changes here
+import { FaTimes } from 'react-icons/fa'; // No changes here
 
 const Modal = ({ show, onClose, title, children }) => {
     const modalRef = useRef(null);
+
+    // --- FIX 1: Store onClose in a ref ---
+    // This ref will hold the *latest* version of the onClose function
+    // without causing the main effect to re-run.
+    const onCloseRef = useRef(onClose);
+
+    // --- FIX 2: Update the ref when onClose changes ---
+    // This small effect runs when onClose changes, keeping the ref fresh.
+    useEffect(() => {
+        onCloseRef.current = onClose;
+    }, [onClose]);
 
     // This is the query to find all focusable elements
     const focusableQuery = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
@@ -15,13 +25,14 @@ const Modal = ({ show, onClose, title, children }) => {
             return;
         }
 
-        // Store the element that was focused *before* the modal opened
         const lastFocusedElement = document.activeElement;
 
         const handleKeyDown = (e) => {
             // 1. Handle Escape key
             if (e.key === 'Escape') {
-                onClose();
+                // --- FIX 3: Call the ref's current value ---
+                // This guarantees we always call the latest function.
+                onCloseRef.current();
                 return;
             }
 
@@ -31,21 +42,17 @@ const Modal = ({ show, onClose, title, children }) => {
 
                 // Find all focusable elements within the modal
                 const focusableElements = Array.from(modalRef.current.querySelectorAll(focusableQuery));
-                if (focusableElements.length === 0) return; // No focusable elements
+                if (focusableElements.length === 0) return;
 
                 const firstElement = focusableElements[0];
                 const lastElement = focusableElements[focusableElements.length - 1];
 
                 if (e.shiftKey) {
-                    // --- Shift + Tab ---
-                    // If focus is on the first element, wrap to the last
                     if (document.activeElement === firstElement) {
                         lastElement.focus();
                         e.preventDefault();
                     }
                 } else {
-                    // --- Just Tab ---
-                    // If focus is on the last element, wrap to the first
                     if (document.activeElement === lastElement) {
                         firstElement.focus();
                         e.preventDefault();
@@ -54,47 +61,54 @@ const Modal = ({ show, onClose, title, children }) => {
             }
         };
 
-        // Add the keyboard listener
         document.addEventListener('keydown', handleKeyDown);
 
         // --- Focus the first element inside the modal when it opens ---
         const focusTimer = setTimeout(() => {
             if (modalRef.current) {
-                const firstFocusable = modalRef.current.querySelector(focusableQuery);
-                if (firstFocusable) {
-                    firstFocusable.focus();
+                const firstInBody = modalRef.current.querySelector(
+                    '.modal-body ' + focusableQuery
+                );
+
+                if (firstInBody) {
+                    firstInBody.focus();
                 } else {
-                    // As a fallback, focus the modal container itself
-                    modalRef.current.focus();
+                    const firstInModal = modalRef.current.querySelector(focusableQuery);
+                    if (firstInModal) {
+                        firstInModal.focus();
+                    } else {
+                        modalRef.current.focus();
+                    }
                 }
             }
-        }, 100); // 100ms delay helps ensure elements are rendered
+        }, 100);
 
         // Cleanup function
         return () => {
             document.removeEventListener('keydown', handleKeyDown);
             clearTimeout(focusTimer);
-            // --- Return focus to the element that opened the modal ---
             lastFocusedElement?.focus();
         };
 
-    }, [show, onClose]); // This effect *needs* onClose to be stable
+        // --- FIX 4: Remove onClose from the dependency array ---
+        // Now, this entire effect only runs when `show` changes!
+    }, [show]);
 
     if (!show) {
         return null;
     }
 
-    // Use your existing modal structure
+    // Your JSX remains exactly the same
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div
                 className="modal-content"
                 onClick={e => e.stopPropagation()}
-                ref={modalRef} // --- ADD THIS ---
+                ref={modalRef}
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="modal-title"
-                tabIndex="-1" // --- ADD THIS ---
+                tabIndex="-1"
             >
                 <div className="modal-header">
                     <h2 id="modal-title">{title}</h2>

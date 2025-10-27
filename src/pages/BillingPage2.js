@@ -129,6 +129,7 @@ const BillingPage = ({ setSelectedPage }) => {
     const total = sellingSubtotal - tax;
     const discountPercentage = actualSubtotal > 0 ? (((actualSubtotal - sellingSubtotal) / actualSubtotal) * 100).toFixed(2) : 0;
     const remainingAmount = sellingSubtotal - payingAmount;
+    const totalUnits = cart.reduce((total, item) => total + item.quantity, 0);
 
     // Effect to sync payingAmount with sellingSubtotal
     useEffect(() => {
@@ -898,7 +899,7 @@ const BillingPage = ({ setSelectedPage }) => {
                                 {/* --- UPDATED: Hint for shortcut --- */}
                                 <button className="btn" onClick={() => setIsModalOpen(true)} title="Alt + E"><i
                                     className="fa-duotone fa-solid fa-user-magnifying-glass" style={{paddingRight:"5px"}}></i>
-                                    {selectedCustomer ? `Change Customer` : 'Search Customer'}
+                                    {selectedCustomer ? `Change Customer` : 'Select Customer'}
                                 </button>
                                 {/* --- UPDATED: Hint for shortcut --- */}
                                 <button className="btn" onClick={() => setIsNewCusModalOpen(true)} title="Shift + Alt + E">
@@ -914,12 +915,57 @@ const BillingPage = ({ setSelectedPage }) => {
                             </div>
                         </div>
 
-                        {selectedCustomer && (
-                            <p style={{ fontSize: '1.1em', textDecoration: 'underline' }}>
-                                Customer: <strong>{selectedCustomer.name}</strong>{' '}
-                                <strong style={{ fontSize: '0.8em', color: '#888', marginLeft: '10px' }}>{selectedCustomer.phone}</strong>
-                            </p>
-                        )}
+                        {/* --- MODIFICATION 2: Customer Display Box --- */}
+                        {/* --- UPDATED: Customer Display Box --- */}
+                        {/* --- UPDATED: Customer Display Box --- */}
+                        {/* --- UPDATED: Customer Display Box --- */}
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            marginTop: '1rem',
+                            gap: '10px' // Space between label and box
+                        }}>
+                            {/* 1. The Label (outside the box) */}
+                            <span style={{
+                                fontSize: '1.1em',
+                                color: 'var(--text-color)',
+                                fontWeight: '600'
+                            }}>
+                                Customer:
+                            </span>
+
+                            {/* 2. The Box (containing name/phone or placeholder) */}
+                            <div
+                                style={{
+                                    border: `3px dashed ${selectedCustomer ? 'green' : '#ff6b6b'}`, // Thicker border
+                                    borderRadius: '15px',
+                                    padding: '10px 15px',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    transition: 'all 0.3s ease',
+                                    gap: '1rem'
+                                }}
+
+                                title="Click to select or change customer (Alt + E)"
+                            >
+                                {selectedCustomer ? (
+                                    // Content when customer is selected
+                                    <div>
+                                        <strong style={{ fontSize: '1.2em' }}>{selectedCustomer.name}</strong>
+                                        <span style={{ fontSize: '0.9em', color: '#888', marginLeft: '10px' }}>{selectedCustomer.phone}</span>
+                                    </div>
+                                ) : (
+                                    // Placeholder when no customer is selected
+                                    <span style={{ fontSize: '1.2em', color: '#888' }}>
+                                        Select Customer
+                                    </span>
+                                )}
+
+                                {/* Plus icon (only shows if no customer) */}
+
+                            </div>
+                        </div>
+
 
                         <div className="product-search-container" ref={searchContainerRef} style={{ marginTop: '1rem', position: 'relative' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', border: '1px solid var(--border-color)', borderRadius: '20px', padding: '0.2rem 1rem' }}>
@@ -984,6 +1030,7 @@ const BillingPage = ({ setSelectedPage }) => {
                                     <table className="beautiful-table cart-table">
                                         <thead>
                                         <tr>
+                                            <th style={{width: '50px'}}>S.No.</th>
                                             <th>Item</th>
                                             <th>HSN</th>
                                             <th>List Price </th>
@@ -1017,6 +1064,7 @@ const BillingPage = ({ setSelectedPage }) => {
 
                                             return (
                                                 <tr key={item.id}>
+                                                    <td style={{ verticalAlign: 'middle', textAlign: 'center' }}>{index + 1}</td>
                                                     <td style={{ verticalAlign: 'middle' }}>{item.name}</td>
                                                     <td style={{ verticalAlign: 'middle' }}>{item.hsn}</td>
                                                     <td style={{ verticalAlign: 'middle' }}>
@@ -1095,6 +1143,9 @@ const BillingPage = ({ setSelectedPage }) => {
                 <div className="summary-section glass-card" style={{ flex: 1, padding: '1rem', height: 'fit-content' }}>
                     <h3 style={{ textAlign: 'center', marginTop: 0 }}>Summary</h3>
                     <div className="invoice-summary">
+                        <p style={{ color: 'var(--primary-color)', fontWeight: '600', fontSize: '1.05em' }}>
+                            Total Units: <span>{totalUnits}</span>
+                        </p>
                         <p>Total without GST: <span>₹{total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></p>
                         <p className="tax">GST: <span>₹{tax.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></p>
 
