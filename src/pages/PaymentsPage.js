@@ -168,32 +168,34 @@ const PaymentsPage = ({ setSelectedPage }) => {
 
 
     const fetchPayments = useCallback(async () => {
-        if (!apiUrl) return; // Don't fetch if apiUrl isn't ready
+        if (!apiUrl) return;
 
-        setIsLoading(true); // Start loading
-        const query = `?fromDate=${fromDate}&toDate=${toDate}`;
+        setIsLoading(true);
+        const query = `?fromDate=${fromDate}&toDate=${toDate}&_=${Date.now()}`;
         try {
             const response = await fetch(`${apiUrl}/api/shop/get/paymentLists${query}`, {
                 method: "GET",
                 credentials: 'include',
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "Cache-Control": "no-cache",
                 },
             });
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
             const data = await response.json();
             console.log("API response:", data);
             setPayments(data);
-        } catch (error) {
-            console.error("Error fetching paymentLists:", error);
-            showAlert("Something went wrong while fetching paymentLists.");
-            setPayments([]); // Clear data on error
+        } catch (err) {
+            console.error(err);
+            showAlert("Error fetching payments");
         } finally {
-            setIsLoading(false); // Stop loading
+            setIsLoading(false);
         }
     }, [apiUrl, fromDate, toDate, showAlert]);
+
+    useEffect(() => {
+        if (apiUrl) fetchPayments();
+    }, [apiUrl, fetchPayments]);
+
 
     useEffect(() => {
         fetchPayments();

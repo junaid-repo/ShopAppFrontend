@@ -22,6 +22,7 @@ const SettingsPage = () => {
 
     // --- State Management ---
     const [showPasswordModal, setShowPasswordModal] = useState(false);
+    const [isRefreshing, setIsRefreshing] = useState(false);
     const [passwordStep, setPasswordStep] = useState(1);
     const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
 
@@ -211,6 +212,38 @@ const SettingsPage = () => {
         }
     };
 
+    const handleRefreshCache = async () => {
+        if (isRefreshing) return; // Prevent double-clicks
+        if (!apiUrl) {
+            toast.error("API not available.");
+            return;
+        }
+
+        setIsRefreshing(true);
+        const refreshToastId = toast.loading("Refreshing app..."); // Show loading toast
+
+        try {
+            // Making an API call as requested
+            const response = await fetch(`${apiUrl}/api/shop/refreshbackendcache`, {
+                method: 'POST', // Using POST for an action that changes state (clears cache)
+                credentials: 'include',
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to refresh cache");
+            }
+
+            // Success toast
+            toast.success('App refreshed', { id: refreshToastId });
+
+        } catch (error) {
+            console.error("Error refreshing cache:", error);
+            toast.error('Refresh failed.', { id: refreshToastId });
+        } finally {
+            setIsRefreshing(false);
+        }
+    };
+
     const handleSaveUiSettings = createSaveHandler('ui', uiSettings, setOriginalUiSettings, 'UI');
     const handleSaveSchedulers = createSaveHandler('scheduler', schedulerSettings, setOriginalSchedulerSettings, 'Scheduler');
     const handleSaveBillingSettings = createSaveHandler('billing', billingSettings, setOriginalBillingSettings, 'Billing');
@@ -375,6 +408,7 @@ const SettingsPage = () => {
                     <div className="tab-pane">
                         {/* ... UI settings content ... */}
                         <div className="setting-item">
+
                             <div className="setting-toggle">
                                 <ToggleSwitch
                                     checked={uiSettings.darkModeDefault}
@@ -399,6 +433,15 @@ const SettingsPage = () => {
                                     onChange={(e) => setUiSettings({ ...uiSettings, autoPrintInvoice: e.target.checked })}
                                 />
                                 <label>Directly forward to invoice printing after payment</label>
+                            </div>
+                        </div>
+                        <div className="setting-item">
+                            <div className="setting-toggle">
+
+                                <button className="btn" onClick={handleRefreshCache} disabled={isRefreshing}>
+                                    {isRefreshing ? 'Refreshing...' : 'Refresh App'}
+                                </button>
+                                <span  style={{paddingLeft:"21rem"}}>Clear server-side application cache</span>
                             </div>
                         </div>
                         {isUiDirty && (

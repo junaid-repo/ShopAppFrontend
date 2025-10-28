@@ -937,7 +937,7 @@ const BillingPage = ({ setSelectedPage }) => {
                             {/* 2. The Box (containing name/phone or placeholder) */}
                             <div
                                 style={{
-                                    border: `3px dashed ${selectedCustomer ? 'green' : '#ff6b6b'}`, // Thicker border
+                                    border: `3px solid ${selectedCustomer ? 'green' : 'var(--primary-color)'}`, // Thicker border
                                     borderRadius: '15px',
                                     padding: '10px 15px',
                                     display: 'inline-flex',
@@ -946,7 +946,7 @@ const BillingPage = ({ setSelectedPage }) => {
                                     gap: '1rem'
                                 }}
 
-                                title="Click to select or change customer (Alt + E)"
+                                title="select or change customer (Alt + E)"
                             >
                                 {selectedCustomer ? (
                                     // Content when customer is selected
@@ -968,8 +968,16 @@ const BillingPage = ({ setSelectedPage }) => {
 
 
                         <div className="product-search-container" ref={searchContainerRef} style={{ marginTop: '1rem', position: 'relative' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', border: '1px solid var(--border-color)', borderRadius: '20px', padding: '0.2rem 1rem' }}>
-                                <FaSearch style={{ color: 'var(--text-color)' }} />
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '10px',
+                                background: "var(--body-bg)",
+                                border: '1px solid var(--primary-color-light)',
+                                borderRadius: '15px',
+                                padding: '0.2rem 1rem'
+                            }}>
+                                <i className="fa-duotone fa-solid fa-magnifying-glass"></i>
                                 <input
                                     type="text"
                                     ref={productSearchInputRef}
@@ -980,7 +988,15 @@ const BillingPage = ({ setSelectedPage }) => {
                                     onFocus={() => setIsSearchFocused(true)}
                                     // --- NEW: onKeyDown for Escape key ---
                                     onKeyDown={handleSearchKeyDown}
-                                    style={{ width: '100%', padding: '10px', background: 'transparent', border: 'none', color: 'var(--text-color)', fontSize: '1rem', outline: 'none' }}
+                                    style={{
+                                        width: '100%',
+                                        padding: '10px',
+                                        background: 'transparent',
+                                        border: 'none',
+                                        color: 'var(--text-color)',
+                                        fontSize: '1rem',
+                                        outline: 'none'
+                                    }}
                                 />
                             </div>
 
@@ -1041,7 +1057,7 @@ const BillingPage = ({ setSelectedPage }) => {
                                             <th>Tax </th>
                                             <th>Selling </th>
                                             <th>Details</th>
-                                            <th>Action</th>
+                                            <th></th>
                                         </tr>
                                         </thead>
                                         <tbody>
@@ -1125,8 +1141,9 @@ const BillingPage = ({ setSelectedPage }) => {
                                                         />
                                                     </td>
                                                     <td style={{ verticalAlign: 'middle' }}>
-                                                        <button className="remove-btn" onClick={() => removeProduct(item.id)}>
-                                                            <FaTrash />
+                                                        <button className="remove-btn"
+                                                                onClick={() => removeProduct(item.id)}>
+                                                            <i className="fa-duotone fa-solid fa-trash"></i>
                                                         </button>
                                                     </td>
                                                 </tr>
@@ -1386,7 +1403,7 @@ const BillingPage = ({ setSelectedPage }) => {
                         <label>Phone Number</label>
                         <input
                             type="tel"
-                            required
+
                             value={phone}
                             onChange={(e) => setPhone(e.target.value)}
                             maxLength="10"

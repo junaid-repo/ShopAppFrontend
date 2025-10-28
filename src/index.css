@@ -1377,3 +1377,47 @@ body.dark-theme .shortcut-key {
     border-color: #555; /* Darker border */
     color: var(--text-color);
 }
+
+/* --- CSS for Info Tooltip --- */
+.info-tooltip-container {
+    position: relative;
+    display: inline-block;
+}
+
+.info-tooltip-container .info-tooltip-text {
+    visibility: hidden;
+    width: 350px;
+    background-color: #333;
+    color: #fff;
+    text-align: left;
+    border-radius: 6px;
+    padding: 10px;
+    position: absolute;
+    z-index: 10;
+    bottom: 125%; /* Position above the icon */
+    left: 50%;
+    margin-left: -175px; /* Use half of the width to center */
+    opacity: 0;
+    transition: opacity 0.3s;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    font-size: 0.9rem;
+    font-weight: normal;
+    line-height: 1.5;
+}
+
+/* Arrow */
+.info-tooltip-container .info-tooltip-text::after {
+    content: "";
+    position: absolute;
+    top: 100%; /* At the bottom of the tooltip */
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #333 transparent transparent transparent;
+}
+
+.info-tooltip-container:hover .info-tooltip-text {
+    visibility: visible;
+    opacity: 1;
+}

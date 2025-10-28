@@ -887,7 +887,7 @@ const SalesPage = () => {
                                         gap: '8px'
                                     }}
                                 >
-                                    <MdSend size={18} /> Send Reminder
+                                    Send Reminder <MdSend size={18} />
                                 </button>
                             </div>
                         </div>

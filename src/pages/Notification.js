@@ -329,17 +329,17 @@ const Notification = ({ setSelectedPage }) => {
                                 </div>
                                 <div style={{ display: 'flex', gap: '0.1rem', flexWrap: 'wrap' }}>
                                     {/* CHANGE 3: Updated button colors and added icons */}
-                                    <button className="small-btn" style={{ backgroundColor: 'rgba(40,167,69,0.72)', color: 'white', borderRadius: '25px' }} onClick={() => handleTakeAction(selectedNotification)}>
+                                    <button className="small-btn" style={{ backgroundColor: 'rgba(40,167,69,0.72)', color: 'white', borderRadius: '25px', cursor: 'pointer' }} onClick={() => handleTakeAction(selectedNotification)}>
                                         <FaCheck size={14}/> Take Action
                                     </button>
                                     <button
                                         className="small-btn"
-                                        style={{ backgroundColor: selectedNotification?.isFlagged ? '#6c757d' : '#ffc107', color: 'white', borderRadius: '25px' }}
+                                        style={{ backgroundColor: selectedNotification?.isFlagged ? '#6c757d' : '#ffc107', color: 'white', borderRadius: '25px', cursor: 'pointer' }}
                                         onClick={() => handleFlag(selectedNotification.id, !selectedNotification.isFlagged)}
                                     >
                                         <FaFlag size={14}/> {selectedNotification?.isFlagged ? 'Unflag' : 'Flag'}
                                     </button>
-                                    <button className="small-btn" style={{ backgroundColor: 'rgba(220,53,69,0.87)', color: 'white', borderRadius: '25px' }} onClick={() => handleDelete(selectedNotification.id)}>
+                                    <button className="small-btn" style={{ backgroundColor: 'rgba(220,53,69,0.87)', color: 'white', borderRadius: '25px', cursor: 'pointer' }} onClick={() => handleDelete(selectedNotification.id)}>
                                         <FaTrash size={14}/> Delete
                                     </button>
                                 </div>

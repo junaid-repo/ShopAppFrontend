@@ -56,7 +56,7 @@ axios.interceptors.response.use(
                 if (!window.location.pathname.includes('/login')) { // Prevent redirect loop if already on login
                     window.location.href = '/login';
                 }
-            }, 1500); // 1.5 second delay
+            }, 15000); // 1.5 second delay
 
             // Prevent the error from propagating further in this case
             return Promise.resolve({ data: null, __handledByInterceptor__: true });

@@ -170,6 +170,13 @@
         const handleAddCustomer = async (e) => {
             e.preventDefault();
             try {
+
+                if(phone===''){
+                    setPhone('0000000000');
+                }
+
+
+
                 const payload = { name, email, phone, city,  customerState, gstNumber};
     
                 const response = await fetch(`${apiUrl}/api/shop/create/customer`, {
@@ -624,7 +631,7 @@
                             <label>Phone Number</label>
                             <input
                                 type="tel"
-                                required
+
                                 value={phone}
                                 onChange={(e) => setPhone(e.target.value)}
                                 // --- Validation Attributes Added Below ---
@@ -668,7 +675,7 @@
                         </div>
                         <div className="form-group">
                             <label>Phone Number</label>
-                            <input type="tel" required value={phone} onChange={(e) => setPhone(e.target.value)} />
+                            <input type="tel"  value={phone} onChange={(e) => setPhone(e.target.value)} />
                         </div>
                         <div className="form-group">
                             <label>GST Number</label>

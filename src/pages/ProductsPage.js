@@ -6,7 +6,7 @@ import { MdEdit, MdDelete } from "react-icons/md";
 import { useLocation } from 'react-router-dom';
 import { useSearchKey } from '../context/SearchKeyContext';
 import toast, { Toaster } from 'react-hot-toast';
-import {  FaCheckDouble, FaTimes } from 'react-icons/fa';
+import { FaCheckDouble, FaTimes, FaInfoCircle, FaDownload } from 'react-icons/fa';
 import { useAlert } from '../context/AlertContext';
 
 import PlaylistAddCheckIcon from '@mui/icons-material/PlaylistAddCheck';
@@ -51,8 +51,14 @@ const ProductsPage = () => {
     const [price, setPrice] = useState("");
     const [costPrice, setCostPrice] = useState("");
     const [stock, setStock] = useState("");
-    const [tax, setTax] = useState("");
+    const [tax, setTax] = useState("18");
     const [selectedProductId, setSelectedProductId] = useState(null);
+
+    const standardTaxSlabs = ['0', '5', '12', '18', '28'];
+
+// Check if the current 'tax' value is one of the standard slabs.
+// We convert 'tax' to a string just in case it's a number from the database.
+    const currentTaxIsStandard = standardTaxSlabs.includes(String(tax));
 
     // CSV Upload State
     const [csvFile, setCsvFile] = useState(null);
@@ -213,7 +219,17 @@ const ProductsPage = () => {
             setSearchTerm(searchKey);
         }
     }, [searchKey]);
-
+    const handleDownloadTemplate = () => {
+        const headers = "selectedProductId,name,hsn,category,costPrice,price,stock,tax";
+        const blob = new Blob([headers], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", "products_template.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
 
     // --- EVENT HANDLERS ---
 
@@ -448,55 +464,64 @@ const ProductsPage = () => {
 };*/
 
 
-    const handleExportCSV = () => {
-        if (!products || products.length === 0) {
-            showAlert("No products available to export.");
+    const handleExportCSV = async () => {
+        if (totalProducts === 0) {
+            showAlert("No products to export.");
             return;
         }
 
-        // Ask for confirmation before download
-        const confirmDownload = window.confirm("Do you want to export the products CSV?");
-        if (!confirmDownload) {
+        // Confirm with the user
+        if (!window.confirm(`Do you want to export all products to CSV?`)) {
             return;
         }
 
-        const headers = ["selectedProductId", "name", "hsn", "category", "costPrice", "price", "stock", "tax"];
+        try {
+            // Build request URL - plain, with no payload/params as requested
+            const url = `${apiUrl}/api/shop/export/products`;
 
-        const rows = products.map(p => [
-            p.id,
-            `"${p.name}"`,
-            p.hsn,
-            `"${p.category}"`,
-            p.costPrice !== undefined && p.costPrice !== null ? p.costPrice : "",
-            p.price,
-            p.stock,
-            p.tax
-        ]);
+            // Fetch CSV file from backend
+            const response = await fetch(url, {
+                method: "GET",
+                credentials: "include",
+            });
 
-        const csvContent =
-            [headers, ...rows]
-                .map(row => row.join(","))
-                .join("\n");
+            if (!response.ok) {
+                // Try to get a more helpful error message
+                let errorText = `HTTP error! status: ${response.status}`;
+                try {
+                    // Assumes backend sends JSON on error, e.g., { message: "..." }
+                    const errorData = await response.json();
+                    errorText = errorData.message || JSON.stringify(errorData);
+                } catch (e) {
+                    // Fallback if the error response isn't JSON
+                    errorText = await response.text();
+                }
+                throw new Error(errorText);
+            }
 
-        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
+            // Convert response bytestream to a Blob
+            const blob = await response.blob();
+            const downloadUrl = window.URL.createObjectURL(blob);
 
-        // Generate timestamp in YYYYMMDD_HHmmss format
-        const now = new Date();
-        const timestamp = now.getFullYear().toString()
-            + String(now.getMonth() + 1).padStart(2, "0")
-            + String(now.getDate()).padStart(2, "0")
-            + "_"
-            + String(now.getHours()).padStart(2, "0")
-            + String(now.getMinutes()).padStart(2, "0")
-            + String(now.getSeconds()).padStart(2, "0");
+            // Create temporary <a> and trigger download
+            const link = document.createElement("a");
+            link.href = downloadUrl;
+            const now = new Date();
+            const timestamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}_${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}`;
 
-        link.setAttribute("download", `Products_Export_${timestamp}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+            // Set a descriptive filename
+            link.setAttribute("download", `Products_Export_All_${timestamp}.csv`);
+            document.body.appendChild(link);
+            link.click();
+
+            // Clean up
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(downloadUrl);
+
+        } catch (err) {
+            console.error("Error exporting CSV:", err);
+            showAlert(`Failed to export products: ${err.message}`);
+        }
     };
 
 
@@ -861,8 +886,16 @@ const ProductsPage = () => {
                     <div className="form-group"><label>Cost Price</label><input type="number" step="0.01" required value={costPrice} onChange={e => setCostPrice(e.target.value)} /></div>
                     <div className="form-group"><label>Selling Price</label><input type="number" step="0.01" required value={price} onChange={e => setPrice(e.target.value)} /></div>
                     <div className="form-group"><label>Stock Quantity</label><input type="number" required value={stock} onChange={e => setStock(e.target.value)} /></div>
-                    <div className="form-group"><label>Tax Percent</label><input type="number" step="0.1" required value={tax} onChange={e => setTax(e.target.value)} /></div>
-                    <div className="form-actions"><button type="submit" className="btn">Add Product</button></div>
+                    <div className="form-group">
+                        <label>Tax Percent</label>
+                        <select required value={tax} onChange={e => setTax(e.target.value)}>
+                            <option value="0">0</option>
+                            <option value="5">5</option>
+                            <option value="12">12</option>
+                            <option value="18">18</option>
+                            <option value="28">28</option>
+                        </select>
+                    </div>                    <div className="form-actions"><button type="submit" className="btn">Add Product</button></div>
                 </form>
             </Modal>
 
@@ -878,21 +911,82 @@ const ProductsPage = () => {
                     <div className="form-group"><label>Cost Price</label><input type="number" step="0.01" required value={costPrice} onChange={e => setCostPrice(e.target.value)} /></div>
                     <div className="form-group"><label>Selling Price</label><input type="number" step="0.01" required value={price} onChange={e => setPrice(e.target.value)} /></div>
                     <div className="form-group"><label>Stock Quantity</label><input type="number" required value={stock} onChange={e => setStock(e.target.value)} /></div>
-                    <div className="form-group"><label>Tax Percent</label><input type="number" step="0.1" required value={tax} onChange={e => setTax(e.target.value)} /></div>
-                    <div className="form-actions"><button type="submit" className="btn">Update Product</button></div>
+                    <div className="form-group">
+                        <label>Tax Percent</label>
+                        <select required value={tax} onChange={e => setTax(e.target.value)}>
+                            <option value="0">0</option>
+                            <option value="5">5</option>
+                            <option value="12">12</option>
+                            <option value="18">18</option>
+                            <option value="28">28</option>
+
+                            {!currentTaxIsStandard && tax != null && tax !== '' && (
+                                <option value={tax}>{tax}% (Current)</option>
+                            )}
+                        </select>
+                    </div>                    <div className="form-actions"><button type="submit" className="btn">Update Product</button></div>
                 </form>
             </Modal>
 
             <Modal title="Upload Products via CSV" show={isCsvModalOpen} onClose={() => setIsCsvModalOpen(false)}>
                 <form onSubmit={handleCsvSubmit}>
                     <div className="form-group">
-                        <label>CSV file</label>
+
+                        {/* --- NEW: Label with Info Icon --- */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                            <label style={{ margin: 0, fontWeight: 'bold' }}>CSV file</label>
+
+                            {/* --- REQUEST 2: Info Icon & Tooltip --- */}
+                            <div className="info-tooltip-container">
+                                <FaInfoCircle style={{ color: 'var(--primary-color)', cursor: 'pointer', fontSize: '1.1rem' }} />
+                                <div className="info-tooltip-text">
+                                    <ul style={{ margin: 0, paddingLeft: '20px', textAlign: 'left' }}>
+                                        <li>Please download the template if you are not sure about the format.</li>
+                                        <li>Very Important! If you want to add Product as new, then give selectedProductId as 0</li>
+                                        <li>Very Important! If you want to update Product then export the product list, update your inputs and then upload here.</li>
+                                        <li>Always use valid numbers for HSN.</li>
+                                        <li>Enter 'Product', 'Service' or 'Others' in Category.</li>
+                                        <li>Try to keep Cost Price lower than the Selling Price.</li>
+                                        <li>Always give valid tax percent (e.g., 0, 5, 12, 18, 28).</li>
+                                        <li>If not sure, take a look at the 'Add Product' popup for reference.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            {/* --- End Request 2 --- */}
+                        </div>
+
                         <input type="file" accept=".csv,text/csv" onChange={handleCsvChange} required />
                         {csvFile && (<small>Selected: {csvFile.name} ({Math.round(csvFile.size / 1024)} KB)</small>)}
                         {uploadError && (<div className="error">{uploadError}</div>)}
-                        <div className="help-text" style={{marginTop: "10px", fontWeight: "bold"}}>Header required: name, hsn, category, price, costPrice, stock, tax.</div>
+
+                        {/* --- REQUEST 1: Download Template Button --- */}
+                        <button
+                            type="button"
+                            className="btn small-btn"
+                            onClick={handleDownloadTemplate}
+                            style={{
+                                marginTop: '15px',
+
+                                alignItems: 'start',
+                                gap: '5px',
+                                background: 'var(--primary-color-light)',
+                                color: 'var(--primary-color)',
+                                border: '1px solid var(--primary-color)',
+                                width: '30%',        /* Prevents stretching */
+                                padding: '6px 12px',  /* Makes it smaller */
+                                fontSize: '0.9em'
+                            }}
+                        >
+                            <FaDownload />Template
+                        </button>
+                        {/* --- End Request 1 --- */}
+
+                        <div className="help-text" style={{marginTop: "15px", fontWeight: "bold", fontSize: "0.9em"}}>
+                            Required Headers: selectedProductId, name, hsn, category, costPrice, price, stock, tax.
+                        </div>
                     </div>
-                    <div className="form-actions" style={{ display: "flex", gap: "10px" }}>
+
+                    <div className="form-actions" style={{ display: "flex", gap: "10px", marginTop: '25px' }}>
                         <button
                             type="button"
                             className="btn btn-danger"
@@ -908,7 +1002,6 @@ const ProductsPage = () => {
                             {isUploading ? "Uploading…" : "Upload"}
                         </button>
                     </div>
-
                 </form>
             </Modal>
         </div>
