@@ -180,7 +180,7 @@
     position: absolute;
     top: 5px;
     right: 7px;
-    background: #e80a0d;
+    background: var(--primary-color);
     color: #fff;
     border-radius: 50%;
     font-size: 0.65rem;
