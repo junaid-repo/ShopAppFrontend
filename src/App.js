@@ -1,5 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+
+// --- NEW ---
+// 1. Import your new LandingPage component
+// (Adjust path if you placed it elsewhere, e.g., './components/LandingPage')
+import LandingPage from './components/LandingPage';
+// --- END NEW ---
+
 import LoginPage from './pages/LoginPage';
 import MainLayout from './components/MainLayout';
 import DashboardPage from './pages/DashboardPage';
@@ -326,11 +333,31 @@ function App() {
             <AlertProvider>
                 <AlertDialog />
                 <Router>
+                    {/* --- MODIFIED --- */}
+                    {/* 2. This is the new routing logic */}
                     <Routes>
+                        {/* Route 1: The new Landing Page (root path)
+                          - If NOT logged in (!user), show LandingPage.
+                          - If logged in (user), redirect them to their app's dashboard.
+                        */}
+                        <Route
+                            path="/"
+                            element={!user ? <LandingPage /> : <Navigate to="/dashboard" replace />}
+                        />
+
+                        {/* Route 2: The Login Page
+                          - If NOT logged in (!user), show LoginPage.
+                          - If logged in (user), redirect them to their app's dashboard.
+                        */}
                         <Route
                             path="/login"
-                            element={!user ? <LoginPage onLogin={handleLogin} /> : <Navigate to="/" replace />}
+                            element={!user ? <LoginPage onLogin={handleLogin} /> : <Navigate to="/dashboard" replace />}
                         />
+
+                        {/* Route 3: The Main Application (all other routes)
+                          - If logged in (user), show MainLayout (which handles /dashboard, /products, etc.).
+                          - If NOT logged in (!user), redirect them to the LOGIN page to protect these routes.
+                        */}
                         <Route
                             path="/*"
                             element={
@@ -339,18 +366,19 @@ function App() {
                                         onLogout={handleLogout}
                                         theme={theme}
                                         toggleTheme={toggleTheme}
-                                        // Pass the calculated `effectivePage` down.
                                         selectedPage={effectivePage}
                                         setSelectedPage={setSelectedPage}
                                         pages={pages}
                                         isAdmin={isAdmin}
                                     />
                                 ) : (
+                                    // Protect all other routes by sending to login
                                     <Navigate to="/login" replace />
                                 )
                             }
                         />
                     </Routes>
+                    {/* --- END MODIFIED --- */}
                 </Router>
                 <Toaster
                     position="top-center"

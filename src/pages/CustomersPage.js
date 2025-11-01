@@ -427,18 +427,19 @@
                                         onClick={() => setViewMode('grid')}
                                         title="Grid View"
                                     >
-                                        <FaThLarge />
+                                        <i className="fa-duotone fa-solid fa-grid-2"></i>
                                     </button>
                                     <button
                                         className={`toggle-btn ${viewMode === 'table' ? 'active' : ''}`}
                                         onClick={() => setViewMode('table')}
                                         title="Table View"
                                     >
-                                        <FaList />
+                                        <i className="fa-duotone fa-solid fa-list"></i>
                                     </button>
                                 </div>
-                                <button className="btn btn-icon" onClick={handleToggleSelectMode} title="Select Multiple">
-                                    <FaCheckDouble />
+                                <button className="btn btn-icon" onClick={handleToggleSelectMode}
+                                        title="Select Multiple">
+                                    <i className="fa-duotone fa-solid fa-check-double"></i>
                                 </button>
                                 <button className="btn add-customer-btn" onClick={() => setIsModalOpen(true)}><i className="fa-duotone fa-solid fa-user-plus" style={{paddingLeft:"1px", paddingRight: "3px"}}></i>New Customer</button>
                             </>
