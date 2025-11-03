@@ -98,8 +98,8 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage, isCollapsed, to
                 });
                 if (!res.ok) return;
                 const data = await res.json();
-               // setUserName(data.username || "");
-                setUserName("rahul01");
+               setUserName(data.username || "");
+
                 const picRes = await fetch(
                     `${apiUrl}/api/shop/user/${data.username}/profile-pic`,
                     { credentials: "include" }

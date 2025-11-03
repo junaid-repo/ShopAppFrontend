@@ -516,10 +516,10 @@ body.dark-theme .time-range-selector select:focus {
 
 /* Download Button */
 .download-btn {
-    background: linear-gradient(135deg, rgba(84, 255, 89, 0.45), rgba(62, 119, 64, 0.45));
-    color: white;
+    background: linear-gradient(135deg, rgba(84, 184, 255, 0.44), rgba(84, 184, 255, 0.44));
+    color: var(--text-color);
     border: none;
-    border-radius: 50%;
+    border-radius: 25%;
     width: 30px; /* Explicit size */
     height: 30px; /* Explicit size */
     cursor: pointer;

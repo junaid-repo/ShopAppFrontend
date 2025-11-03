@@ -826,7 +826,8 @@ const PaymentsPage = ({ setSelectedPage }) => {
                                                 }}
                                             >
 
-                                                <i className="fa-duotone fa-solid fa-money-check-dollar-pen"  style={{fontSize: '17px'}}></i>
+                                                <i className="fa-duotone fa-solid fa-credit-card"
+                                                   style={{fontSize: '17px'}}></i>
                                             </button>
                                         )}
                                     </td>
