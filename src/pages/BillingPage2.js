@@ -9,6 +9,10 @@ import { useAlert } from '../context/AlertContext';
 import toast, {Toaster} from 'react-hot-toast';
 import useHotkeys from '../hooks/useHotkeys'; // Adjust the path if needed
 import { FaChevronDown, FaTimes } from 'react-icons/fa'; // Import new icons
+import PremiumFeature from '../components/PremiumFeature';
+import PremiumBadge from '../context/PremiumBadge';
+import { usePremium } from '../context/PremiumContext'; // <-- ADD THIS
+import { FaCrown } from 'react-icons/fa';
 
 // A simple debounce hook to prevent API calls on every keystroke
 const useDebounce = (value, delay) => {
@@ -131,6 +135,14 @@ const BillingPage = ({ setSelectedPage }) => {
     const remainingAmount = sellingSubtotal - payingAmount;
     const totalUnits = cart.reduce((total, item) => total + item.quantity, 0);
 
+    const { isPremium } = usePremium();
+    const [dailyInvoiceCount, setDailyInvoiceCount] = useState(0);
+    const [isLimitLoading, setIsLimitLoading] = useState(true);
+
+    const DAILY_LIMIT = 20;
+    const remainingInvoices = Math.max(0, DAILY_LIMIT - dailyInvoiceCount);
+    const isLimitReached = !isPremium && remainingInvoices <= 0;
+
     // Effect to sync payingAmount with sellingSubtotal
     useEffect(() => {
         if (!isPayingAmountManuallySet) {
@@ -249,6 +261,41 @@ const BillingPage = ({ setSelectedPage }) => {
             setHighlightedIndex(-1);
         }
     };
+
+    useEffect(() => {
+        // If user is premium or apiUrl isn't ready, don't fetch.
+        if (isPremium || !apiUrl) {
+            setIsLimitLoading(false);
+            return;
+        }
+
+        const fetchDailyCount = async () => {
+            setIsLimitLoading(true);
+            try {
+                // This is the API endpoint you will create
+                const response = await fetch(`${apiUrl}/api/shop/billing/daily-count`, {
+                    method: 'GET',
+                    credentials: 'include',
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    // Assuming backend returns: { count: 5 }
+                    setDailyInvoiceCount(data.count || 0);
+                } else {
+                    // Don't block billing if this fails, just log it
+                    console.error("Could not fetch daily invoice count.");
+                    setDailyInvoiceCount(0); // Fail open
+                }
+            } catch (error) {
+                console.error("Error fetching daily count:", error);
+            } finally {
+                setIsLimitLoading(false);
+            }
+        };
+
+        fetchDailyCount();
+    }, [apiUrl, isPremium]);
 
 
     // --- NEW: All Hotkeys ---
@@ -895,16 +942,36 @@ const BillingPage = ({ setSelectedPage }) => {
 
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                             <h3 style={{ margin: 0 }}>Current Bill</h3>
+                            {!isPremium && !isLimitLoading && (
+                                <span
+                                    className="premium-limit-badge"
+                                    style={{
+                                        background: 'var(--primary-color-light)',
+                                        color: 'var(--primary-color)',
+                                        padding: '4px 8px',
+                                        borderRadius: '12px',
+                                        fontSize: '0.8em',
+                                        fontWeight: '600',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '5px'
+                                    }}
+                                >
+
+                                    {remainingInvoices} remaining for today
+            </span>
+                            )}
                             <div className="customer-actions" style={{ display: 'flex', gap: '10px' }}>
                                 {/* --- UPDATED: Hint for shortcut --- */}
-                                <button className="btn" onClick={() => setIsModalOpen(true)} title="Alt + E"><i
-                                    className="fa-duotone fa-solid fa-user-magnifying-glass" style={{paddingRight:"5px"}}></i>
-                                    {selectedCustomer ? `Change Customer` : 'Select Customer'}
-                                </button>
+
+                                    <button className="btn" onClick={() => setIsModalOpen(true)} title="Alt + E" disabled={isLimitReached}>
+                                        <i className="fa-duotone fa-solid fa-user-magnifying-glass" style={{paddingRight:"5px"}}></i>
+                                        {selectedCustomer ? `Change Customer` : 'Select Customer'}
+                                    </button>
                                 {/* --- UPDATED: Hint for shortcut --- */}
-                                <button className="btn" onClick={() => setIsNewCusModalOpen(true)} title="Shift + Alt + E">
+                                <PremiumFeature> <button className="btn" onClick={() => setIsNewCusModalOpen(true)} title="Shift + Alt + E">
                                     <i className="fa-duotone fa-solid fa-user-plus"></i> Create Customer
-                                </button>
+                                </button>  </PremiumFeature>
                                 {cart.length > 0 && (
                                     // --- UPDATED: Hint for shortcut ---
                                     <button className="btn btn-danger" onClick={handleNewBilling} title="Ctrl + Alt + N"><i
@@ -967,76 +1034,107 @@ const BillingPage = ({ setSelectedPage }) => {
                         </div>
 
 
-                        <div className="product-search-container" ref={searchContainerRef} style={{ marginTop: '1rem', position: 'relative' }}>
-                            <div style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '10px',
-                                background: "var(--body-bg)",
-                                border: '1px solid var(--primary-color-light)',
-                                borderRadius: '15px',
-                                padding: '0.2rem 1rem'
-                            }}>
-                                <i className="fa-duotone fa-solid fa-magnifying-glass"></i>
-                                <input
-                                    type="text"
-                                    ref={productSearchInputRef}
-                                    // --- UPDATED: Hint for shortcut ---
-                                    placeholder="Search for products to add... (F2)"
-                                    value={productSearchTerm}
-                                    onChange={(e) => setProductSearchTerm(e.target.value)}
-                                    onFocus={() => setIsSearchFocused(true)}
-                                    // --- NEW: onKeyDown for Escape key ---
-                                    onKeyDown={handleSearchKeyDown}
-                                    style={{
-                                        width: '100%',
-                                        padding: '10px',
-                                        background: 'transparent',
-                                        border: 'none',
-                                        color: 'var(--text-color)',
-                                        fontSize: '1rem',
-                                        outline: 'none'
-                                    }}
-                                />
-                            </div>
+                        {/* --- START: UPDATED SEARCH BLOCK --- */}
+                        <div
+                            style={{ position: 'relative' }}
+                            // Add tooltip-wrapper class and data-tooltip only when limit is reached
+                            className={isLimitReached ? "tooltip-wrapper" : ""}
+                            data-tooltip={isLimitReached ? "Today's invoice limit reached. Upgrade to Premium." : ""}
+                        >
 
-                            {isSearchFocused && debouncedSearchTerm && (
-                                <div className="search-results" style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100, background: 'var(--glass-bg)', border: '1px solid var(--border-color)', borderRadius: '8px', maxHeight: '300px', overflowY: 'auto', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-                                    {products.length > 0 ? products.map((p, index) => (
-                                        <div
-                                            key={p.id}
-                                            className="search-result-item"
-                                            onClick={() => {
-                                                handleAddProduct(p); // Add to cart
-                                                setProductSearchTerm(''); // Clear search term
-                                                // --- UPDATE: Keep focus and ensure dropdown can show ---
-                                                setIsSearchFocused(true);
-                                                productSearchInputRef.current?.focus(); // Keep focus
-                                                setHighlightedIndex(-1); // Reset highlight
-                                            }}
-                                            onMouseEnter={() => setHighlightedIndex(index)}
-                                            style={{
-                                                display: 'flex',
-                                                justifyContent: 'space-between',
-                                                alignItems: 'center',
-                                                padding: '8px 12px',
-                                                borderBottom: '1px solid var(--border-color-light)',
-                                                cursor: 'pointer',
-                                                transition: 'background-color 0.2s ease',
-                                                backgroundColor: index === highlightedIndex ? 'var(--primary-color-light)' : 'transparent'
-                                            }}
-                                        >
-                                            <div>
-                                                <strong>{p.name}</strong>
-                                                <div style={{ fontSize: '0.8em', color: '#888' }}>
-                                                    Price: ₹{p.price} | Tax: {p.tax}% | Stock: {p.stock}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )) : <div style={{padding: '1rem', textAlign: 'center', color: '#888'}}>No products found.</div>}
+                            {/* 1. Add the crown icon (from PremiumFeature.css) if limit is reached */}
+                            {isLimitReached && (
+                                <div className="premium-feature-icon" style={{ zIndex: 5, top: '10px', right: '10px' }}>
+                                    <FaCrown />
                                 </div>
                             )}
+
+                            {/* 2. Your existing search bar div, now with opacity and pointerEvents */}
+                            <div
+                                className="product-search-container"
+                                ref={searchContainerRef}
+                                style={{
+                                    marginTop: '1rem',
+                                    position: 'relative',
+                                    opacity: isLimitReached ? 0.6 : 1,
+                                    pointerEvents: isLimitReached ? 'none' : 'auto',
+                                    transition: 'opacity 0.3s ease' // Added smooth transition
+                                }}
+                            >
+                                <div style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '10px',
+                                    background: "var(--body-bg)",
+                                    border: '1px solid var(--primary-color-light)',
+                                    borderRadius: '15px',
+                                    padding: '0.2rem 1rem'
+                                }}>
+                                    <i className="fa-duotone fa-solid fa-magnifying-glass"></i>
+                                    <input
+                                        type="text"
+                                        ref={productSearchInputRef}
+                                        // --- UPDATED: Placeholder and disabled state ---
+                                        placeholder={isLimitReached ? "Daily limit reached" : "Search for products to add... (F2)"}
+                                        disabled={isLimitReached}
+                                        // --- END UPDATE ---
+                                        value={productSearchTerm}
+                                        onChange={(e) => setProductSearchTerm(e.target.value)}
+                                        onFocus={() => setIsSearchFocused(true)}
+                                        onKeyDown={handleSearchKeyDown}
+                                        style={{
+                                            width: '100%',
+                                            padding: '10px',
+                                            background: 'transparent',
+                                            border: 'none',
+                                            color: 'var(--text-color)',
+                                            fontSize: '1rem',
+                                            outline: 'none',
+                                            cursor: isLimitReached ? 'not-allowed' : 'auto' // Show not-allowed cursor
+                                        }}
+                                    />
+                                </div>
+
+                                {/* This dropdown will now be hidden because the input is disabled */}
+                                {isSearchFocused && debouncedSearchTerm && (
+                                    <div className="search-results" style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100, background: 'var(--glass-bg)', border: '1px solid var(--border-color)', borderRadius: '8px', maxHeight: '300px', overflowY: 'auto', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                                        {products.length > 0 ? products.map((p, index) => (
+                                            <div
+                                                key={p.id}
+                                                className="search-result-item"
+                                                onClick={() => {
+                                                    handleAddProduct(p); // Add to cart
+                                                    setProductSearchTerm(''); // Clear search term
+                                                    setIsSearchFocused(true);
+
+                                                    productSearchInputRef.current?.focus(); // Keep focus
+                                                    setHighlightedIndex(-1); // Reset highlight
+                                                }}
+                                                onMouseEnter={() => setHighlightedIndex(index)}
+                                                style={{
+                                                    display: 'flex',
+                                                    justifyContent: 'space-between',
+                                                    alignItems: 'center',
+                                                    padding: '8px 12px',
+                                                    borderBottom: '1px solid var(--border-color-light)',
+                                                    cursor: 'pointer',
+                                                    transition: 'background-color 0.2s ease',
+                                                    backgroundColor: index === highlightedIndex ? 'var(--primary-color-light)' : 'transparent'
+                                                }}
+                                            >
+                                                <div>
+                                                    <strong>{p.name}</strong>
+                                                    <div style={{ fontSize: '0.8em', color: '#888' }}>
+                                                        Price: ₹{p.price} | Tax: {p.tax}% | Stock: {p.stock}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )) : <div style={{padding: '1rem', textAlign: 'center', color: '#888'}}>No products found.</div>}
+                                    </div>
+                                )}
+                            </div>
                         </div>
+                        {/* --- END: UPDATED SEARCH BLOCK --- */}
 
                         <div className="cart-items" style={{ marginTop: '1rem' }}>
                             {cart.length === 0 ? (

@@ -1,6 +1,7 @@
 // src/components/Topbar.js
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import PremiumFeature from '../components/PremiumFeature';
 import {
     Bell,
     Moon,
@@ -321,8 +322,8 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage, isCollapsed, to
             </div>
 
             {/* --- TOPBAR CENTER (Global Search) --- */}
-            <div className="topbar-center">
-                <div className="global-search-container" ref={searchDropdownRef}>
+            <div className="topbar-center"><PremiumFeature>
+            <div className="global-search-container" ref={searchDropdownRef}>
                     <i className="fa-duotone fa-solid fa-search search-icon"></i>
                     <input
                         type="text"
@@ -356,8 +357,8 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage, isCollapsed, to
                             )}
                         </div>
                     )}
-                </div>
-            </div>
+                </div></PremiumFeature>
+        </div>
 
             {/* --- TOPBAR RIGHT (Icons + User Menu) --- */}
             <div className="topbar-right">

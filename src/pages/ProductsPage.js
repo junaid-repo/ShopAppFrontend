@@ -8,6 +8,7 @@ import { useSearchKey } from '../context/SearchKeyContext';
 import toast, { Toaster } from 'react-hot-toast';
 import { FaCheckDouble, FaTimes, FaInfoCircle, FaDownload } from 'react-icons/fa';
 import { useAlert } from '../context/AlertContext';
+import PremiumFeature from '../components/PremiumFeature';
 
 import PlaylistAddCheckIcon from '@mui/icons-material/PlaylistAddCheck';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -692,9 +693,10 @@ const ProductsPage = () => {
                     {/* Group for primary actions */}
                     <div className="actions-group-left">
                         <button type="button" className="btn" onClick={() => setIsModalOpen(true)}><i class="fa-duotone fa-solid fa-grid-2-plus" style={{marginRight: "3px"}}></i>Add Product</button>
-                        <button type="button" className="btn" onClick={() => setIsCsvModalOpen(true)}><i class="fa-duotone fa-solid fa-arrow-up-from-square" style={{marginRight: "5px"}}></i>Upload CSV</button>
-                        <button type="button" className="btn" onClick={handleExportCSV}><i class="fa-duotone fa-solid fa-file-export" style={{marginRight: "5px"}}></i>Export CSV</button>
-                    </div>
+                        <PremiumFeature>
+                            <button type="button" className="btn" onClick={() => setIsCsvModalOpen(true)}><i className="fa-duotone fa-solid fa-arrow-up-from-square" style={{marginRight: "5px"}}></i>Upload CSV</button>
+                        </PremiumFeature>                         <PremiumFeature><button type="button" className="btn" onClick={handleExportCSV}><i class="fa-duotone fa-solid fa-file-export" style={{marginRight: "5px"}}></i>Export CSV</button>
+                    </PremiumFeature>   </div>
 
                     <div ref={columnsRef} className="columns-dropdown-container">
                                  <span

@@ -7,7 +7,7 @@ import { useConfig } from "./ConfigProvider";
 import './ChatPage.css'; // Your existing CSS
 import './TicketSystem.css'; // New CSS for the ticketing components
 import { useAlert } from '../context/AlertContext';
-
+import PremiumFeature from '../components/PremiumFeature';
 const ChatPage = ({ setSelectedPage }) => {
     const { showAlert } = useAlert();
     // --- State Management ---
@@ -327,7 +327,8 @@ const ChatPage = ({ setSelectedPage }) => {
             <div className="ticket-list-container">
                 <div className="ticket-list-header">
                     <h2>My Support Tickets</h2>
-                    <button className="btn" onClick={() => setView('create')}><FaPlus /> Create New Ticket</button>
+                    <PremiumFeature>
+                    <button className="btn" onClick={() => setView('create')}><FaPlus /> Create New Ticket</button>  </PremiumFeature>
                 </div>
                 {isLoading ? <p>Loading tickets...</p> : (
                     <div className="tickets-table-wrapper">

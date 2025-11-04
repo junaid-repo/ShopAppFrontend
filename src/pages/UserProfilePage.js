@@ -9,20 +9,63 @@ import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import { Gauge, UsersFour, Invoice , Archive, ChartLineUp, MicrosoftExcelLogo, ShoppingCart, CreditCard, Receipt} from "@phosphor-icons/react";
 import toast, {Toaster} from 'react-hot-toast';
 import './InvoiceTemplates.css';
+import { FaCrown, FaStar } from 'react-icons/fa'; // <-- ADD THIS
 // Mock data (used as initial fallback while API loads)
 const mockUser = {
    
 };
 
-const UserProfilePage = () => {
+// Formats date string to "04 Nov 2025"
+const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+    });
+};
+
+// Calculates remaining days
+const calculateRemainingDays = (endDate) => {
+    if (!endDate) return null;
+    const end = new Date(endDate);
+    const now = new Date();
+    const diff = end.getTime() - now.getTime();
+    if (diff < 0) return 0; // Expired
+    return Math.ceil(diff / (1000 * 60 * 60 * 24));
+};
+
+// Calculates total duration of the plan in days
+const getTotalDuration = (startDate, endDate) => {
+    if (!startDate || !endDate) return 1; // Avoid division by zero
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const diff = end.getTime() - start.getTime();
+    const totalDays = Math.ceil(diff / (1000 * 60 * 60 * 24));
+    return totalDays <= 0 ? 1 : totalDays; // ensure it's at least 1
+};
+
+// Determines the bar color
+const getBarColor = (days) => {
+    if (days === null || days > 10) return 'green';
+    if (days <= 5) return 'red';
+    if (days <= 10) return 'yellow';
+    return 'green';
+};
+// --- END HELPER FUNCTIONS ---
+
+const UserProfilePage = ({ setSelectedPage }) => {
 
     const { showAlert } = useAlert();
     // Tabs
-    const [activeTab, setActiveTab] = useState('user');
+    const [activeTab, setActiveTab] = useState('subscription');
 
     // Core data
     const [user, setUser] = useState({});
     const [formData, setFormData] = useState({});
+
+    const [subscription, setSubscription] = useState(null);
+    const [isLoadingSub, setIsLoadingSub] = useState(true);
 
     // Editing state
     const [isEditing, setIsEditing] = useState(false); // user edit
@@ -67,6 +110,8 @@ const UserProfilePage = () => {
     const [selectedTemplate, setSelectedTemplate] = useState(''); // Store the *name* of the selected template
     const [modalOpen, setModalOpen] = useState(false);
     const [modalTemplate, setModalTemplate] = useState(null); // Store the template object for the modal
+
+
 
     useEffect(() => {
         // initial fallback while API loads
@@ -120,6 +165,44 @@ const UserProfilePage = () => {
         loadSelectedTemplate();
 
     }, [apiUrl, user?.username, formData?.username]); // Dependencies
+
+    useEffect(() => {
+        if (!apiUrl) return;
+
+        const fetchSubscriptionDetails = async () => {
+            setIsLoadingSub(true);
+            try {
+                // This is the new endpoint you will create
+                const res = await fetch(`${apiUrl}/api/shop/subscription/details`, {
+                    method: "GET",
+                    credentials: 'include',
+                });
+
+                // 404 is a valid response meaning "no active subscription"
+                if (res.status === 404) {
+                    setSubscription(null);
+                    return;
+                }
+
+                if (!res.ok) {
+                    throw new Error(`Subscription fetch failed (${res.status})`);
+                }
+
+                const data = await res.json();
+                console.log(data);
+                // Backend should return: { subscriptionId, status, planType, startDate, endDate }
+                setSubscription(data);
+
+            } catch (err) {
+                console.error("Error loading subscription details:", err);
+                setSubscription(null); // Set to null on error
+            } finally {
+                setIsLoadingSub(false);
+            }
+        };
+
+        fetchSubscriptionDetails();
+    }, [apiUrl]);
 
     // --- ADDED: Handler for selecting a template ---
     const handleSelectTemplate = async (templateName, displayName) => {
@@ -726,11 +809,19 @@ const UserProfilePage = () => {
                 </div>
                 {/* Tabs */}
                 <div className="tab-header">
+                    <button className={`tab-btn ${activeTab === 'subscription' ? 'active' : ''}`} onClick={() => setActiveTab('subscription')}>Subscription</button>
                     <button className={`tab-btn ${activeTab === 'user' ? 'active' : ''}`} onClick={() => setActiveTab('user')}>User Details</button>
                     <button className={`tab-btn ${activeTab === 'shop' ? 'active' : ''}`} onClick={() => setActiveTab('shop')}>Shop Details</button>
                 </div>
 
                 {/* USER TAB */}
+                {activeTab === 'subscription' && (
+                    <SubscriptionPanel
+                        subscription={subscription}
+                        isLoading={isLoadingSub}
+                        setSelectedPage={setSelectedPage} // Pass prop for "Upgrade" button
+                    />
+                )}
                 {activeTab === 'user' && (
                     <div className="tab-content">
                         <div className="avatar-container">
@@ -1081,3 +1172,96 @@ const UserProfilePage = () => {
 };
 
 export default UserProfilePage;
+
+// --- ADD THIS NEW COMPONENT AT THE BOTTOM OF YOUR FILE ---
+
+/**
+ * A new component to render the subscription panel.
+ * Receives subscription data and loading state as props.
+ */
+const SubscriptionPanel = ({ subscription, isLoading, setSelectedPage }) => {
+
+    // 1. Loading State
+    if (isLoading) {
+        return <div className="tab-content">Loading Subscription Details...</div>;
+    }
+
+    // 2. Free Plan / No Subscription View
+    if (!subscription || subscription.status !== 'active') {
+        return (
+            <div className="tab-content">
+                <div className="subscription-panel non-premium">
+                    <FaStar size={48} />
+                    <h3>You are on the Free Plan</h3>
+                    <p>Upgrade to Premium to unlock all features, including unlimited invoices and advanced analytics.</p>
+                    <button
+                        className="btn"
+                        onClick={() => setSelectedPage('subscribe')} // Use setSelectedPage
+                    >
+                        Upgrade to Premium
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    // 3. Active Premium Plan View
+    const { subscriptionId, status, planType, startDate, endDate } = subscription;
+
+    const remainingDays = calculateRemainingDays(endDate);
+    const totalDuration = getTotalDuration(startDate, endDate);
+    // Ensure progress is between 0 and 100
+    const progressPercent = Math.max(0, Math.min(100, (remainingDays / totalDuration) * 100));
+    const barColor = getBarColor(remainingDays);
+
+    return (
+        <div className="tab-content">
+            <div className="subscription-panel premium">
+                <div className="premium-badge-header">
+                    <FaCrown />
+                    <span>Premium Member</span>
+                </div>
+                <h3>Your Active Plan</h3>
+
+                {/* --- Task 2: Subscription Details --- */}
+                <div className="subscription-details-grid">
+                    <div>
+                        <label>Subscription ID</label>
+                        <span>{subscriptionId || 'N/A'}</span>
+                    </div>
+                    <div>
+                        <label>Status</label>
+                        <span className={`status-${status?.toLowerCase()}`}>{status || 'N/A'}</span>
+                    </div>
+                    <div>
+                        <label>Plan Type</label>
+                        <span>{planType || 'N/A'}</span>
+                    </div>
+                    <div>
+                        <label>Start Date</label>
+                        <span>{formatDate(startDate)}</span>
+                    </div>
+                    <div>
+                        <label>End Date</label>
+                        <span>{formatDate(endDate)}</span>
+                    </div>
+                    <div>
+                        <label>Remaining</label>
+                        <span>{remainingDays} Days</span>
+                    </div>
+                </div>
+
+                {/* --- Task 3: Progress Bar --- */}
+                <h4 className="progress-title">Plan Validity</h4>
+                <div className="progress-bar-container">
+                    <div
+                        className={`progress-bar-inner ${barColor}`}
+                        style={{ width: `${progressPercent}%` }}
+                    >
+                        {remainingDays} days left
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};

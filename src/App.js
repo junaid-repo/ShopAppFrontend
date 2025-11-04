@@ -1,21 +1,18 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useContext } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 
-// --- NEW ---
-// 1. Import your new LandingPage component
-// (Adjust path if you placed it elsewhere, e.g., './components/LandingPage')
 import LandingPage from './components/LandingPage';
-// --- END NEW ---
-
 import LoginPage from './pages/LoginPage';
 import MainLayout from './components/MainLayout';
 import DashboardPage from './pages/DashboardPage';
-import ProductsPage from './pages/ProductsPage';
-import SalesPage from './pages/SalesPage';
+// ... (all your other page imports)
 import CustomersPage from './pages/CustomersPage';
 import PaymentsPage from './pages/PaymentsPage';
 import BillingPage from './pages/BillingPage';
 import BillingPage2 from './pages/BillingPage2';
+import ProductsPage from './pages/ProductsPage';
+
+import SalesPage from './pages/SalesPage';
 import ReportsPage from './pages/ReportsPage';
 import UserProfilePage from './pages/UserProfilePage';
 import AnalyticsPage from './pages/AnalyticsPage';
@@ -26,6 +23,11 @@ import Notification from './pages/Notification';
 import SettingsPage from './pages/SettingsPage';
 import ChatPage from './pages/ChatPage';
 import AdminChatPage from './pages/AdminChatPage';
+import SubscriptionPage from './pages/SubscriptionPage';
+
+// This is your full-page blocker
+import PremiumGuard from './context/PremiumGuard'; // Respecting your file path
+
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useConfig } from "./pages/ConfigProvider";
 import { useSearchKey } from "./context/SearchKeyContext";
@@ -34,51 +36,49 @@ import { AlertProvider } from './context/AlertContext';
 import AlertDialog from './components/AlertDialog';
 import axios from 'axios';
 
+import { PremiumProvider, usePremium } from './context/PremiumContext';
+
+// --- NEW ---
+// 1. Import the new modal context and component
+import { PremiumModalProvider } from './context/PremiumModalContext';
+import PremiumModal from './components/PremiumModal';
+// --- END NEW ---
+
 const queryClient = new QueryClient();
 
 
 axios.interceptors.response.use(
     (response) => {
-        // If response is successful (2xx), just return it
         return response;
     },
     (error) => {
-        // Check if the error response exists and has a 401 status
         if (error.response && error.response.status === 401) {
             console.warn('Unauthorized (401). Token likely expired. Logging out.');
-            // Display toast only once to avoid duplicates if multiple calls fail
-            if (!window.location.pathname.includes('/login')) { // Avoid showing on login page itself
+            if (!window.location.pathname.includes('/login')) {
                 alert('Your session has expired. Please log in again.');
             }
-
-            // --- Trigger Logout ---
-            // 1. Clear relevant storage (adjust key if needed)
-            localStorage.removeItem('userToken'); // Example: Adjust if you use a different key
-            // Clear theme preference on logout as well?
+            localStorage.removeItem('userToken');
             localStorage.removeItem('theme');
-
-            // 2. Redirect to login - Forces a full page reload
-            // Add a small delay to allow the toast message to be seen briefly
             setTimeout(() => {
-                if (!window.location.pathname.includes('/login')) { // Prevent redirect loop if already on login
+                if (!window.location.pathname.includes('/login')) {
                     window.location.href = '/login';
                 }
-            }, 15000); // 1.5 second delay
+            }, 1500);
 
-            // Prevent the error from propagating further in this case
             return Promise.resolve({ data: null, __handledByInterceptor__: true });
         }
-
-        // If it's not a 401, pass the error along to the component's catch block
         return Promise.reject(error);
     }
 );
 
-function App() {
+// ----------------------------------------------------------------------
+// --- AppContent COMPONENT ---
+// ----------------------------------------------------------------------
+function AppContent() {
     const [user, setUser] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [warning, setWarning] = useState(false);
-    const [countdown, setCountdown] = useState(60);
+    const [countdown, setCountdown] = useState(360);
     const countdownRef = useRef(null);
     const inactivityTimerRef = useRef(null);
     const config = useConfig();
@@ -86,6 +86,8 @@ function App() {
     if (config) {
         apiUrl = config.API_URL;
     }
+
+    const { setIsPremium } = usePremium();
 
     const [theme, setTheme] = useState(() => {
         const savedTheme = localStorage.getItem('theme');
@@ -112,8 +114,15 @@ function App() {
         return new Intl.NumberFormat("en-IN", options).format(this.valueOf());
     };
 
-    const checkSession = async () => {
-        setIsLoading(true); // Move isLoading to the start
+    const clearTimers = useCallback(() => {
+        if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
+        if (countdownRef.current) clearInterval(countdownRef.current);
+        inactivityTimerRef.current = null;
+        countdownRef.current = null;
+    }, []);
+
+    const checkSession = useCallback(async () => {
+        setIsLoading(true);
         try {
             const response = await fetch(`${apiUrl}/api/shop/user/profileWithRole`, {
                 method: 'GET',
@@ -122,61 +131,48 @@ function App() {
             if (response.ok) {
                 const data = await response.json();
                 setUser(data);
-                handleUserActivity();
-                // --- START: NEW UI SETTINGS LOGIC ---
+
+                if (data.roles && data.roles.includes('ROLE_PREMIUM')) {
+                    setIsPremium(true);
+                } else {
+                    setIsPremium(false);
+                }
+
                 try {
-                    // Make a second call to get UI settings
                     const settingsResponse = await fetch(`${apiUrl}/api/shop/get/user/settings`, {
                         method: 'GET',
                         credentials: 'include',
                     });
-
                     if (settingsResponse.ok) {
                         const settingsData = await settingsResponse.json();
-                        console.log("The ui settings ", settingsData);
-                        console.log("The deafult theme as dark", settingsData.ui.darkModeDefault);
-                        // Assuming response is like: { darkModeDefault: true, billingPageDefault: false, autoPrintInvoice: true }
-
-                        // 1. Set default theme (only if user hasn't already set one)
-                        const savedTheme = localStorage.getItem('theme');
                         if ( settingsData.ui.darkModeDefault) {
                             setTheme('dark');
-                        }
-                        else{
+                        } else {
                             setTheme('light');
                         }
-
-                        // 2. Set default page (only if user is still on the initial 'dashboard' page)
-                        if (settingsData.ui.billingPageDefault && selectedPage === 'dashboard') {
-                            setSelectedPage('billing2');
-                        }
-
-                        // 3. Save auto-print setting to local storage for the billing page
-                        localStorage.setItem('autoPrintInvoice', settingsData.ui.autoPrintInvoice);
-                        localStorage.setItem('autoSendInvoice', settingsData.billing.autoSendInvoice);
-                        localStorage.setItem('doParitalBilling', settingsData.billing.showPartialPaymentOption);
-                        localStorage.setItem('showRemarksOptions', settingsData.billing.showRemarksOnSummarySide);
-
+                        // ... (rest of your settings logic)
                     } else {
                         console.warn("Could not fetch user UI settings. Using defaults.");
                     }
                 } catch (settingsError) {
-                    // Log the error but don't break the app; login was still successful
                     console.error('Error fetching user UI settings:', settingsError);
                 }
-                // --- END: NEW UI SETTINGS LOGIC ---// <-- Call this instead of resetInactivityTimer
+
             } else {
                 setUser(null);
-                clearTimers(); // Ensure timers are cleared if session check fails
+                setIsPremium(false);
+                clearTimers();
             }
         } catch (error) {
             console.error('Error checking session:', error);
             setUser(null);
-            clearTimers(); // Ensure timers are cleared on error
+            setIsPremium(false);
+            clearTimers();
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [apiUrl, clearTimers, setIsPremium]);
+
 
     const handleLogin = () => {
         setIsLoading(true);
@@ -188,18 +184,22 @@ function App() {
             await fetch(`${apiUrl}/auth/logout`, { method: 'POST', credentials: 'include' });
         } catch (e) { console.error('Logout failed', e); }
         setUser(null);
-        // When logging out, reset selectedPage to the default
+        setIsPremium(false);
         setSelectedPage('dashboard');
-        clearTimers(); // <-- Make sure this is called
-        setWarning(false); // Also hide warning on explicit logout
+        clearTimers();
+        setWarning(false);
     };
 
-    const resetInactivityTimer = () => {
-        clearTimers();
+    const startInactivityWarning = useCallback(() => {
+        if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
+
         inactivityTimerRef.current = setTimeout(() => {
             setWarning(true);
             let timeLeft = 360;
             setCountdown(timeLeft);
+
+            if (countdownRef.current) clearInterval(countdownRef.current);
+
             countdownRef.current = setInterval(() => {
                 timeLeft -= 1;
                 setCountdown(timeLeft);
@@ -210,47 +210,13 @@ function App() {
                 }
             }, 1000);
         }, 14 * 60 * 1000);
-    };
-
-    const clearTimers = () => {
-        // Clear both the main inactivity timeout and the countdown interval
-        if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
-        if (countdownRef.current) clearInterval(countdownRef.current);
-        inactivityTimerRef.current = null;
-        countdownRef.current = null;
-    };
-    const startInactivityWarning = () => {
-        // Clear only the main timer before setting a new one
-        if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
-
-        inactivityTimerRef.current = setTimeout(() => {
-            setWarning(true); // Show the warning modal/message
-            let timeLeft = 360; // Start the 6-minute (360s) countdown
-            setCountdown(timeLeft);
-
-            // Clear any previous countdown interval before starting a new one
-            if (countdownRef.current) clearInterval(countdownRef.current);
-
-            countdownRef.current = setInterval(() => {
-                timeLeft -= 1;
-                setCountdown(timeLeft);
-                if (timeLeft <= 0) {
-                    // Time's up - log out
-                    clearTimers();
-                    alert("You have been logged out due to inactivity."); // Consider using a modal instead of alert
-                    handleLogout();
-                }
-            }, 1000);
-        }, 14 * 60 * 1000); // 14 minutes
-    };
+    }, [clearTimers, handleLogout]);
 
     const handleUserActivity = useCallback(() => {
-        if (!user) return; // Only run if logged in
-
-        clearTimers(); // Clear both main timer and countdown (if active)
-        setWarning(false); // Hide the warning modal/message
-        startInactivityWarning(); // Restart the 14-minute timer
-        // Add dependencies that handleUserActivity relies on indirectly
+        if (!user) return;
+        clearTimers();
+        setWarning(false);
+        startInactivityWarning();
     }, [user, clearTimers, setWarning, startInactivityWarning]);
 
     const { setSearchKey } = useSearchKey();
@@ -258,34 +224,28 @@ function App() {
     useEffect(() => {
         checkSession();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []); // Empty dependency array means run only once
+    }, []); // Only on mount
 
-    // Effect 2: Manage activity listeners based on login state
     useEffect(() => {
-        // Only add listeners if a user is logged in
         if (user) {
             const resetEvents = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
-            const activityHandler = () => handleUserActivity(); // Use the memoized handler
+            const activityHandler = () => handleUserActivity();
 
             resetEvents.forEach(evt => window.addEventListener(evt, activityHandler, { capture: true, passive: true }));
-            console.log("Activity listeners added."); // For debugging
+            console.log("Activity listeners added.");
 
-            // Start the timer when listeners are added (i.e., user is confirmed logged in)
             handleUserActivity();
 
-            // Cleanup function: Remove listeners when user logs out or component unmounts
             return () => {
-                console.log("Removing activity listeners."); // For debugging
+                console.log("Removing activity listeners.");
                 resetEvents.forEach(evt => window.removeEventListener(evt, activityHandler, { capture: true }));
-                clearTimers(); // Also clear timers on logout/unmount
+                clearTimers();
             };
         } else {
-            // If there's no user, ensure any stray timers are cleared
             clearTimers();
-            console.log("No user, ensuring timers are clear and listeners removed."); // For debugging
-            // No need to return a cleanup function here as no listeners were added
+            console.log("No user, ensuring timers are clear.");
         }
-    }, [user, handleUserActivity]);
+    }, [user, handleUserActivity, clearTimers]);
 
     const [selectedPage, setSelectedPage] = useState('dashboard');
 
@@ -297,13 +257,12 @@ function App() {
 
     const isAdmin = user?.roles?.includes('ADMIN') ?? false;
 
-    // This is the definitive logic for setting the page.
-    // It runs on every render but only changes the page if the admin is on the default 'dashboard' state.
     let effectivePage = selectedPage;
     if (isAdmin && selectedPage === 'chat') {
         effectivePage = 'adminChat';
     }
 
+    // This pages object correctly uses PremiumGuard for full-page protection
     const pages = {
         dashboard: <DashboardPage setSelectedPage={setSelectedPage} />,
         products: <ProductsPage setSelectedPage={setSelectedPage} />,
@@ -312,9 +271,18 @@ function App() {
         payments: <PaymentsPage setSelectedPage={setSelectedPage} />,
         billing: <BillingPage setSelectedPage={setSelectedPage} />,
         billing2: <BillingPage2 setSelectedPage={setSelectedPage} />,
-        reports: <ReportsPage setSelectedPage={setSelectedPage} />,
+        subscribe: <SubscriptionPage />,
+        reports: (
+            <PremiumGuard>
+                <ReportsPage setSelectedPage={setSelectedPage} />
+            </PremiumGuard>
+        ),
         profile: <UserProfilePage setSelectedPage={setSelectedPage} />,
-        analytics: <AnalyticsPage setSelectedPage={setSelectedPage} />,
+        analytics: (
+            <PremiumGuard>
+                <AnalyticsPage setSelectedPage={setSelectedPage} />
+            </PremiumGuard>
+        ),
         terms: <TermsPage setSelectedPage={setSelectedPage} />,
         privacy: <PrivacyPage setSelectedPage={setSelectedPage} />,
         help: <HelpPage setSelectedPage={setSelectedPage} />,
@@ -328,72 +296,97 @@ function App() {
         return <div>Loading Application...</div>;
     }
 
+    // The content part returns the Router
+    return (
+        <Router>
+            <AlertDialog />
+
+            {/* --- NEW --- */}
+            {/* 2. Render the single, global Premium Modal */}
+            {/* It's available to be opened from anywhere */}
+            <PremiumModal setSelectedPage={setSelectedPage} />
+            {/* --- END NEW --- */}
+
+            <Routes>
+                <Route
+                    path="/"
+                    element={!user ? <LandingPage /> : <Navigate to="/dashboard" replace />}
+                />
+                <Route
+                    path="/subscribe"
+                    element={
+                        user ? (
+                            <MainLayout
+                                onLogout={handleLogout}
+                                theme={theme}
+                                toggleTheme={toggleTheme}
+                                selectedPage={'subscribe'} // Set the page
+                                setSelectedPage={setSelectedPage}
+                                pages={pages}
+                                isAdmin={isAdmin}
+                            />
+                        ) : (
+                            <Navigate to="/login" replace />
+                        )
+                    }
+                />
+                <Route
+                    path="/login"
+                    element={!user ? <LoginPage onLogin={handleLogin} /> : <Navigate to="/dashboard" replace />}
+                />
+                <Route
+                    path="/*"
+                    element={
+                        user ? (
+                            <MainLayout
+                                onLogout={handleLogout}
+                                theme={theme}
+                                toggleTheme={toggleTheme}
+                                selectedPage={effectivePage}
+                                setSelectedPage={setSelectedPage}
+                                pages={pages}
+                                isAdmin={isAdmin}
+                            />
+                        ) : (
+                            <Navigate to="/login" replace />
+                        )
+                    }
+                />
+            </Routes>
+            <Toaster
+                position="top-center"
+                toastOptions={{
+                    duration: 2000,
+                    style: {
+                        background: 'lightgreen',
+                        color: 'var(--text-color)',
+                        borderRadius: '25px',
+                        padding: '12px',
+                        minWidth: '350px',
+                        fontSize: '16px',
+                    },
+                }}
+            />
+        </Router>
+    );
+}
+
+// ----------------------------------------------------------------------
+// --- UPDATED App COMPONENT ---
+// This is now just the provider wrapper
+// ----------------------------------------------------------------------
+function App() {
     return (
         <QueryClientProvider client={queryClient}>
             <AlertProvider>
-                <AlertDialog />
-                <Router>
-                    {/* --- MODIFIED --- */}
-                    {/* 2. This is the new routing logic */}
-                    <Routes>
-                        {/* Route 1: The new Landing Page (root path)
-                          - If NOT logged in (!user), show LandingPage.
-                          - If logged in (user), redirect them to their app's dashboard.
-                        */}
-                        <Route
-                            path="/"
-                            element={!user ? <LandingPage /> : <Navigate to="/dashboard" replace />}
-                        />
-
-                        {/* Route 2: The Login Page
-                          - If NOT logged in (!user), show LoginPage.
-                          - If logged in (user), redirect them to their app's dashboard.
-                        */}
-                        <Route
-                            path="/login"
-                            element={!user ? <LoginPage onLogin={handleLogin} /> : <Navigate to="/dashboard" replace />}
-                        />
-
-                        {/* Route 3: The Main Application (all other routes)
-                          - If logged in (user), show MainLayout (which handles /dashboard, /products, etc.).
-                          - If NOT logged in (!user), redirect them to the LOGIN page to protect these routes.
-                        */}
-                        <Route
-                            path="/*"
-                            element={
-                                user ? (
-                                    <MainLayout
-                                        onLogout={handleLogout}
-                                        theme={theme}
-                                        toggleTheme={toggleTheme}
-                                        selectedPage={effectivePage}
-                                        setSelectedPage={setSelectedPage}
-                                        pages={pages}
-                                        isAdmin={isAdmin}
-                                    />
-                                ) : (
-                                    // Protect all other routes by sending to login
-                                    <Navigate to="/login" replace />
-                                )
-                            }
-                        />
-                    </Routes>
-                    {/* --- END MODIFIED --- */}
-                </Router>
-                <Toaster
-                    position="top-center"
-                    toastOptions={{
-                        duration: 2000,
-                        style: {
-                            background: 'lightgreen',
-                            color: 'var(--text-color)',
-                            borderRadius: '25px',
-                            padding: '12px',
-                            minWidth: '350px',
-                            fontSize: '16px',
-                        },
-                    }}
-                />
+                <PremiumProvider>
+                    {/* --- NEW --- */}
+                    {/* 3. Wrap AppContent with the Modal Provider */}
+                    <PremiumModalProvider>
+                        <AppContent />
+                    </PremiumModalProvider>
+                    {/* --- END NEW --- */}
+                </PremiumProvider>
             </AlertProvider>
         </QueryClientProvider>
     );

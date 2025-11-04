@@ -8,7 +8,7 @@ import { formatDate } from "../utils/formatDate";
 import { useAlert } from '../context/AlertContext';
 import {PaperPlaneTilt} from "@phosphor-icons/react";
 import { FaPaperPlane } from 'react-icons/fa';
-
+import PremiumFeature from '../components/PremiumFeature';
 import toast, {Toaster} from 'react-hot-toast';
 
 import {
@@ -537,7 +537,8 @@ const SalesPage = () => {
 
                         {/* This key 'status' should be verified against your backend model */}
                         <th>Status</th>
-                        <th>Send</th>
+
+                        <th><PremiumFeature>Send  </PremiumFeature></th>
 
                         <th>Invoice</th>
                         <th>Remind</th>
@@ -570,7 +571,7 @@ const SalesPage = () => {
                         {sale.status}
                     </span>
                                 </td>
-                                <td>
+                                <td>  <PremiumFeature>
                                     <button
                                         className="action-icons"
                                         title="Send Invoice via mail"
@@ -592,7 +593,7 @@ const SalesPage = () => {
                                     >
                                         <i className="fa-duotone fa-solid fa-paper-plane" style={{fontSize:"18px", color:"var(--text-color)"}}></i>
 
-                                    </button>
+                                    </button>  </PremiumFeature>
                                 </td>
                                 <td>
                                     <button
@@ -619,7 +620,7 @@ const SalesPage = () => {
                                 </td>
                                 <td>
                                     {(sale.total !== sale.paid) && ( // Check if not fully paid
-                                        <button
+                                        <PremiumFeature> <button
                                             className="reminder-btn"
                                             title="Send Payment Reminder"
                                             onMouseEnter={() => setHoveredReminderBtnId(sale.id)}
@@ -648,7 +649,7 @@ const SalesPage = () => {
                                             <span style={{ fontWeight: "bold", fontSize: "0.9em", color: "var(--text-color)" }}>
                                 {sale.reminderCount || 0}
                             </span>
-                                        </button>
+                                        </button>  </PremiumFeature>
                                     )}
                                 </td>
                             </tr>

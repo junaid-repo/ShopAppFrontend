@@ -8,6 +8,7 @@ import { useConfig } from "./ConfigProvider";
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import { useNumberFormat } from "../context/NumberFormatContext";
 import { useAlert } from '../context/AlertContext';
+import PremiumFeature from '../components/PremiumFeature';
 import toast, {Toaster} from 'react-hot-toast';
 import {
     Chart as ChartJS,
@@ -760,7 +761,7 @@ const DashboardPage = ({ setSelectedPage }) => {
             {/* Time Range Selector */}
             <div className="time-range-selector glass-card" style={{ boxShadow: "inset 0 -1px 0 rgba(0,0,0,0.06)", borderRadius: "20px", border: "2px solid var(--primary-color-light)"} }>
                 <label htmlFor="timeRange"><i class="fa-duotone fa-solid fa-calendar-range" style={{fontSize:'20px', marginRight:'0px'}}></i> </label>
-                <select
+            <PremiumFeature> <select
                     id="timeRange"
                     value={timeRange}
                     onChange={(e) => setTimeRange(e.target.value)}
@@ -771,6 +772,7 @@ const DashboardPage = ({ setSelectedPage }) => {
                     <option value="lastMonth">This Month</option>
                     <option value="lastYear">This Year</option>
                 </select>
+            </PremiumFeature>
             </div>
 
             <div className="stats-grid">

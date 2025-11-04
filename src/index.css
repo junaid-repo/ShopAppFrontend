@@ -1421,3 +1421,45 @@ body.dark-theme .shortcut-key {
     visibility: visible;
     opacity: 1;
 }
+
+/* Add to your App.css or a new Premium.css file */
+
+.premium-block-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    background-color: var(--background-color); /* Or your app's bg color */
+    border: 2px dashed var(--border-color); /* Or your border color */
+    border-radius: 8px;
+    text-align: center;
+    margin: 20px;
+}
+
+.premium-block-icon {
+    margin-bottom: 16px;
+}
+
+.premium-block-wrapper h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #f59e0b; /* Gold color for premium */
+    margin: 0 0 8px 0;
+}
+
+.premium-block-wrapper p {
+    font-size: 0.9rem;
+    color: var(--text-color);
+    margin: 0 0 16px 0;
+}
+
+.premium-block-wrapper .upgrade-button {
+    background-color: var(--glass-bg); /* Your app's theme color */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    font-weight: 600;
+    cursor: pointer;
+}
