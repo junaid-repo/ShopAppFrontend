@@ -322,7 +322,7 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage, isCollapsed, to
             </div>
 
             {/* --- TOPBAR CENTER (Global Search) --- */}
-            <div className="topbar-center"><PremiumFeature>
+            <div className="topbar-center">
             <div className="global-search-container" ref={searchDropdownRef}>
                     <i className="fa-duotone fa-solid fa-search search-icon"></i>
                     <input
@@ -357,7 +357,7 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage, isCollapsed, to
                             )}
                         </div>
                     )}
-                </div></PremiumFeature>
+                </div>
         </div>
 
             {/* --- TOPBAR RIGHT (Icons + User Menu) --- */}

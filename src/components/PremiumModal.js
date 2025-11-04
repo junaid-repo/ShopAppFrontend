@@ -24,17 +24,26 @@ const PremiumModal = ({setSelectedPage}) => {
                 </p>
 
                 <ul style={{ listStyle: 'none', padding: 0, textAlign: 'left', margin: '30px 0' }}>
-                    <li style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '1.1rem', marginBottom: '15px' }}>
-                        <FaRocket color="var(--theme-color)" />
+                    <li style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        fontSize: '1.1rem',
+                        marginBottom: '15px'
+                    }}>
+                        <i className="fa-duotone fa-solid fa-rocket-launch"></i>
                         <span>Bulk CSV Product Uploads</span>
                     </li>
-                    <li style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '1.1rem', marginBottom: '15px' }}>
-                        <FaStar color="var(--theme-color)" />
+                    <li style={{
+                        display: 'flex',
+                        alignItems: 'center', gap: '12px', fontSize: '1.1rem', marginBottom: '15px'
+                    }}>
+                        <i className="fa-duotone fa-solid fa-chart-mixed"></i>
                         <span>Advanced Analytics & Reports</span>
                     </li>
-                    <li style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '1.1rem' }}>
-                        <FaStar color="var(--theme-color)" />
-                        <span>AI-Powered Insights (Coming Soon!)</span>
+                    <li style={{display: 'flex', alignItems: 'center', gap: '12px', fontSize: '1.1rem'}}>
+                        <i className="fa-duotone fa-solid fa-infinity"></i>
+                        <span>Unlimited Invoices</span>
                     </li>
                 </ul>
 

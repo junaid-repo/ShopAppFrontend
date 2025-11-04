@@ -249,7 +249,7 @@ const BillingPage = ({ setSelectedPage }) => {
             if (highlightedIndex >= 0 && products[highlightedIndex]) {
                 const selectedProduct = products[highlightedIndex]; // Get product
                 handleAddProduct(selectedProduct); // Add to cart
-                setProductSearchTerm(''); // Clear search term
+                // Clear search term
                 // --- UPDATE: Keep focus and ensure dropdown can show ---
                 setIsSearchFocused(true);
                 productSearchInputRef.current?.focus(); // Keep focus
@@ -969,9 +969,9 @@ const BillingPage = ({ setSelectedPage }) => {
                                         {selectedCustomer ? `Change Customer` : 'Select Customer'}
                                     </button>
                                 {/* --- UPDATED: Hint for shortcut --- */}
-                                <PremiumFeature> <button className="btn" onClick={() => setIsNewCusModalOpen(true)} title="Shift + Alt + E">
+                                 <button className="btn" onClick={() => setIsNewCusModalOpen(true)} title="Shift + Alt + E">
                                     <i className="fa-duotone fa-solid fa-user-plus"></i> Create Customer
-                                </button>  </PremiumFeature>
+                                </button>
                                 {cart.length > 0 && (
                                     // --- UPDATED: Hint for shortcut ---
                                     <button className="btn btn-danger" onClick={handleNewBilling} title="Ctrl + Alt + N"><i
@@ -1104,7 +1104,7 @@ const BillingPage = ({ setSelectedPage }) => {
                                                 className="search-result-item"
                                                 onClick={() => {
                                                     handleAddProduct(p); // Add to cart
-                                                    setProductSearchTerm(''); // Clear search term
+                                                     // Clear search term
                                                     setIsSearchFocused(true);
 
                                                     productSearchInputRef.current?.focus(); // Keep focus

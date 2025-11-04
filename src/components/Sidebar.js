@@ -4,7 +4,7 @@ import { Gauge, UsersFour, Invoice , Archive, ChartLineUp, MicrosoftExcelLogo, S
 // 👆 Added `Headset` icon for chat support
 
 import './Sidebar.css';
-
+import PremiumFeature from '../components/PremiumFeature';
 
 const iconColors = {
     dashboard: "#353aad",
@@ -181,7 +181,7 @@ const Sidebar = ({ isCollapsed = false,  selectedPage, setSelectedPage }) => {
                     <i className="fa-duotone fa-solid fa-credit-card" style={{ paddingRight:"15px", fontSize: '20px' }}></i>
                     <span className="nav-text">Payments</span>
                 </button>
-
+              <PremiumFeature>
                 <button
                     type="button"
                     onClick={makeClickHandler('reports')}
@@ -193,7 +193,8 @@ const Sidebar = ({ isCollapsed = false,  selectedPage, setSelectedPage }) => {
                     <i className="fa-duotone fa-solid fa-file-spreadsheet" style={{ paddingRight:"15px", fontSize: '20px' }}></i>
                     <span className="nav-text">Reports</span>
                 </button>
-
+              </PremiumFeature>
+            <PremiumFeature>
                 <button
                     type="button"
                     onClick={makeClickHandler('analytics')}
@@ -204,7 +205,7 @@ const Sidebar = ({ isCollapsed = false,  selectedPage, setSelectedPage }) => {
                     {/*<ChartLineUp weight="duotone" style={{ color: 'var(--text-color)' }} />*/}
                     <i className="fa-duotone fa-solid fa-chart-mixed" style={{ paddingRight:"15px", fontSize: '20px' }}></i>
                     <span className="nav-text">Analytics</span>
-                </button>
+                </button> </PremiumFeature>
             </nav>
 
 

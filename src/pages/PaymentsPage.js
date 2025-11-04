@@ -133,9 +133,7 @@ const PaymentsPage = ({ setSelectedPage }) => {
     const [fromDate, setFromDate] = useState(() => {
         return (_savedFilters && _savedFilters.fromDate) || formatDateInput(defaultFrom);
     });
-    const [toDate, setToDate] = useState(() => {
-        return (_savedFilters && _savedFilters.toDate) || formatDateInput(defaultTo);
-    });
+    const [toDate, setToDate] = useState(formatDateInput(defaultTo));
 
     // --- NEW State for Reminder Modal ---
     const [showReminderModal, setShowReminderModal] = useState(false);
@@ -159,24 +157,28 @@ const PaymentsPage = ({ setSelectedPage }) => {
     const [historyLoading, setHistoryLoading] = useState(false); // Loading spinner for modal
 
     // 🔹 whenever dates change, enforce max 30 days
+    // 🔹 whenever dates change, enforce max 31 days
     useEffect(() => {
         const from = new Date(fromDate);
         const to = new Date(toDate);
 
         if (to < from) {
-            // auto-correct if user picks invalid range
-            setToDate(fromDate);
+            // auto-correct if user picks invalid range (from > to)
+            // Set 'from' date to be the same as 'to' date
+            setFromDate(toDate);
             return;
         }
 
         const diffDays = Math.floor((to - from) / (1000 * 60 * 60 * 24));
+
+        // This is the new logic for Request 2
         if (diffDays > 31) {
-            showAlert("Date range cannot exceed 31 days. Adjusting the end date.");
-            const newTo = new Date(from);
-            newTo.setDate(newTo.getDate() + 31);
-            setToDate(formatDateInput(newTo));
+            showAlert("Date range cannot exceed 31 days. Adjusting the start date.");
+            const newFrom = new Date(to); // Start from the 'to' date
+            newFrom.setDate(newFrom.getDate() - 31); // Go back 31 days
+            setFromDate(formatDateInput(newFrom)); // Adjust the 'from' date
         }
-    }, [fromDate, toDate]);
+    }, [fromDate, toDate, showAlert]); // Added showAlert to dependency array
 
     // save filters whenever they change so they persist across page switches
     useEffect(() => {

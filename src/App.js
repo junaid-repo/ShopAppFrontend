@@ -271,7 +271,7 @@ function AppContent() {
         payments: <PaymentsPage setSelectedPage={setSelectedPage} />,
         billing: <BillingPage setSelectedPage={setSelectedPage} />,
         billing2: <BillingPage2 setSelectedPage={setSelectedPage} />,
-        subscribe: <SubscriptionPage />,
+        subscribe: <SubscriptionPage setSelectedPage={setSelectedPage} />,
         reports: (
             <PremiumGuard>
                 <ReportsPage setSelectedPage={setSelectedPage} />

@@ -695,8 +695,8 @@ const ProductsPage = () => {
                         <button type="button" className="btn" onClick={() => setIsModalOpen(true)}><i class="fa-duotone fa-solid fa-grid-2-plus" style={{marginRight: "3px"}}></i>Add Product</button>
                         <PremiumFeature>
                             <button type="button" className="btn" onClick={() => setIsCsvModalOpen(true)}><i className="fa-duotone fa-solid fa-arrow-up-from-square" style={{marginRight: "5px"}}></i>Upload CSV</button>
-                        </PremiumFeature>                         <PremiumFeature><button type="button" className="btn" onClick={handleExportCSV}><i class="fa-duotone fa-solid fa-file-export" style={{marginRight: "5px"}}></i>Export CSV</button>
-                    </PremiumFeature>   </div>
+                        </PremiumFeature>                          <button type="button" className="btn" onClick={handleExportCSV}><i class="fa-duotone fa-solid fa-file-export" style={{marginRight: "5px"}}></i>Export CSV</button>
+                       </div>
 
                     <div ref={columnsRef} className="columns-dropdown-container">
                                  <span

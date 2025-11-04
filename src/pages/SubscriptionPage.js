@@ -1,28 +1,24 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import { FaCheckCircle, FaCrown } from 'react-icons/fa';
 import './SubscriptionPage.css'; // We will create this CSS file
 import { useConfig } from "./ConfigProvider";
 import { usePremium } from '../context/PremiumContext';
 import toast from 'react-hot-toast';
 
-// Helper component for listing features
-const FeatureItem = ({ children }) => (
-    <li className="feature-item">
-        <FaCheckCircle color="var(--theme-color)" />
-        <span>{children}</span>
-    </li>
-);
-
-const SubscriptionPage = () => {
+const SubscriptionPage = ({ setSelectedPage }) => {
     const config = useConfig();
     const apiUrl = config ? config.API_URL : "";
     const { setIsPremium } = usePremium();
-    const navigate = useNavigate();
 
-    // State to track loading for each button
     const [isMonthlyLoading, setIsMonthlyLoading] = useState(false);
     const [isYearlyLoading, setIsYearlyLoading] = useState(false);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+    // --- 1. UPDATED COUNTDOWN STATE ---
+    const TOTAL_DURATION = 5000; // 5 seconds in milliseconds
+    const [countdown, setCountdown] = useState(TOTAL_DURATION / 1000); // Start at 5
+    const [countdownPercent, setCountdownPercent] = useState(100); // For the graph
+    // --- END ---
 
     // --- Calculate Savings ---
     const monthlyPrice = 199;
@@ -31,10 +27,39 @@ const SubscriptionPage = () => {
     const savings = annualCostOfMonthly - yearlyPrice;
     const savingsPercentage = Math.round((savings / annualCostOfMonthly) * 100);
 
-    /**
-     * This is the main 3-step payment function.
-     * It follows the exact flow you described.
-     */
+    // --- 2. UPDATED useEffect for smooth countdown ---
+    useEffect(() => {
+        let interval;
+        if (showSuccessModal) {
+            let remainingTime = TOTAL_DURATION;
+            setCountdown(remainingTime / 1000);
+            setCountdownPercent(100);
+
+            interval = setInterval(() => {
+                remainingTime -= 100; // Update every 100ms for smoothness
+
+                // Update text every full second
+                if (remainingTime % 1000 === 0) {
+                    setCountdown(remainingTime / 1000);
+                }
+
+                // Update progress bar
+                setCountdownPercent((remainingTime / TOTAL_DURATION) * 100);
+
+                if (remainingTime <= 0) {
+                    clearInterval(interval);
+                    setIsPremium(true);
+                    setShowSuccessModal(false);
+                    if (setSelectedPage) {
+                        setSelectedPage('dashboard');
+                    }
+                }
+            }, 100); // 100ms interval
+        }
+        return () => clearInterval(interval);
+    }, [showSuccessModal, setIsPremium, setSelectedPage]);
+
+
     const handlePayment = async (planType, amount) => {
         if (planType === 'MONTHLY') {
             setIsMonthlyLoading(true);
@@ -45,88 +70,79 @@ const SubscriptionPage = () => {
         let subscriptionId = null;
 
         try {
-            // --- Step A & B: Create Subscription Record ---
-            // The backend creates a "PENDING" subscription and a Razorpay order
+            // Step 1: Create Subscription Record
             const createSubResponse = await fetch(`${apiUrl}/api/shop/subscription/create`, {
                 method: 'POST',
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    planType: planType, // "MONTHLY" or "YEARLY"
+                    planType: planType,
                     amount: amount * 100
                 }),
             });
+            if (!createSubResponse.ok) throw new Error('Failed to create subscription record.');
 
-            if (!createSubResponse.ok) {
-                throw new Error('Failed to create subscription order.');
-            }
-
+            // Step 2: Create Razorpay Order
             const orderResponse = await fetch(`${apiUrl}/api/razorpay/create-order`, {
                 method: "POST",
                 credentials: "include",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ amount: amount * 100, currency: "INR" }),
             });
+            if (!orderResponse.ok) throw new Error('Failed to create Razorpay order.');
 
-            if (!orderResponse.ok) {
+            const orderData2 = await orderResponse.json(); // This is your variable
 
-
-                return;
-            }
-            const orderData2 = await orderResponse.json();
-
-
-
-
-            // --- Step C: Get Order Details ---
-            // Backend returns { orderId, subscriptionId (your DB id), amount }
+            // Step 3: Get Order Details
             const orderData = await createSubResponse.json();
-            subscriptionId = orderData.subscriptionId; // Store this for the verification step
+            subscriptionId = orderData.subscriptionId;
 
-            // --- Step D: Open Razorpay Gateway ---
-            // This logic is from your BillingPage.js
-
+            // Step 4: Open Razorpay Gateway
             const options = {
                 key: "rzp_test_RM94Bh3gUaJSjZ",
                 order_id: orderData2.id,
-                amount: orderData.amount,
+                amount: orderData2.amount,
                 name: "ClearBill Premium",
                 description: "Subscription",
 
-                // --- Step E: Payment Handler ---
+                // --- 3. UPDATED HANDLER ---
                 handler: async (response) => {
-                    // --- Step F: Verify Payment ---
-                    // Send Razorpay details AND your subscriptionId to backend
-                    const verifyResponse = await fetch(`${apiUrl}/api/shop/subscription/verify`, {
-                        method: 'POST',
-                        credentials: 'include',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            razorpay_order_id: response.razorpay_order_id,
-                            razorpay_payment_id: response.razorpay_payment_id,
-                            razorpay_signature: response.razorpay_signature,
-                            subscriptionId: subscriptionId // Your internal DB ID
-                        }),
-                    });
 
-                    if (!verifyResponse.ok) {
-                        throw new Error('Payment verification failed.');
+                    // --- FIX 1: SHOW MODAL IMMEDIATELY ---
+                    setShowSuccessModal(true);
+                    // --- END FIX ---
+
+                    // --- Step F: Verify Payment (runs in background) ---
+                    try {
+                        const verifyResponse = await fetch(`${apiUrl}/api/shop/subscription/verify`, {
+                            method: 'POST',
+                            credentials: 'include',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                razorpay_order_id: response.razorpay_order_id,
+                                razorpay_payment_id: response.razorpay_payment_id,
+                                razorpay_signature: response.razorpay_signature,
+                                subscriptionId: subscriptionId
+                            }),
+                        });
+                        if (!verifyResponse.ok) {
+                            // If verification fails, we can show a toast
+                            // The modal is already open, so this is just a background check
+                            toast.error('Payment verification failed. Please contact support.');
+                        }
+                    } catch (verifyErr) {
+                        console.error("Verification failed:", verifyErr);
+                        toast.error('Payment verification failed. Please contact support.');
                     }
 
-                    // --- Step G & H: Success ---
-                    // Backend has now updated user role to ROLE_PREMIUM
-                    toast.success('Upgrade successful! Welcome to Premium.');
-                    setIsPremium(true); // Update global context
-                    navigate('/dashboard'); // Redirect to dashboard
+                    // --- Step G & H (moved to useEffect) ---
                 },
-
                 theme: { color: "#3399cc" },
             };
 
             const rzp = new window.Razorpay(options);
             rzp.on("payment.failed", (response) => {
                 toast.error(`Payment Failed: ${response.error.description}`);
-                // Optional: You could call backend to mark subscription as "FAILED"
             });
             rzp.open();
 
@@ -141,75 +157,126 @@ const SubscriptionPage = () => {
 
 
     return (
-        <div className="subscription-page-container">
-            <div className="subscription-header">
-                <FaCrown size={48} />
-                <h1>Go Premium</h1>
-                <p>Unlock powerful features to supercharge your business.</p>
-            </div>
+        <>
+            {/* --- 4. UPDATED SUCCESS MODAL JSX --- */}
+            {showSuccessModal && (
+                <div className="success-modal-overlay">
+                    <div className="success-modal-content">
 
-            <div className="subscription-content">
-                {/* --- Feature List --- */}
-                <div className="features-list-card">
-                    <h2>Premium Features Include:</h2>
-                    <ul>
-                        <FeatureItem>Unlimited Invoices (removes 20/day limit)</FeatureItem>
-                        <FeatureItem>Bulk Product Upload via CSV</FeatureItem>
-                        <FeatureItem>Advanced Analytics & Reports</FeatureItem>
-                        <FeatureItem>Detailed Customer Insights</FeatureItem>
-                        <FeatureItem>Priority Email Support</FeatureItem>
-                        <FeatureItem>All Future Premium Updates</FeatureItem>
-                    </ul>
-                </div>
-
-                {/* --- Plan Options --- */}
-                <div className="plans-container">
-
-                    {/* --- Monthly Plan --- */}
-                    <div className="plan-card">
-                        <div className="plan-header">
-                            <h3>Monthly</h3>
-                            <p className="plan-price">
-                                ₹{monthlyPrice}
-                                <span>/ month</span>
-                            </p>
+                        {/* --- NEW Timer/Graph --- */}
+                        <div className="countdown-timer">
+                            <svg className="countdown-svg" viewBox="0 0 36 36">
+                                <path
+                                    className="countdown-circle-bg"
+                                    d="M18 2.0845
+                                      a 15.9155 15.9155 0 0 1 0 31.831
+                                      a 15.9155 15.9155 0 0 1 0 -31.831"
+                                />
+                                <path
+                                    className="countdown-circle-progress"
+                                    style={{ strokeDasharray: `${countdownPercent}, 100` }}
+                                    d="M18 2.0845
+                                      a 15.9155 15.9155 0 0 1 0 31.831
+                                      a 15.9155 15.9155 0 0 1 0 -31.831"
+                                />
+                            </svg>
+                            <div className="countdown-text">{countdown}</div>
                         </div>
-                        <p className="plan-billed-info">Billed every month</p>
-                        <button
-                            className="btn-subscribe"
-                            onClick={() => handlePayment('MONTHLY', monthlyPrice)}
-                            disabled={isMonthlyLoading || isYearlyLoading}
-                        >
-                            {isMonthlyLoading ? 'Processing...' : 'Choose Monthly'}
-                        </button>
-                    </div>
 
-                    {/* --- Yearly Plan --- */}
-                    <div className="plan-card popular">
-                        <div className="plan-badge">Best Value</div>
-                        <div className="plan-header">
-                            <h3>Yearly</h3>
-                            <p className="plan-price">
-                                ₹{yearlyPrice}
-                                <span>/ year</span>
-                            </p>
+                        <div className="hurrah-animation">
+                            <svg className="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                                <circle className="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+                                <path className="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                            </svg>
                         </div>
-                        <p className="plan-billed-info">Billed once per year</p>
-                        <button
-                            className="btn-subscribe"
-                            onClick={() => handlePayment('YEARLY', yearlyPrice)}
-                            disabled={isMonthlyLoading || isYearlyLoading}
-                        >
-                            {isYearlyLoading ? 'Processing...' : 'Choose Yearly'}
-                        </button>
-                        <p className="plan-savings">
-                            Save {savingsPercentage}% (₹{savings}) vs Monthly
+                        <h2>Hurrah! Payment Successful!</h2>
+
+                        {/* --- NEW Styled Text --- */}
+
+
+                        <p style={{marginTop: '20px'}}>
+                            Redirecting you to the dashboard...
+                        </p>
+                        <p className="success-modal-detail-email">
+                            Your order details have been sent to your registered email id.
+                        </p>
+                        <p className="success-modal-detail-profile">
+                            View subscription details in your profile section.
                         </p>
                     </div>
+                </div>
+            )}
+            {/* --- END MODAL --- */}
 
+            <div className="subscription-page-container">
+                <div className="subscription-header">
+                    <FaCrown size={48} />
+                    <h1>Go Premium</h1>
+                    <p>Unlock powerful features to supercharge your business.</p>
+                </div>
+
+                <div className="subscription-content">
+                    {/* --- Feature List --- */}
+                    <div className="features-list-card">
+                        <h2>Premium Features Include:</h2>
+                        <div className="simple-feature-list">
+                            <p><i className="fa-solid fa-circle-check"></i> Unlimited Invoices (removes 20/day limit)</p>
+                            <p><i className="fa-solid fa-circle-check"></i> Bulk Product Upload via CSV</p>
+                            <p><i className="fa-solid fa-circle-check"></i> Advanced Analytics & Reports</p>
+                            <p><i className="fa-solid fa-circle-check"></i> Detailed Customer Insights</p>
+                            <p><i className="fa-solid fa-circle-check"></i> Payment Reminders</p>
+                            <p><i className="fa-solid fa-circle-check"></i> Priority Email Support</p>
+                            <p><i className="fa-solid fa-circle-check"></i> Chat and Ticket based support</p>
+                            <p><i className="fa-solid fa-circle-check"></i> All Future Premium Updates</p>
+                        </div>
+                    </div>
+
+                    {/* --- Plan Options --- */}
+                    <div className="plans-container">
+                        {/* ... (Monthly and Yearly plan cards) ... */}
+                        <div className="plan-card">
+                            <div className="plan-header">
+                                <h3>Monthly</h3>
+                                <p className="plan-price">
+                                    ₹{monthlyPrice}
+                                    <span>/ month</span>
+                                </p>
+                            </div>
+                            <p className="plan-billed-info">Billed every month</p>
+                            <button
+                                className="btn-subscribe"
+                                onClick={() => handlePayment('MONTHLY', monthlyPrice)}
+                                disabled={isMonthlyLoading || isYearlyLoading}
+                            >
+                                {isMonthlyLoading ? 'Processing...' : 'Choose Monthly'}
+                            </button>
+                        </div>
+
+                        <div className="plan-card popular">
+                            <div className="plan-badge">Best Value</div>
+                            <div className="plan-header">
+                                <h3>Yearly</h3>
+                                <p className="plan-price">
+                                    ₹{yearlyPrice}
+                                    <span>/ year</span>
+                                </p>
+                            </div>
+                            <p className="plan-billed-info">Billed once per year</p>
+                            <button
+                                className="btn-subscribe"
+                                onClick={() => handlePayment('YEARLY', yearlyPrice)}
+                                disabled={isMonthlyLoading || isYearlyLoading}
+                            >
+                                {isYearlyLoading ? 'Processing...' : 'Choose Yearly'}
+                            </button>
+                            <p className="plan-savings">
+                                Save {savingsPercentage}% (₹{savings}) vs Monthly
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
+        </>
     );
 };
 
