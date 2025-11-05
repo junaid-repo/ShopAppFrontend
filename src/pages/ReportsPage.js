@@ -480,8 +480,8 @@ const ReportsPage = () => {
                             </div>
 
                             {/* Request 4: Button is now next to dropdown */}
-                            <button type="submit" className="btn small-btn" disabled={!canGenerate}>
-                                {isGenerating ? 'Generating…' : 'Generate report'}
+                            <button type="submit" className="btn" disabled={!canGenerate}>
+                                {isGenerating ? 'Generating…' : 'Generate Report'}
                             </button>
                         </div>
                     </div>

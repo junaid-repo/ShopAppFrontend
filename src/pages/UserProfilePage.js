@@ -10,9 +10,10 @@ import { Gauge, UsersFour, Invoice , Archive, ChartLineUp, MicrosoftExcelLogo, S
 import toast, {Toaster} from 'react-hot-toast';
 import './InvoiceTemplates.css';
 import { FaCrown, FaStar } from 'react-icons/fa'; // <-- ADD THIS
+
 // Mock data (used as initial fallback while API loads)
 const mockUser = {
-   
+
 };
 
 // Formats date string to "04 Nov 2025"
@@ -58,13 +59,15 @@ const UserProfilePage = ({ setSelectedPage }) => {
 
     const { showAlert } = useAlert();
     // Tabs
+    // --- REQ 1: Changed default active tab to 'user' ---
     const [activeTab, setActiveTab] = useState('subscription');
 
     // Core data
     const [user, setUser] = useState({});
     const [formData, setFormData] = useState({});
 
-    const [subscription, setSubscription] = useState(null);
+    // --- REQ 3: Subscription is now an array ---
+    const [subscription, setSubscription] = useState([]);
     const [isLoadingSub, setIsLoadingSub] = useState(true);
 
     // Editing state
@@ -166,6 +169,7 @@ const UserProfilePage = ({ setSelectedPage }) => {
 
     }, [apiUrl, user?.username, formData?.username]); // Dependencies
 
+    // --- REQ 3: Updated fetch logic to handle an array ---
     useEffect(() => {
         if (!apiUrl) return;
 
@@ -180,7 +184,7 @@ const UserProfilePage = ({ setSelectedPage }) => {
 
                 // 404 is a valid response meaning "no active subscription"
                 if (res.status === 404) {
-                    setSubscription(null);
+                    setSubscription([]); // Set to empty array
                     return;
                 }
 
@@ -188,14 +192,17 @@ const UserProfilePage = ({ setSelectedPage }) => {
                     throw new Error(`Subscription fetch failed (${res.status})`);
                 }
 
-                const data = await res.json();
+                const data = await res.json(); // This is now an array: [ { ... }, { ... } ]
                 console.log(data);
-                // Backend should return: { subscriptionId, status, planType, startDate, endDate }
-                setSubscription(data);
+
+                // Sort the data by startDate (earliest first)
+                const sortedData = data.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+
+                setSubscription(sortedData); // Set the sorted array
 
             } catch (err) {
                 console.error("Error loading subscription details:", err);
-                setSubscription(null); // Set to null on error
+                setSubscription([]); // Set to empty array on error
             } finally {
                 setIsLoadingSub(false);
             }
@@ -741,9 +748,11 @@ const UserProfilePage = ({ setSelectedPage }) => {
                     bankAccount: formData.bankAccount,
                     bankIfsc: formData.bankIfsc,
                     bankName: formData.bankName,
-                    bankAddress: formData.bankAddress
+                    bankAddress: formData.bankAddress,
+                    gstin: formData.gstin || formData.gstNumber,
+                    pan: formData.pan
                 };
-
+                console.log("payload for finance ", financePayload);
                 const resp = await fetch(`${apiUrl}/api/shop/user/edit/details/finance`, {
                     method: 'PUT',
                     credentials: 'include',
@@ -807,7 +816,8 @@ const UserProfilePage = ({ setSelectedPage }) => {
                     <span className="info-text" style={{marginLeft: "-1100px"}}>* You cannot update Name, Email and Profile Photo if source is google</span>
                     <span className="info-text" style={{marginLeft: "-1237px"}}>* Enter valid GSTIN to autopopulate shop details</span>
                 </div>
-                {/* Tabs */}
+
+                {/* --- REQ 1: Tabs Reordered --- */}
                 <div className="tab-header">
                     <button className={`tab-btn ${activeTab === 'subscription' ? 'active' : ''}`} onClick={() => setActiveTab('subscription')}>Subscription</button>
                     <button className={`tab-btn ${activeTab === 'user' ? 'active' : ''}`} onClick={() => setActiveTab('user')}>User Details</button>
@@ -815,13 +825,6 @@ const UserProfilePage = ({ setSelectedPage }) => {
                 </div>
 
                 {/* USER TAB */}
-                {activeTab === 'subscription' && (
-                    <SubscriptionPanel
-                        subscription={subscription}
-                        isLoading={isLoadingSub}
-                        setSelectedPage={setSelectedPage} // Pass prop for "Upgrade" button
-                    />
-                )}
                 {activeTab === 'user' && (
                     <div className="tab-content">
                         <div className="avatar-container">
@@ -966,7 +969,7 @@ const UserProfilePage = ({ setSelectedPage }) => {
 
                             </div>
 
-                           {/* <div className="form-group">
+                            {/* <div className="form-group">
                                 <label>GSTIN</label>
                                 <input type="text" value={formData.gstin || formData.gstNumber || ''} disabled={!sectionEdit.finance} onChange={e => setFormData({ ...formData, gstin: e.target.value, gstNumber: e.target.value })} />
                             </div>
@@ -1057,39 +1060,14 @@ const UserProfilePage = ({ setSelectedPage }) => {
                     </div>
                 )}
 
-                {/* --- ADDED: INVOICE TEMPLATES TAB --- */}
-                {/*{activeTab === 'templates' && (
-                    <div className="tab-content invoice-templates-tab">
-                        <h3>Select Your Invoice Template</h3>
-                        <p>Choose the design you prefer for your generated invoices.</p>
-                        <div className="template-grid">
-                            {invoiceTemplates.map((template) => (
-                                <div
-                                    key={template.name}
-                                    className={`template-card ${selectedTemplate === template.name ? 'selected' : ''}`}
-                                >
-                                    <img
-                                        src={template.imageUrl}
-                                        alt={template.displayName}
-                                        onClick={() => openTemplateModal(template)}
-                                        className="template-image"
-                                    />
-                                    <div className="template-info">
-                                        <span className="template-name">{template.displayName}</span>
-                                        <button
-                                            className="btn select-btn"
-                                            onClick={() => handleSelectTemplate(template.name, template.displayName)}
-                                            disabled={selectedTemplate === template.name}
-                                        >
-                                            {selectedTemplate === template.name ? 'Selected' : 'Select'}
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}*/}
-
+                {/* --- REQ 1: Subscription Tab Moved to the End --- */}
+                {activeTab === 'subscription' && (
+                    <SubscriptionPanel
+                        subscription={subscription} // --- REQ 3: Pass array
+                        isLoading={isLoadingSub}
+                        setSelectedPage={setSelectedPage}
+                    />
+                )}
 
                 {/* --- ADDED: Template Modal --- */}
                 {modalOpen && modalTemplate && (
@@ -1109,7 +1087,6 @@ const UserProfilePage = ({ setSelectedPage }) => {
                     </div>
                 )}
 
-                {/* PASSWORD MODAL (intact) */}
                 {/* PASSWORD MODAL (intact) */}
                 {showPasswordModal && (
                     <div className="modal-overlay">
@@ -1173,12 +1150,7 @@ const UserProfilePage = ({ setSelectedPage }) => {
 
 export default UserProfilePage;
 
-// --- ADD THIS NEW COMPONENT AT THE BOTTOM OF YOUR FILE ---
-
-/**
- * A new component to render the subscription panel.
- * Receives subscription data and loading state as props.
- */
+// --- REQ 3: Refactored SubscriptionPanel to handle an array ---
 const SubscriptionPanel = ({ subscription, isLoading, setSelectedPage }) => {
 
     // 1. Loading State
@@ -1187,25 +1159,66 @@ const SubscriptionPanel = ({ subscription, isLoading, setSelectedPage }) => {
     }
 
     // 2. Free Plan / No Subscription View
-    if (!subscription || subscription.status !== 'active') {
+    if (!subscription || subscription.length === 0) {
         return (
             <div className="tab-content">
                 <div className="subscription-panel non-premium">
-                    <FaStar size={48} />
-                    <h3>You are on the Free Plan</h3>
-                    <p>Upgrade to Premium to unlock all features, including unlimited invoices and advanced analytics.</p>
-                    <button
-                        className="btn"
-                        onClick={() => setSelectedPage('subscribe')} // Use setSelectedPage
-                    >
-                        Upgrade to Premium
-                    </button>
+                    {/* --- REQ 2: Button on far right for Free Plan --- */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '0px' }}>
+                        <h3 style={{ margin: 0 }}>Your Plan</h3>
+                        <button
+                            className="btn"
+                            onClick={() => setSelectedPage('subscribe')}
+                        >
+                            Update Subscription
+                        </button>
+                    </div>
+
+                    {/* Centered content */}
+                    <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                        <FaStar size={48} style={{ color: '#ffc107' }} />
+                        <h3>You are on the Free Plan</h3>
+                        <p>Upgrade to Premium to unlock all features, including unlimited invoices and advanced analytics.</p>
+                    </div>
                 </div>
             </div>
         );
     }
 
-    // 3. Active Premium Plan View
+    // 3. Active/Upcoming Plans View (Now a loop)
+    return (
+        <div className="tab-content">
+            {/* --- REQ 2: Button on far right for Premium Users --- */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', marginBottom: '-2rem', marginTop: '-2rem'  }}>
+                <button
+                    className="btn"
+                    onClick={() => setSelectedPage('subscribe')}
+                >
+                    Update Subscription
+                </button>
+            </div>
+
+            {/* --- REQ 3: Loop over all subscriptions --- */}
+            {subscription.map((sub, index) => {
+                // Check if the plan is upcoming
+                const isUpcoming = new Date(sub.startDate) > new Date();
+
+                // Render a separate component for each subscription
+                return (
+                    <SingleSubscriptionItem
+                        key={sub.subscriptionId || index}
+                        subscription={sub}
+                        isUpcoming={isUpcoming}
+                    />
+                );
+            })}
+        </div>
+    );
+};
+
+
+// --- REQ 3: NEW Helper Component to render ONE subscription item ---
+const SingleSubscriptionItem = ({ subscription, isUpcoming }) => {
     const { subscriptionId, status, planType, startDate, endDate } = subscription;
 
     const remainingDays = calculateRemainingDays(endDate);
@@ -1214,54 +1227,70 @@ const SubscriptionPanel = ({ subscription, isLoading, setSelectedPage }) => {
     const progressPercent = Math.max(0, Math.min(100, (remainingDays / totalDuration) * 100));
     const barColor = getBarColor(remainingDays);
 
+    // Determine status label and class
+    let displayStatus = isUpcoming ? "Upcoming" : status;
+    let statusClass = isUpcoming ? "status-upcoming" : `status-${status?.toLowerCase()}`;
+
+
     return (
-        <div className="tab-content">
-            <div className="subscription-panel premium">
+        <div className="subscription-panel premium" style={{ marginBottom: '1.5rem' }}>
+            {/* Show "Upcoming" badge OR "Premium" badge */}
+            {isUpcoming ? (
+                <div className="premium-badge-header upcoming-badge">
+                    <FaStar />
+                    <span>Upcoming Plan</span>
+                </div>
+            ) : (
                 <div className="premium-badge-header">
                     <FaCrown />
                     <span>Premium Member</span>
                 </div>
-                <h3>Your Active Plan</h3>
+            )}
 
-                {/* --- Task 2: Subscription Details --- */}
-                <div className="subscription-details-grid">
-                    <div>
-                        <label>Subscription ID</label>
-                        <span>{subscriptionId || 'N/A'}</span>
-                    </div>
-                    <div>
-                        <label>Status</label>
-                        <span className={`status-${status?.toLowerCase()}`}>{status || 'N/A'}</span>
-                    </div>
-                    <div>
-                        <label>Plan Type</label>
-                        <span>{planType || 'N/A'}</span>
-                    </div>
-                    <div>
-                        <label>Start Date</label>
-                        <span>{formatDate(startDate)}</span>
-                    </div>
-                    <div>
-                        <label>End Date</label>
-                        <span>{formatDate(endDate)}</span>
-                    </div>
-                    <div>
-                        <label>Remaining</label>
-                        <span>{remainingDays} Days</span>
-                    </div>
+            <h3>Plan Details</h3>
+
+            <div className="subscription-details-grid">
+                <div>
+                    <label>Subscription ID</label>
+                    <span>{subscriptionId || 'N/A'}</span>
                 </div>
-
-                {/* --- Task 3: Progress Bar --- */}
-                <h4 className="progress-title">Plan Validity</h4>
-                <div className="progress-bar-container">
-                    <div
-                        className={`progress-bar-inner ${barColor}`}
-                        style={{ width: `${progressPercent}%` }}
-                    >
-                        {remainingDays} days left
-                    </div>
+                <div>
+                    <label>Status</label>
+                    {/* Use new status class and label */}
+                    <span className={statusClass}>{displayStatus || 'N/A'}</span>
+                </div>
+                <div>
+                    <label>Plan Type</label>
+                    <span>{planType || 'N/A'}</span>
+                </div>
+                <div>
+                    <label>Start Date</label>
+                    <span>{formatDate(startDate)}</span>
+                </div>
+                <div>
+                    <label>End Date</label>
+                    <span>{formatDate(endDate)}</span>
+                </div>
+                <div>
+                    <label>Remaining</label>
+                    <span>{remainingDays} Days</span>
                 </div>
             </div>
+
+            {/* Only show progress bar for non-upcoming (i.e., active or expired) plans */}
+            {!isUpcoming && (
+                <>
+                    <h4 className="progress-title">Plan Validity</h4>
+                    <div className="progress-bar-container">
+                        <div
+                            className={`progress-bar-inner ${barColor}`}
+                            style={{ width: `${progressPercent}%` }}
+                        >
+                            {remainingDays > 0 ? `${remainingDays} days left` : 'Expired'}
+                        </div>
+                    </div>
+                </>
+            )}
         </div>
     );
 };
