@@ -943,7 +943,7 @@ const BillingPage = ({ setSelectedPage }) => {
                     <div className="glass-card" style={{ padding: '1rem' }}>
 
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                            <h3 style={{ margin: 0 }}>Current Bill</h3>
+                            <h2 style={{ margin: 0 }}>Cart</h2>
                             {!isPremium && !isLimitLoading && (
                                 <span
                                     className="premium-limit-badge"
@@ -1274,7 +1274,7 @@ const BillingPage = ({ setSelectedPage }) => {
                 </div>
 
                 <div className="summary-section glass-card" style={{ flex: 1, padding: '1rem', height: 'fit-content' }}>
-                    <h3 style={{ textAlign: 'center', marginTop: 0 }}>Summary</h3>
+                    <h3 style={{ textAlign: 'center', marginTop: 0 }}>Total</h3>
                     <div className="invoice-summary">
                         <p style={{ color: 'var(--primary-color)', fontWeight: '600', fontSize: '1.05em', marginBottom: '1.0rem' }}>
                             Total Units: <span>{totalUnits}</span>
@@ -1438,7 +1438,7 @@ const BillingPage = ({ setSelectedPage }) => {
                     <div style={{ marginTop: '2.5rem', display: 'flex', gap: '10px'  }}>
                         {/* --- UPDATED: Hint for shortcut --- */}
                         <button className="preview-btn"  onClick={handlePreview} disabled={cart.length === 0} title="Ctrl + Alt + P">
-                            Preview
+                            Summary
                         </button>
                         <button
                             className="process-payment-btn"
