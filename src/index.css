@@ -21,7 +21,8 @@
     --error-bg: rgba(207, 50, 50, 0.39);
     --error-message: #ff6b6b;
     --error-color: #c80b0b;
-
+    --selected-green: #eafff0;
+    --selected-red: #ffd5da;
     --small-bg-cyan: rgba(105, 207, 9, 0.13);
     --bp-order-summary-bg: var(--modal-bg, #fff); /* global fallback for billing/order summary */
 }
@@ -41,6 +42,9 @@ body.dark-theme {
     --input-border: var(--border-color);
     --table-hover-bg: rgba(0, 170, 255, 0.1);
     --tiny-text-color: #f4efef;
+    --selected-green: #40704d;
+    --selected-red: #9b565e;
+    --error-color: #fa7171;
     --pagination-bg: #21262d;
     --pagination-border: var(--border-color);
     --pagination-disabled-bg: #161b22;
@@ -750,7 +754,6 @@ body.dark-theme {
 /* ensure process button width and margin match previous */
 .process-payment-btn {
     width: 100%;
-    margin-top: 1.5rem;
 }
 
 /* ---------- Invoice card (big visual) ---------- */
@@ -835,7 +838,7 @@ body.dark-theme {
 /* process payment button - primary color */
 .process-payment-btn {    padding: 0.75rem 1.5rem;
     border-radius: 25px;
-    background: rgba(25, 180, 61, 0.4); /* faint glassy background */
+    background: rgba(25, 180, 61, 0.55); /* faint glassy background */
     border: 1px solid rgb(26, 255, 0); /* visible faint border */
     backdrop-filter: blur(8px); /* frosted effect */
     -webkit-backdrop-filter: blur(8px);
@@ -851,6 +854,27 @@ body.dark-theme {
 .process-payment-btn:hover {
     /* slightly darker on hover; uses alpha overlay on primary */
     background: linear-gradient(0deg, rgba(0, 128, 0, 0.53), rgba(0, 128, 0, 0.51)), rgba(0, 128, 0, 0.62);
+    color: white;
+}
+
+.preview-btn {    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    background: rgb(230, 232, 193); /* faint glassy background */
+    border: 1px solid rgb(248, 212, 31); /* visible faint border */
+    backdrop-filter: blur(8px); /* frosted effect */
+    -webkit-backdrop-filter: blur(8px);
+    color: var(--text-color); /* darker readable text */
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 12px rgba(0, 50, 100, 0.25); /* darker shadow for light bg */
+
+}
+
+.preview-btn:hover {
+    /* slightly darker on hover; uses alpha overlay on primary */
+    background: linear-gradient(0deg, rgb(201, 207, 62), rgb(192, 198, 47)), rgb(150, 153, 43);
     color: white;
 }
 
@@ -997,6 +1021,8 @@ body.dark-theme {
 .tax {
     color: #c0392b;  /* red */
     font-weight: 600;
+    font-size: 1rem;
+    padding-top: 0.5rem;
 }
 
 /* Payments stats - symmetrical cards (Dates | Total | Bars) */
@@ -1262,9 +1288,9 @@ body.dark-theme {
     justify-content: center;
     transition: background-color 0.2s;
 }
-.action-icon.edit { background-color: #e0f7fa; color: #00796b; }
+.action-icon.edit { background-color: var(--selected-green); color: var(--text-color); }
 .action-icon.edit:hover { background-color: #b2ebf2; }
-.action-icon.delete { background-color: #ffebee; color: #d32f2f; }
+.action-icon.delete { background-color: var(--selected-red); color:var(--text-color); }
 .action-icon.delete:hover { background-color: #ffcdd2; }
 .ribbonw {
     width: 150px;

@@ -13,6 +13,7 @@ import PremiumFeature from '../components/PremiumFeature';
 import PremiumBadge from '../context/PremiumBadge';
 import { usePremium } from '../context/PremiumContext'; // <-- ADD THIS
 import { FaCrown } from 'react-icons/fa';
+import {UserSwitchIcon} from "@phosphor-icons/react";
 
 // A simple debounce hook to prevent API calls on every keystroke
 const useDebounce = (value, delay) => {
@@ -132,6 +133,7 @@ const BillingPage = ({ setSelectedPage }) => {
     }, 0);
     const total = sellingSubtotal - tax;
     const discountPercentage = actualSubtotal > 0 ? (((actualSubtotal - sellingSubtotal) / actualSubtotal) * 100).toFixed(2) : 0;
+    const discountAmount = actualSubtotal - sellingSubtotal;
     const remainingAmount = sellingSubtotal - payingAmount;
     const totalUnits = cart.reduce((total, item) => total + item.quantity, 0);
 
@@ -964,10 +966,26 @@ const BillingPage = ({ setSelectedPage }) => {
                             <div className="customer-actions" style={{ display: 'flex', gap: '10px' }}>
                                 {/* --- UPDATED: Hint for shortcut --- */}
 
-                                    <button className="btn" onClick={() => setIsModalOpen(true)} title="Alt + E" disabled={isLimitReached}>
-                                        <i className="fa-duotone fa-solid fa-user-magnifying-glass" style={{paddingRight:"5px"}}></i>
-                                        {selectedCustomer ? `Change Customer` : 'Select Customer'}
-                                    </button>
+                                <button
+                                    className="btn"
+                                    onClick={() => setIsModalOpen(true)}
+                                    title="Alt + E"
+                                    disabled={isLimitReached}
+                                >
+                                    {selectedCustomer ? (
+                                        <i
+                                            className="fa-duotone fa-solid fa-user-slash"
+                                            style={{ paddingRight: "5px" }}
+                                        ></i>
+                                    ) : (
+                                        <i
+                                            className="fa-duotone fa-solid fa-user-magnifying-glass"
+                                            style={{ paddingRight: "5px" }}
+                                        ></i>
+                                    )}
+                                    {selectedCustomer ? 'Change Customer' : 'Select Customer'}
+                                </button>
+
                                 {/* --- UPDATED: Hint for shortcut --- */}
                                  <button className="btn" onClick={() => setIsNewCusModalOpen(true)} title="Shift + Alt + E">
                                     <i className="fa-duotone fa-solid fa-user-plus"></i> Create Customer
@@ -1024,7 +1042,7 @@ const BillingPage = ({ setSelectedPage }) => {
                                 ) : (
                                     // Placeholder when no customer is selected
                                     <span style={{ fontSize: '1.2em', color: '#888' }}>
-                                        Select Customer
+                                       Add Customer
                                     </span>
                                 )}
 
@@ -1258,13 +1276,13 @@ const BillingPage = ({ setSelectedPage }) => {
                 <div className="summary-section glass-card" style={{ flex: 1, padding: '1rem', height: 'fit-content' }}>
                     <h3 style={{ textAlign: 'center', marginTop: 0 }}>Summary</h3>
                     <div className="invoice-summary">
-                        <p style={{ color: 'var(--primary-color)', fontWeight: '600', fontSize: '1.05em' }}>
+                        <p style={{ color: 'var(--primary-color)', fontWeight: '600', fontSize: '1.05em', marginBottom: '1.0rem' }}>
                             Total Units: <span>{totalUnits}</span>
                         </p>
-                        <p>Total without GST: <span>₹{total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></p>
+                        <p style={{  fontWeight: '600', fontSize: '1.15em', marginBottom: '0.5rem' }}>Total without GST: <span>₹{total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></p>
                         <p className="tax">GST: <span>₹{tax.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></p>
 
-                        <div className="tax-breakdown" style={{ fontSize: '0.85em', color: '#666', borderLeft: '2px solid var(--border-color)', paddingLeft: '10px', marginLeft: '5px' }}>
+                        <div className="tax-breakdown" style={{ fontSize: '0.85em', color: '#666', borderLeft: '2px solid var(--border-color)', paddingLeft: '10px', marginLeft: '5px', marginBottom: '2rem' }}>
                             {Object.entries(groupedTaxes).map(([key, value]) => (
                                 <p key={key} style={{ margin: '2px 0', color: "var(--tiny-text-color)", display: 'flex', justifyContent: 'space-between' }}>
                                     <span>{key}:</span>
@@ -1307,7 +1325,7 @@ const BillingPage = ({ setSelectedPage }) => {
                                         }}
                                     />
                                 </div>
-                                <h5 className="remaining-total" style={{ margin: '0 0 1rem 0', textAlign: 'right', color: 'var(--primary-color)' }}>
+                                <h5 className="remaining-total" style={{ margin: '0 0 1rem 0', textAlign: 'right', color: 'var(--error-color)' }}>
                                     Due: <span>₹{remainingAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                 </h5>
                             </>
@@ -1417,8 +1435,11 @@ const BillingPage = ({ setSelectedPage }) => {
                         </div>
 
                     </div>
-                    <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div style={{ marginTop: '2.5rem', display: 'flex', gap: '10px'  }}>
                         {/* --- UPDATED: Hint for shortcut --- */}
+                        <button className="preview-btn"  onClick={handlePreview} disabled={cart.length === 0} title="Ctrl + Alt + P">
+                            Preview
+                        </button>
                         <button
                             className="process-payment-btn"
                             onClick={handleProcessPayment}
@@ -1428,9 +1449,7 @@ const BillingPage = ({ setSelectedPage }) => {
                             {loading ? 'Processing...' : 'Process Payment'}
                         </button>
                         {/* --- UPDATED: Hint for shortcut --- */}
-                        <button className="btn" onClick={handlePreview} disabled={cart.length === 0} title="Ctrl + Alt + P">
-                            Preview
-                        </button>
+
                     </div>
                 </div>
             </div>

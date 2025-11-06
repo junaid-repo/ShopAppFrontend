@@ -662,7 +662,7 @@ const ProductsPage = () => {
                         <button
                             type="button"
                             // Consider using a class like "icon-btn" for specific styling
-                            className={`btn ${isSelectionMode ? 'btn-active' : ''}`}
+                            className="btn btn-icon"
                             onClick={handleToggleSelectionMode}
                             title={isSelectionMode ? 'Cancel Selection' : 'Select Multiple'}
                             style={{
@@ -671,10 +671,12 @@ const ProductsPage = () => {
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                padding: 0
+                                padding: 0,
+                                borderColor: 'var(--primary-color)',
+                                boxShadow: '0 0px 0px var(--shadow-color)'
                             }}
                         >
-                            {isSelectionMode ? <FaTimes size={18} /> : <FaCheckDouble size={18} />}
+                            {isSelectionMode ? <FaTimes size={18} /> : <i className="fa-duotone fa-solid fa-check-double" style={{paddingLeft:"1px", paddingRight: "3px"}}></i>}
                         </button>
 
                         {isSelectionMode && selectedProducts.size > 0 && (

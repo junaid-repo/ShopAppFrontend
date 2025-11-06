@@ -143,18 +143,14 @@ const LandingPage = () => {
                     <div className="features-grid">
                         <ul>
                             <li><i className="fa-solid fa-check-circle"></i> Professional GST Invoicing</li>
-                            <li><i className="fa-solid fa-check-circle"></i> Client Management</li>
+                            <li><i className="fa-solid fa-check-circle"></i> Customer Management</li>
                             <li><i className="fa-solid fa-check-circle"></i> Product & Service Catalog</li>
                             <li><i className="fa-solid fa-check-circle"></i> Stock & Inventory Control</li>
                             <li><i className="fa-solid fa-check-circle"></i> Purchase Order Management</li>
-                            <li><i className="fa-solid fa-check-circle"></i> Expense Tracking</li>
                             <li><i className="fa-solid fa-check-circle"></i> Payment Reminders</li>
-                            <li><i className="fa-solid fa-check-circle"></i> Multi-Currency Support</li>
                         </ul>
                         <ul>
                             <li><i className="fa-solid fa-check-circle"></i> Detailed Sales Reports</li>
-                            <li><i className="fa-solid fa-check-circle"></i> GST Filing Reports (GSTR-1, 3B)</li>
-                            <li><i className="fa-solid fa-check-circle"></i> Staff Access Control</li>
                             <li><i className="fa-solid fa-check-circle"></i> Data Backup & Restore</li>
                             <li><i className="fa-solid fa-check-circle"></i> Share Invoices on WhatsApp</li>
                             <li><i className="fa-solid fa-check-circle"></i> Thermal Printer Support</li>
@@ -169,7 +165,7 @@ const LandingPage = () => {
                     <h2 className="section-title">Watch ClearBill in Action</h2>
                     <div className="video-container">
                         <iframe
-                            src="https://www.youtube.com/embed/" // <-- Replace with your demo video ID
+                            src="https://www.youtube.com/embed/NK4kMvhujPQ" // <-- Replace with your demo video ID
                             title="YouTube video player"
                             frameBorder="0"
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -237,30 +233,7 @@ const LandingPage = () => {
                             </div>
                             <button type="submit" className="btn">Send Message</button>
                         </form>
-                        <div className="contact-info">
-                            <div className="contact-info-grid">
-                                <div className="contact-info-item">
-                                    <i className="fa-solid fa-phone"></i>
-                                    <h4>Phone</h4>
-                                    <p>+91 12345 67890</p>
-                                </div>
-                                <div className="contact-info-item">
-                                    <i className="fa-solid fa-envelope"></i>
-                                    <h4>Email</h4>
-                                    <p>support@clearbill.com</p>
-                                </div>
-                                <div className="contact-info-item">
-                                    <i className="fa-brands fa-whatsapp"></i>
-                                    <h4>WhatsApp</h4>
-                                    <p>+91 12345 67890</p>
-                                </div>
-                                <div className="contact-info-item">
-                                    <i className="fa-solid fa-map-marker-alt"></i>
-                                    <h4>Address</h4>
-                                    <p>123 Billing St, Tech Park, Bangalore, India</p>
-                                </div>
-                            </div>
-                        </div>
+
                     </div>
                 </section>
             </main>

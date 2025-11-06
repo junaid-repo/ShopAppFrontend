@@ -79,12 +79,15 @@ const SettingsPage = () => {
 
     // --- COPIED: Define your invoice templates ---
     const invoiceTemplates = [
+        { name: 'gstinvoiceThermal1', displayName: 'Thermal Print 1', imageUrl: '/invoiceTemplates/ThermalPrint01.png' },
+        { name: 'gstinvoiceThermal2', displayName: 'Thermal Print 2', imageUrl: '/invoiceTemplates/ThermalPrint02.png' },
+        { name: 'gstinvoice', displayName: 'Best Purple', imageUrl: '/invoiceTemplates/Screenshot_20251019_235220.png' },
         { name: 'gstinvoiceskyblue', displayName: 'Modern Blue', imageUrl: '/invoiceTemplates/Screenshot_20251019_235059.png' },
         { name: 'gstinvoiceLightGreen', displayName: 'Elegant Green', imageUrl: '/invoiceTemplates/Screenshot_20251019_235119.png' },
         { name: 'gstinvoiceGreen', displayName: 'Simple Green', imageUrl: '/invoiceTemplates/Screenshot_20251019_235133.png' },
         { name: 'gstinvoiceBlue', displayName: 'Simple Blue', imageUrl: '/invoiceTemplates/Screenshot_20251019_235150.png' },
         { name: 'gstinvoiceOrange', displayName: 'Classic Orange', imageUrl: '/invoiceTemplates/Screenshot_20251019_235203.png' },
-        { name: 'gstinvoice', displayName: 'Best Purple', imageUrl: '/invoiceTemplates/Screenshot_20251019_235220.png' },
+
     ];
 
     // --- COPIED: State for Invoice Templates ---

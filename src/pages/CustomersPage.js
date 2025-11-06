@@ -420,7 +420,24 @@
                                     value={searchTerm}
                                     className="search-bar"
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                />
+                                /> <div>
+                                <button className="btn btn-icon"
+
+                                        style={{
+                                            width: '50px',
+                                            height: '40px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            padding: 0,
+                                            borderColor: 'var(--primary-color)',
+                                            boxShadow: '0 0px 0px var(--shadow-color)'
+                                        }}
+                                        onClick={handleToggleSelectMode}
+                                        title="Select Multiple">
+
+                                    <i className="fa-duotone fa-solid fa-check-double"></i>
+                                </button> </div>
                                 <div className="view-toggle-buttons">
                                     <button
                                         className={`toggle-btn ${viewMode === 'grid' ? 'active' : ''}`}
@@ -437,10 +454,7 @@
                                         <i className="fa-duotone fa-solid fa-list"></i>
                                     </button>
                                 </div>
-                                <button className="btn btn-icon" onClick={handleToggleSelectMode}
-                                        title="Select Multiple">
-                                    <i className="fa-duotone fa-solid fa-check-double"></i>
-                                </button>
+
                                 <button className="btn add-customer-btn" onClick={() => setIsModalOpen(true)}><i className="fa-duotone fa-solid fa-user-plus" style={{paddingLeft:"1px", paddingRight: "3px"}}></i>New Customer</button>
                             </>
                         )}

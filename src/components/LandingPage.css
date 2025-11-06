@@ -161,7 +161,7 @@ html {
 .features-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1rem 3rem;
+    gap: 2rem 13rem;
 }
 
 .features-grid ul {
@@ -215,7 +215,7 @@ html {
     margin-bottom: 1.5rem;
     color: var(--primary-color, #00aaff);
     --fa-primary-color: var(--primary-color, #00aaff);
-    --fa-secondary-color: var(--primary-color-light, #e0f7ff);
+    --fa-secondary-color: #9f9fc4;
     --fa-secondary-opacity: 1.0;
 }
 

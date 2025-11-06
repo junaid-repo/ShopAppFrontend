@@ -1,4 +1,3 @@
-// src/components/Topbar.js
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import PremiumFeature from '../components/PremiumFeature';
@@ -99,7 +98,7 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage, isCollapsed, to
                 });
                 if (!res.ok) return;
                 const data = await res.json();
-               setUserName(data.username || "");
+                setUserName(data.username || "");
 
                 const picRes = await fetch(
                     `${apiUrl}/api/shop/user/${data.username}/profile-pic`,
@@ -142,11 +141,15 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage, isCollapsed, to
 
     // --- Original useEffect (Search Fetch) ---
     useEffect(() => {
-        if (!debouncedSearchTerm) {
+        // --- CHANGE 1: Added length check ---
+        // If the term is empty OR less than 3 chars, clear results and hide dropdown.
+        if (!debouncedSearchTerm || debouncedSearchTerm.length < 3) {
             setSearchResults([]);
             setIsDropdownVisible(false);
             return;
         }
+        // --- END CHANGE 1 ---
+
         const fetchSearch = async () => {
             // ... (rest of search fetch logic)
             setIsSearchLoading(true);
@@ -323,7 +326,7 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage, isCollapsed, to
 
             {/* --- TOPBAR CENTER (Global Search) --- */}
             <div className="topbar-center">
-            <div className="global-search-container" ref={searchDropdownRef}>
+                <div className="global-search-container" ref={searchDropdownRef}>
                     <i className="fa-duotone fa-solid fa-search search-icon"></i>
                     <input
                         type="text"
@@ -334,6 +337,8 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage, isCollapsed, to
                         onFocus={() => {
                             if (searchResults.length > 0) setIsDropdownVisible(true);
                         }}
+                        // --- CHANGE 2: Added title attribute ---
+                        title="Enter at least 3 characters to start search"
                     />
                     {isDropdownVisible && (
                         <div className="search-results-dropdown">
@@ -358,7 +363,7 @@ const Topbar = ({ onLogout, theme, toggleTheme, setSelectedPage, isCollapsed, to
                         </div>
                     )}
                 </div>
-        </div>
+            </div>
 
             {/* --- TOPBAR RIGHT (Icons + User Menu) --- */}
             <div className="topbar-right">
