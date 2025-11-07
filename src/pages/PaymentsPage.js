@@ -59,6 +59,13 @@ const PaymentsPage = ({ setSelectedPage }) => {
         } catch (e) { }
         return "All";
     });
+    const [status, setStatus] = useState(() => {
+        try {
+            const s = localStorage.getItem("payments_filters");
+            if (s) return JSON.parse(s).status || "All";
+        } catch (e) { }
+        return "All";
+    });
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10); // show 5 records per page
 
@@ -183,12 +190,12 @@ const PaymentsPage = ({ setSelectedPage }) => {
     // save filters whenever they change so they persist across page switches
     useEffect(() => {
         try {
-            const obj = { fromDate, toDate, paymentMode, searchTerm };
+            const obj = { fromDate, toDate, paymentMode, searchTerm, status };
             localStorage.setItem("payments_filters", JSON.stringify(obj));
         } catch (e) {
             // ignore storage errors
         }
-    }, [fromDate, toDate, paymentMode, searchTerm]);
+    }, [fromDate, toDate, paymentMode, searchTerm, status]);
 
     // compute unique payment modes from all payments (used to populate dropdown)
     const uniqueModes = useMemo(() => {
@@ -274,16 +281,16 @@ const PaymentsPage = ({ setSelectedPage }) => {
 
             // mode filter
             const matchesMode = paymentMode === "All" || !paymentMode ? true : (p.method === paymentMode);
-
+            const matchesStatus = status === "All" || !status ? true : (p.status === status);
             // date parsing - guard against invalid dates
             const pDate = new Date(p.date);
             if (isNaN(pDate.getTime())) return matchesSearch; // if date invalid, don't filter by date
 
             const withinRange = pDate >= from && pDate <= to;
 
-            return matchesSearch && withinRange && matchesMode;
+            return matchesSearch && withinRange && matchesMode && matchesStatus;
         });
-    }, [payments, searchTerm, fromDate, toDate, paymentMode]);
+    }, [payments, searchTerm, fromDate, toDate, paymentMode, status]);
 
     // --- ⭐️ NEW: Sorting Logic ---
     const sortedPayments = useMemo(() => {
@@ -362,7 +369,7 @@ const PaymentsPage = ({ setSelectedPage }) => {
     // --- ⭐️ MODIFIED: reset page when filters OR sort change ---
     useEffect(() => {
         setCurrentPage(1);
-    }, [searchTerm, fromDate, toDate, paymentMode, sortConfig]);
+    }, [searchTerm, fromDate, toDate, paymentMode, status, sortConfig]);
 
 
     // --- NEW: Handlers for Reminder Modal ---
@@ -622,6 +629,19 @@ const PaymentsPage = ({ setSelectedPage }) => {
                                 {uniqueModes.map((m) => (
                                     <option key={m} value={m}>{m}</option>
                                 ))}
+                            </select>
+                        </label>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '5px', fontWeight: 500 }}>
+                            Status:
+                            <select
+                                className="date-input"
+                                value={status}
+                                onChange={(e) => setStatus(e.target.value)}
+                            >
+                                <option value="All">All</option>
+                                <option value="Paid">Paid</option>
+                                <option value="SemiPaid">SemiPaid</option>
+                                <option value="UnPaid">UnPaid</option>
                             </select>
                         </label>
                         <button
