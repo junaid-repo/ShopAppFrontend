@@ -859,8 +859,8 @@ body.dark-theme {
 
 .preview-btn {    padding: 0.75rem 1.5rem;
     border-radius: 25px;
-    background: rgb(230, 232, 193); /* faint glassy background */
-    border: 1px solid rgb(248, 212, 31); /* visible faint border */
+    background: rgb(193, 232, 226); /* faint glassy background */
+    border: 1px solid rgb(193, 232, 226); /* visible faint border */
     backdrop-filter: blur(8px); /* frosted effect */
     -webkit-backdrop-filter: blur(8px);
     color: var(--text-color); /* darker readable text */
@@ -874,7 +874,7 @@ body.dark-theme {
 
 .preview-btn:hover {
     /* slightly darker on hover; uses alpha overlay on primary */
-    background: linear-gradient(0deg, rgb(201, 207, 62), rgb(192, 198, 47)), rgb(150, 153, 43);
+    background: linear-gradient(0deg, rgb(55, 123, 113), rgb(50, 91, 85)), rgb(134, 178, 171);
     color: white;
 }
 

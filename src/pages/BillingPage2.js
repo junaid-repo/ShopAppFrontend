@@ -13,6 +13,7 @@ import PremiumFeature from '../components/PremiumFeature';
 import PremiumBadge from '../context/PremiumBadge';
 import { usePremium } from '../context/PremiumContext'; // <-- ADD THIS
 import { FaCrown } from 'react-icons/fa';
+import './AnalyticsPage.css';
 import {UserSwitchIcon} from "@phosphor-icons/react";
 
 // A simple debounce hook to prevent API calls on every keystroke
