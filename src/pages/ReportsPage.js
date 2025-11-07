@@ -2,13 +2,13 @@ import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { useConfig } from "./ConfigProvider";
 import { useAlert } from '../context/AlertContext';
 import * as XLSX from 'xlsx';
-import Modal from '../components/Modal'; // <-- 1. IMPORT MODAL
+import Modal from '../components/Modal';
 
-// Import the stylesheet (we'll add new styles for this layout)
 import './ReportsPage.css';
 
 // --- Report Data (Unchanged) ---
 const DOMAIN_REPORTS = {
+    // ... (data unchanged)
     gst: [
 
         { id: 'statewisegst', name: 'SateWiseGST Summary', icon: 'fa-duotone fa-solid fa-truck-fast' },
@@ -43,11 +43,89 @@ const REPORT_ICON_MAP = Object.values(DOMAIN_REPORTS)
         return acc;
     }, {});
 
-// --- Utilities (Unchanged) ---
-function addMonths(date, n) { /* ... */ }
-function isRangeWithin12Months(fromISO, toISO) { /* ... */ }
-function formatRange(fromISO, toISO) { /* ... */ }
-function timeAgo(iso) { /* ... */ }
+// --- UPDATED: Utilities (Implemented stubs) ---
+function addMonths(date, n) {
+    const d = new Date(date);
+    d.setMonth(d.getMonth() + n);
+    return d;
+}
+
+function isRangeWithin12Months(fromISO, toISO) {
+    if (!fromISO || !toISO) return false;
+    try {
+        const fromDate = new Date(fromISO);
+        const toDate = new Date(toISO);
+        // Add 12 months to the start date
+        const limitDate = addMonths(fromDate, 12);
+        // The end date must be on or before this limit date
+        return toDate <= limitDate;
+    } catch (e) {
+        return false;
+    }
+}
+
+function formatDate(iso) {
+    if (!iso) return '';
+    try {
+        const date = new Date(iso);
+        // Use timeZone: 'UTC' to prevent off-by-one day errors
+        return date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            timeZone: 'UTC'
+        });
+    } catch (e) {
+        return 'Invalid Date';
+    }
+}
+
+function formatRange(fromISO, toISO) {
+    if (!fromISO || !toISO) return 'Invalid range';
+    const from = formatDate(fromISO);
+    const to = formatDate(toISO);
+    return `${from} - ${to}`;
+}
+
+function timeAgo(iso) {
+    if (!iso) return '';
+    try {
+        const now = new Date();
+        const past = new Date(iso);
+        const seconds = Math.floor((now - past) / 1000);
+
+        if (isNaN(seconds)) return '';
+
+        let interval = seconds / 31536000; // years
+        if (interval > 1) {
+            return Math.floor(interval) + "y ago";
+        }
+        interval = seconds / 2592000; // months
+        if (interval > 1) {
+            return Math.floor(interval) + "mo ago";
+        }
+        interval = seconds / 86400; // days
+        if (interval > 1) {
+            return Math.floor(interval) + "d ago";
+        }
+        interval = seconds / 3600; // hours
+        if (interval > 1) {
+            return Math.floor(interval) + "h ago";
+        }
+        interval = seconds / 60; // minutes
+        if (interval > 1) {
+            return Math.floor(interval) + "m ago";
+        }
+        if (seconds < 10) {
+            return "just now";
+        }
+        return Math.floor(seconds) + "s ago";
+    } catch (e) {
+        return '';
+    }
+}
+// --- END UPDATED Utilities ---
+
 
 // --- Mock API (Unchanged) ---
 async function mockFetchRecentReports({ limit = 10 } = {}, apiUrl) {
@@ -112,7 +190,7 @@ function ExcelPreview({ data }) {
     );
 }
 
-// --- 1. NEW: Helper for Base64 conversion ---
+// --- Helper for Base64 conversion (Unchanged) ---
 const fileReaderAsync = (blob) => {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -148,7 +226,6 @@ const ReportsPage = () => {
     const [isGenerating, setIsGenerating] = useState(false);
     const [excelData, setExcelData] = useState(null);
 
-    // --- 2. NEW: State for Email Modal ---
     const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
 
     const config = useConfig();
@@ -162,7 +239,6 @@ const ReportsPage = () => {
         setSelectedReport(null);
     }, [domain]);
 
-    // --- 1. NEW: Helper to clear cache ---
     const clearReportCache = () => {
         // Clean up old excel blob url
         if (previewData.url && format === 'excel' && previewData.url.startsWith('blob:')) {
@@ -171,7 +247,7 @@ const ReportsPage = () => {
         sessionStorage.removeItem('reportCache');
     };
 
-    // --- UPDATED: Load recent reports AND cached report ---
+    // --- Load recent reports AND cached report (Unchanged) ---
     useEffect(() => {
         let mounted = true;
         setLoadingRecent(true);
@@ -186,37 +262,31 @@ const ReportsPage = () => {
                 if (mounted) setLoadingRecent(false);
             });
 
-        // --- 1. NEW: Load cached report from sessionStorage ---
         const loadCache = async () => {
             const cached = sessionStorage.getItem('reportCache');
             if (cached) {
                 try {
                     const data = JSON.parse(cached);
 
-                    // Restore filters
                     setFromDate(data.fromDate);
                     setToDate(data.toDate);
                     setDomain(data.domain);
                     setFormat(data.format);
 
-                    // Find and set selectedReport
                     const allReports = Object.values(DOMAIN_REPORTS).flat();
                     const report = allReports.find(r => r.id === data.selectedReportId);
                     if(report) setSelectedReport(report);
 
-                    // Restore preview data
                     if (data.excelData) {
                         setExcelData(data.excelData);
                     }
 
                     if (data.fileBase64) {
-                        // Re-create blob from Base64
                         const res = await fetch(data.fileBase64);
                         const blob = await res.blob();
                         setPreviewData({
                             blob: blob,
                             name: data.name,
-                            // For PDF, use the Base64 data URL. For Excel, create a new blob URL.
                             url: data.format === 'pdf' ? data.fileBase64 : window.URL.createObjectURL(blob)
                         });
                     }
@@ -231,12 +301,37 @@ const ReportsPage = () => {
         return () => (mounted = false);
     }, [apiUrl, showAlert]); // Only run on mount
 
-    const validationError = useMemo(() => { /* ... */ }, [fromDate, toDate]);
+    // --- UPDATED: Implemented validationError ---
+    const validationError = useMemo(() => {
+        if (!fromDate || !toDate) return null;
+        if (new Date(fromDate) > new Date(toDate)) {
+            return "From date cannot be after To date.";
+        }
+        if (!isRangeWithin12Months(fromDate, toDate)) {
+            return "Date range cannot be more than 12 months.";
+        }
+        return null;
+    }, [fromDate, toDate]);
+    // --- END UPDATED validationError ---
+
     const canGenerate = fromDate && toDate && selectedReport && format && !validationError && !isGenerating;
 
-    const handleDownload = () => { /* ... */ };
+    // --- UPDATED: Implemented handleDownload ---
+    const handleDownload = () => {
+        if (previewData.url && previewData.name) {
+            const a = document.createElement('a');
+            a.href = previewData.url;
+            a.download = previewData.name;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            // We don't revoke the blob URL, as it's needed for the preview.
+            // It's revoked by clearReportCache() on next generation.
+        }
+    };
+    // --- END UPDATED handleDownload ---
 
-    // --- MODIFIED: onGenerate (to save to cache) ---
+    // --- onGenerate (Unchanged, caching logic is already correct) ---
     const onGenerate = async (e) => {
         e.preventDefault();
         if (!canGenerate) return;
@@ -278,7 +373,7 @@ const ReportsPage = () => {
             const clean = str => str.replace(/\.+$/, "");
             const pureFileName = `${clean(selectedReport.name.replace(/\s+/g, '_'))}_${clean(dateTimeStr)}.${cleanExt}`;
 
-            // --- 1. NEW CACHE & PREVIEW LOGIC ---
+            // --- CACHE & PREVIEW LOGIC ---
             const fileBase64 = await fileReaderAsync(blob); // Convert blob to Base64
             let excelJson = null;
             let previewUrl = fileBase64; // For PDF, the base64 URL is the preview
@@ -428,14 +523,13 @@ const ReportsPage = () => {
                     </form>
                 </div>
 
-                {/* --- 2. Middle Column: Preview (UPDATED) --- */}
+                {/* --- 2. Middle Column: Preview (Unchanged) --- */}
                 <div className="report-column report-preview">
                     <div className="report-preview-header">
                         <h4>Report Preview</h4>
-                        {/* --- 2. NEW BUTTONS WRAPPER --- */}
                         <div className="preview-actions">
                             <button
-                                className="btn btn-email" // New class
+                                className="btn btn-email"
                                 onClick={() => setIsEmailModalOpen(true)}
                                 disabled={!previewData.blob}
                             >
@@ -452,7 +546,6 @@ const ReportsPage = () => {
                             </button>
                         </div>
                     </div>
-                    {/* --- Preview Content (Unchanged) --- */}
                     <div className="report-preview-content">
                         {isGenerating ? (
                             <div className="preview-placeholder">
@@ -477,7 +570,8 @@ const ReportsPage = () => {
                     </div>
                 </div>
 
-                {/* --- 3. Right Column: Recent (Unchanged) --- */}
+                {/* --- 3. Right Column: Recent (Unchanged, but will now render data) --- */}
+                {/* The `formatRange` and `timeAgo` functions will now populate data here */}
                 <div className="report-column report-recent">
                     <h3>Recent Reports</h3>
                     <div className="recent-reports-list">
@@ -506,7 +600,7 @@ const ReportsPage = () => {
 
             </div> {/* .reports-main-layout */}
 
-            {/* --- 2. NEW EMAIL MODAL RENDER --- */}
+            {/* --- Email Modal Render (Unchanged) --- */}
             {isEmailModalOpen && (
                 <EmailModal
                     show={isEmailModalOpen}
@@ -523,8 +617,7 @@ const ReportsPage = () => {
 };
 
 
-// --- 2. NEW EMAIL MODAL COMPONENT ---
-// This component is added to the same file to keep things simple
+// --- Email Modal Component ---
 const EmailModal = ({ show, onClose, apiUrl, showAlert, reportBlob, reportName }) => {
 
     const [emailList, setEmailList] = useState([]);
@@ -532,7 +625,6 @@ const EmailModal = ({ show, onClose, apiUrl, showAlert, reportBlob, reportName }
     const [isSending, setIsSending] = useState(false);
 
     const validateEmail = (email) => {
-        // Basic email validation regex
         return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     };
 
@@ -554,7 +646,6 @@ const EmailModal = ({ show, onClose, apiUrl, showAlert, reportBlob, reportName }
     };
 
     const handleEmailInputKeyDown = (e) => {
-        // Add email on Enter, Comma, or Space
         if (e.key === 'Enter' || e.key === ',' || e.key === ' ') {
             e.preventDefault();
             handleAddEmail();
@@ -567,22 +658,19 @@ const EmailModal = ({ show, onClose, apiUrl, showAlert, reportBlob, reportName }
 
     const handleSend = async () => {
         if (emailList.length === 0) {
-            // Check if there's a valid email in the input field
             if(validateEmail(currentEmail.trim())) {
-                await handleAddEmail(); // Add it first
+                await handleAddEmail();
             } else {
                 showAlert("Please add at least one valid email address.", "error");
                 return;
             }
         }
 
-        // Check again after potentially adding the last email
         if (emailList.length === 0 && !validateEmail(currentEmail.trim())) {
             showAlert("Please add at least one valid email address.", "error");
             return;
         }
 
-        // If the user typed an email but didn't press Enter, add it now.
         const lastEmail = currentEmail.trim();
         let finalEmailList = emailList;
         if (lastEmail && validateEmail(lastEmail) && !emailList.includes(lastEmail)) {
@@ -598,13 +686,13 @@ const EmailModal = ({ show, onClose, apiUrl, showAlert, reportBlob, reportName }
         const formData = new FormData();
         formData.append('file', reportBlob, reportName);
         formData.append('subject', `Report: ${reportName}`);
-        formData.append('to', finalEmailList.join(',')); // Send as comma-separated list
+        formData.append('to', finalEmailList.join(','));
 
         try {
             const response = await fetch(`${apiUrl}/api/shop/report/email`, {
                 method: 'POST',
                 credentials: 'include',
-                body: formData, // No Content-Type header needed, browser sets it
+                body: formData,
             });
 
             if (!response.ok) {
@@ -653,14 +741,36 @@ const EmailModal = ({ show, onClose, apiUrl, showAlert, reportBlob, reportName }
                     <label>Subject:</label>
                     <input type="text" value={reportName ? `Report: ${reportName}` : 'Report'} readOnly disabled />
                 </div>
-                <div className="form-actions">
-                    <button className="btn" onClick={handleSend} disabled={isSending}>
+
+                {/* --- UPDATED: Added inline styles for button layout --- */}
+                <div
+                    className="form-actions"
+                    style={{
+                        display: 'flex',
+                        justifyContent: 'flex-end',
+                        gap: '10px',
+                        marginTop: '20px'
+                    }}
+                >
+                    <button
+                        className="btn"
+                        onClick={handleSend}
+                        disabled={isSending}
+                        style={{ width: 'auto' }} // Fix for 'way too wide'
+                    >
                         {isSending ? "Sending..." : "Send"}
                     </button>
-                    <button className="btn btn-secondary" onClick={onClose} disabled={isSending}>
+                    <button
+                        className="btn btn-secondary"
+                        onClick={onClose}
+                        disabled={isSending}
+                        style={{ width: 'auto' }} // Fix for 'way too wide'
+                    >
                         Cancel
                     </button>
                 </div>
+                {/* --- END UPDATED --- */}
+
             </div>
         </Modal>
     );
