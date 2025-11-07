@@ -335,3 +335,75 @@
     top: 0; /* Make header sticky */
     z-index: 1;
 }
+
+.preview-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.btn-email {
+    background-color: #007bff; /* Blue */
+    color: white;
+}
+.btn-email:hover:not(:disabled) {
+    background-color: #0056b3;
+}
+.btn-email i {
+    margin-right: 0.5rem;
+}
+
+/* --- Email Modal Styles --- */
+.email-chip-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #fff;
+    cursor: text;
+}
+
+.email-chip-container input {
+    border: none;
+    outline: none;
+    flex-grow: 1;
+    min-width: 150px;
+    padding: 0.25rem;
+}
+
+.email-chip {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #e0e0e0;
+    padding: 0.25rem 0.75rem;
+    border-radius: 16px;
+    font-size: 0.9rem;
+}
+
+.email-chip button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    color: #555;
+    padding: 0;
+    line-height: 1;
+}
+
+.email-modal-content .form-group {
+    margin-bottom: 1.25rem;
+}
+
+.email-modal-content .form-group label {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.email-modal-content input[type="text"][disabled] {
+    background-color: #f4f4f4;
+    cursor: not-allowed;
+}
+
