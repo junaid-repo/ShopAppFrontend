@@ -1,94 +1,178 @@
 // context/BillingContext.js
-import { createContext, useContext, useState, useCallback, useMemo } from "react";
+import { createContext, useContext, useReducer, useEffect, useCallback } from "react";
 
 const BillingContext = createContext();
 export const useBilling = () => useContext(BillingContext);
 
-export const BillingProvider = ({ children }) => {
-    const [selectedCustomer, setSelectedCustomer] = useState(null);
-    const [cart, setCart] = useState([]);
-    const [paymentMethod, setPaymentMethod] = useState('CASH');
-    const [products, setProducts] = useState([]); // store products with stock
-    const [payingAmount, setPayingAmount] = useState(0);
-    const [isPayingAmountManuallySet, setIsPayingAmountManuallySet] = useState(false);
+const BILLING_SESSION_KEY = 'billingContextState';
 
-    // --- All context functions are now wrapped in useCallback ---
+// 1. Define the default state
+const initialState = {
+    selectedCustomer: null,
+    cart: [],
+    paymentMethod: 'CASH',
+    products: [], // This is transient search data, won't be saved
+    payingAmount: 0,
+    isPayingAmountManuallySet: false,
+};
 
-    const loadProducts = useCallback((productList) => {
-        setProducts(productList);
-    }, []);
+// 2. Create a "lazy initializer" to load state from session storage
+const loadState = () => {
+    try {
+        const savedState = sessionStorage.getItem(BILLING_SESSION_KEY);
+        if (savedState) {
+            // Parse the saved state and reset transient data like 'products'
+            return { ...JSON.parse(savedState), products: [] };
+        }
+    } catch (e) {
+        console.error("Failed to load billing state from session storage", e);
+        sessionStorage.removeItem(BILLING_SESSION_KEY);
+    }
+    // Return default state if nothing is saved
+    return initialState;
+};
 
-    const addProduct = useCallback((product) => {
-        if (product.stock <= 0) return; // no stock, no adding
+// 3. Create a reducer to handle all state changes
+const billingReducer = (state, action) => {
+    switch (action.type) {
+        case 'LOAD_PRODUCTS':
+            return { ...state, products: action.payload };
 
-        // Note: Stock is now managed within the product data itself,
-        // so we don't need to manage a separate `products` list state here.
-        // The stock check is sufficient.
+        case 'ADD_PRODUCT': {
+            const product = action.payload;
+            if (product.stock <= 0) return state; // No stock, no change
 
-        setCart(prev => {
-            const existing = prev.find(item => item.id === product.id);
+            const existing = state.cart.find(item => item.id === product.id);
+            let newCart;
             if (existing) {
-                // Increment quantity if item exists
-                return prev.map(item =>
+                // Increment quantity
+                newCart = state.cart.map(item =>
                     item.id === product.id
                         ? { ...item, quantity: item.quantity + 1 }
                         : item
                 );
+            } else {
+                // Add new item
+                newCart = [...state.cart, { ...product, quantity: 1, details: product.details || '' }];
             }
-            // Add new item to cart
-            return [...prev, { ...product, quantity: 1, details: product.details || '' }];
-        });
+            return { ...state, cart: newCart };
+        }
+
+        case 'REMOVE_PRODUCT':
+            return {
+                ...state,
+                cart: state.cart.filter(item => item.id !== action.payload.productId)
+            };
+
+        case 'UPDATE_CART_ITEM':
+            return {
+                ...state,
+                cart: state.cart.map(item =>
+                    item.id === action.payload.productId
+                        ? { ...item, ...action.payload.changes }
+                        : item
+                )
+            };
+
+        case 'CLEAR_BILL':
+            // Reset to default, but keep the 'products' list
+            return { ...initialState, products: state.products };
+
+        case 'SET_CUSTOMER':
+            return { ...state, selectedCustomer: action.payload };
+
+        case 'SET_PAYMENT_METHOD':
+            return { ...state, paymentMethod: action.payload };
+
+        case 'SET_PAYING_AMOUNT':
+            return {
+                ...state,
+                payingAmount: action.payload // Any manual set triggers this
+            };
+
+        case 'SET_MANUAL_PAY_FLAG':
+            return { ...state, isPayingAmountManuallySet: action.payload };
+
+        default:
+            return state;
+    }
+};
+
+// 4. Create the provider
+export const BillingProvider = ({ children }) => {
+
+    // 5. Use the reducer, passing the 'loadState' function as the initializer
+    // This runs ONCE on load, before the component renders
+    const [state, dispatch] = useReducer(billingReducer, null, loadState);
+
+    // 6. Use useEffect to SAVE state to session storage on *every* change
+    useEffect(() => {
+        // We don't need to save the 'products' search list,
+        // so we destructure it out before saving.
+        const { products, ...stateToSave } = state;
+        sessionStorage.setItem(BILLING_SESSION_KEY, JSON.stringify(stateToSave));
+    }, [state]); // This dependency array saves on ANY state change
+
+    // 7. Define dispatch functions (memoized with useCallback)
+    const loadProducts = useCallback((productList) => {
+        dispatch({ type: 'LOAD_PRODUCTS', payload: productList });
+    }, []);
+
+    const addProduct = useCallback((product) => {
+        dispatch({ type: 'ADD_PRODUCT', payload: product });
     }, []);
 
     const removeProduct = useCallback((productId) => {
-        setCart(prev => prev.filter(item => item.id !== productId));
+        dispatch({ type: 'REMOVE_PRODUCT', payload: { productId } });
     }, []);
 
     const updateCartItem = useCallback((productId, changes) => {
-        setCart(prev => prev.map(item => item.id === productId ? { ...item, ...changes } : item));
+        dispatch({ type: 'UPDATE_CART_ITEM', payload: { productId, changes } });
     }, []);
 
     const clearBill = useCallback(() => {
-        setSelectedCustomer(null);
-        setCart([]);
-        setPaymentMethod('CASH');
-        setPayingAmount(0);
-        setIsPayingAmountManuallySet(false);
+        dispatch({ type: 'CLEAR_BILL' });
     }, []);
 
-    // --- The context value is wrapped in useMemo for performance ---
-    // This ensures the value object is not recreated on every render
-    const value = useMemo(() => ({
-        selectedCustomer,
+    const setSelectedCustomer = useCallback((customer) => {
+        dispatch({ type: 'SET_CUSTOMER', payload: customer });
+    }, []);
+
+    const setPaymentMethod = useCallback((method) => {
+        dispatch({ type: 'SET_PAYMENT_METHOD', payload: method });
+    }, []);
+
+    const setPayingAmount = useCallback((amount) => {
+        dispatch({ type: 'SET_PAYING_AMOUNT', payload: amount });
+    }, []);
+
+    const setIsPayingAmountManuallySet = useCallback((isManual) => {
+        dispatch({ type: 'SET_MANUAL_PAY_FLAG', payload: isManual });
+    }, []);
+
+    // 8. Define the context value
+    // This no longer needs useMemo because 'state' is a stable object
+    // and all functions are wrapped in useCallback.
+    const value = {
+        // State values
+        selectedCustomer: state.selectedCustomer,
+        cart: state.cart,
+        paymentMethod: state.paymentMethod,
+        products: state.products,
+        payingAmount: state.payingAmount,
+        isPayingAmountManuallySet: state.isPayingAmountManuallySet,
+
+        // Setter functions
         setSelectedCustomer,
-        cart,
         addProduct,
         removeProduct,
-        paymentMethod,
         setPaymentMethod,
         clearBill,
-        products,
         loadProducts,
         updateCartItem,
-        // --- Add these four new values ---
-        payingAmount,
         setPayingAmount,
-        isPayingAmountManuallySet,
         setIsPayingAmountManuallySet
-    }), [
-        selectedCustomer,
-        cart,
-        paymentMethod,
-        products,
-        // --- Add the 4 new values to the dependency array ---
-        payingAmount,
-        isPayingAmountManuallySet,
-        addProduct,
-        removeProduct,
-        clearBill,
-        loadProducts,
-        updateCartItem
-    ]);
+    };
 
     return (
         <BillingContext.Provider value={value}>

@@ -88,6 +88,10 @@ const BillingPage = ({ setSelectedPage }) => {
     const [isCustomerLoading, setIsCustomerLoading] = useState(false);
     const [isShortcutListVisible, setIsShortcutListVisible] = useState(false); // <-- ADD THIS
 
+    const [useGstinBill, setUseGstinBill] = useState(false);
+    const [gstinNumber, setGstinNumber] = useState("");
+    const [useCustomerGstin, setUseCustomerGstin] = useState(false);
+   // const BILLING_SESSION_KEY = 'billingPageData';
     // --- NEW: Refs for Hotkeys ---
     const productSearchInputRef = useRef(null);
     const [highlightedIndex, setHighlightedIndex] = useState(-1);
@@ -155,7 +159,18 @@ const BillingPage = ({ setSelectedPage }) => {
     const handleNewBilling = () => {
         clearBill();
         setProductSearchTerm("");
+        setRemarks("");
+        setUseGstinBill(false);
+        setGstinNumber("");
+        setUseCustomerGstin(false);
+        setIsPayingAmountManuallySet(false); // Reset the manual override
+        setPayingAmount(0);
     };
+
+    const isGstinInvalid = useMemo(() => {
+        // If "Use GSTIN Bill" is checked, the gstinNumber MUST have a value
+        return useGstinBill && (!gstinNumber || gstinNumber.trim() === "");
+    }, [useGstinBill, gstinNumber]);
 
 
     const handlePreview = () => {
@@ -170,6 +185,10 @@ const BillingPage = ({ setSelectedPage }) => {
     const processPayment = async (paymentProviderPayload = {}) => {
         if (!selectedCustomer || cart.length === 0) {
             showAlert('Please select a customer and add products.');
+            return;
+        }
+        if (isGstinInvalid) {
+            showAlert('"Use GSTIN Bill" is selected, but no GSTIN has been provided.', 'error');
             return;
         }
         setLoading(true);
@@ -197,6 +216,7 @@ const BillingPage = ({ setSelectedPage }) => {
             remarks,
             payingAmount: payingAmount,
             remainingAmount: remainingAmount,
+            gstin: useGstinBill ? gstinNumber : null,
             ...paymentProviderPayload
         };
 
@@ -300,6 +320,40 @@ const BillingPage = ({ setSelectedPage }) => {
         fetchDailyCount();
     }, [apiUrl, isPremium]);
 
+
+
+// --- NEW: Session Storage LOADING Effect ---
+// This effect runs ONCE on page load to restore state
+
+    useEffect(() => {
+        if (useGstinBill && useCustomerGstin) {
+            // If the "Use Customer GSTIN" is active, sync it
+            setGstinNumber(selectedCustomer?.gstNumber || "");
+        }
+    }, [selectedCustomer, useGstinBill, useCustomerGstin]);
+
+    // --- NEW: Handler for Use Customer GSTIN checkbox ---
+    const handleUseCustomerGstinToggle = (e) => {
+        const isChecked = e.target.checked;
+        setUseCustomerGstin(isChecked);
+
+        if (isChecked) {
+            // Populate from selectedCustomer and freeze
+            if (selectedCustomer && selectedCustomer.gstNumber) {
+                setGstinNumber(selectedCustomer.gstNumber);
+            } else {
+                setGstinNumber(""); // Clear it if no GSTIN found
+                if (selectedCustomer) {
+                    showAlert("Selected customer does not have a GSTIN.", "warning");
+                } else {
+                    showAlert("Please select a customer first.", "warning");
+                }
+            }
+        } else {
+            // Uncheck, clear the field so user can type
+            setGstinNumber("");
+        }
+    };
 
     // --- NEW: All Hotkeys ---
 
@@ -1311,8 +1365,19 @@ const BillingPage = ({ setSelectedPage }) => {
                                         ref={remarksRef}
                                         value={payingAmount}
                                         onChange={(e) => {
-                                            setPayingAmount(parseFloat(e.target.value) || 0);
-                                            setIsPayingAmountManuallySet(true);
+                                            const rawValue = e.target.value;
+
+                                            if (rawValue === "") {
+                                                // User cleared the input.
+                                                // Reset amount to 0 AND reset the manual flag.
+                                                setPayingAmount(0);
+                                                setIsPayingAmountManuallySet(false);
+                                            } else {
+                                                // User typed a number.
+                                                // Set the amount AND set the manual flag.
+                                                setPayingAmount(parseFloat(rawValue) || 0);
+                                                setIsPayingAmountManuallySet(true);
+                                            }
                                         }}
                                         style={{
                                             width: '40%',
@@ -1359,6 +1424,61 @@ const BillingPage = ({ setSelectedPage }) => {
                                 />
                             </div>
                         )}
+
+                        <div className="gstin-section" style={{ margin: '1rem 0', padding: '10px', border: '1px solid var(--border-color)', borderRadius: '15px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <input
+                                    type="checkbox"
+                                    id="useGstinBill"
+                                    style={{ width: 'auto' }}
+                                    checked={useGstinBill}
+                                    onChange={(e) => {
+                                        setUseGstinBill(e.target.checked);
+                                        if (!e.target.checked) { // Clear on uncheck
+                                            setGstinNumber("");
+                                            setUseCustomerGstin(false);
+                                        }
+                                    }}
+                                />
+                                <label htmlFor="useGstinBill" style={{ fontWeight: 500, color: 'var(--primary-color)', cursor: 'pointer' }}>
+                                    Use GSTIN Bill
+                                </label>
+                            </div>
+
+                            {useGstinBill && (
+                                <div className="gstin-input-wrapper" style={{ marginTop: '10px', paddingLeft: '10px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                                        <input
+                                            type="checkbox"
+                                            id="useCustomerGstin"
+                                            style={{ width: 'auto' }}
+                                            checked={useCustomerGstin}
+                                            onChange={handleUseCustomerGstinToggle}
+                                        />
+                                        <label htmlFor="useCustomerGstin" style={{ fontSize: '0.9em', cursor: 'pointer' }}>
+                                            Use Customer GSTIN
+                                        </label>
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={gstinNumber}
+                                        onChange={(e) => setGstinNumber(e.target.value.toUpperCase())}
+                                        placeholder="Enter GSTIN..."
+                                        disabled={useCustomerGstin} // Freeze if checkbox is ticked
+                                        style={{
+                                            width: '100%',
+                                            padding: '10px',
+                                            borderRadius: '15px',
+                                            border: '1px solid var(--border-color)',
+                                            background: useCustomerGstin ? 'var(--input-bg-disabled)' : 'var(--input-bg)',
+                                            color: 'var(--text-color)',
+                                            fontSize: '1rem',
+                                            textTransform: 'uppercase'
+                                        }}
+                                    />
+                                </div>
+                            )}
+                        </div>
 
                         {/* --- UPDATED: Add ref, tabIndex, and hint --- */}
                         <div

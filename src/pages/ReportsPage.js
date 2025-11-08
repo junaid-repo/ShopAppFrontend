@@ -3,7 +3,7 @@ import { useConfig } from "./ConfigProvider";
 import { useAlert } from '../context/AlertContext';
 import * as XLSX from 'xlsx';
 import Modal from '../components/Modal';
-
+import toast, { Toaster } from 'react-hot-toast';
 import './ReportsPage.css';
 
 // --- Report Data (Unchanged) ---
@@ -225,7 +225,7 @@ const ReportsPage = () => {
     const [loadingRecent, setLoadingRecent] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
     const [excelData, setExcelData] = useState(null);
-
+    const [previewFormat, setPreviewFormat] = useState(null);
     const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
 
     const config = useConfig();
@@ -280,7 +280,7 @@ const ReportsPage = () => {
                     if (data.excelData) {
                         setExcelData(data.excelData);
                     }
-
+                    setPreviewFormat(data.format);
                     if (data.fileBase64) {
                         const res = await fetch(data.fileBase64);
                         const blob = await res.blob();
@@ -342,7 +342,7 @@ const ReportsPage = () => {
         // Clear local state
         setPreviewData({ blob: null, name: null, url: null });
         setExcelData(null);
-
+        setPreviewFormat(null);
         try {
             const payload = {
                 reportType: selectedReport.name,
@@ -383,13 +383,13 @@ const ReportsPage = () => {
                 const workbook = XLSX.read(buffer, { type: 'buffer' });
                 const sheetName = workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[sheetName];
-                excelJson = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                excelJson = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
                 setExcelData(excelJson);
                 previewUrl = window.URL.createObjectURL(blob); // For Excel, create a blob URL
             }
 
             setPreviewData({ blob: blob, name: pureFileName, url: previewUrl });
-
+            setPreviewFormat(format);
             // Save to sessionStorage
             sessionStorage.setItem('reportCache', JSON.stringify({
                 fromDate,
@@ -446,6 +446,18 @@ const ReportsPage = () => {
 
     return (
         <div className="page-container reports-page">
+
+            <Toaster position="top-center" toastOptions={{
+                duration: 2000,
+                style: {
+                    background: 'lightgreen',
+                    color: 'var(--text-color)',
+                    borderRadius: '25px',
+                    padding: '12px',
+                    width: '3500px',
+                    fontSize: '16px',
+                },
+            }} reverseOrder={false} />
             <div className="reports-main-layout">
 
                 {/* --- 1. Left Column: Filters (Unchanged) --- */}
@@ -551,7 +563,7 @@ const ReportsPage = () => {
                             <div className="preview-placeholder">
                                 <p>Generating your report, please wait...</p>
                             </div>
-                        ) : format === 'pdf' && previewData.url ? (
+                        ) : previewFormat === 'pdf' && previewData.url ? ( // <-- CHANGED
                             <iframe
                                 src={previewData.url}
                                 title="Report Preview"
@@ -559,7 +571,7 @@ const ReportsPage = () => {
                                 height="100%"
                                 frameBorder="0"
                             ></iframe>
-                        ) : format === 'excel' && excelData ? (
+                        ) : previewFormat === 'excel' && excelData ? ( // <-- CHANGED
                             <ExcelPreview data={excelData} />
                         ) : (
                             <div className="preview-placeholder">
@@ -632,16 +644,16 @@ const EmailModal = ({ show, onClose, apiUrl, showAlert, reportBlob, reportName }
         const email = currentEmail.trim();
 
         if (emailList.length >= 10) {
-            showAlert("You can add at most 10 email addresses.", "error");
+            alert("You can add at most 10 email addresses.", "error");
             return;
         }
         if (email && validateEmail(email) && !emailList.includes(email)) {
             setEmailList([...emailList, email]);
             setCurrentEmail("");
         } else if (email && !validateEmail(email)) {
-            showAlert("Please enter a valid email address.", "error");
+            alert("Please enter a valid email address.", "error");
         } else if (emailList.includes(email)) {
-            showAlert("Email already in the list.", "warning");
+            alert("Email already in the list.", "warning");
         }
     };
 
@@ -700,7 +712,7 @@ const EmailModal = ({ show, onClose, apiUrl, showAlert, reportBlob, reportName }
                 throw new Error(errorData.message || "Failed to send email.");
             }
 
-            showAlert("Report sent successfully!", "success");
+            toast.success("Report sent successfully!", "success");
             onClose();
 
         } catch (err) {

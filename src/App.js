@@ -150,7 +150,11 @@ function AppContent() {
                         } else {
                             setTheme('light');
                         }
-                        // ... (rest of your settings logic)
+                        localStorage.setItem('autoPrintInvoice', settingsData.ui.autoPrintInvoice);
+                        localStorage.setItem('autoSendInvoice', settingsData.billing.autoSendInvoice);
+                        localStorage.setItem('doParitalBilling', settingsData.billing.showPartialPaymentOption);
+                        localStorage.setItem('showRemarksOptions', settingsData.billing.showRemarksOnSummarySide);
+
                     } else {
                         console.warn("Could not fetch user UI settings. Using defaults.");
                     }
