@@ -520,6 +520,9 @@ const SalesPage = () => {
                         <th style={{ cursor: 'pointer' }} onClick={() => toggleSort('customer')}>
                             Customer {hasSortActive && sortConfig.key === 'customer' ? (sortConfig.direction === 'asc' ? ' ▲' : ' ▼') : ''}
                         </th>
+                        <th style={{ cursor: 'pointer' }} onClick={() => toggleSort('gstin')}>
+                            Gstin {hasSortActive && sortConfig.key === 'gstin' ? (sortConfig.direction === 'asc' ? ' ▲' : ' ▼') : ''}
+                        </th>
 
                         {/* CORRECTED: Changed 'createdAt' to 'date' */}
                         <th style={{ cursor: 'pointer' }} onClick={() => toggleSort('date')}>
@@ -563,6 +566,7 @@ const SalesPage = () => {
                             >
                                 <td>{sale.id}</td>
                                 <td>{sale.customer}</td>
+                                <td>{sale.gstin}</td>
                                 <td>{formatDate(sale.date)}</td>
                                 <td>₹{sale.total.toLocaleString()}</td>
                                 <td>₹{sale.paid.toLocaleString()}</td>
@@ -745,7 +749,7 @@ const SalesPage = () => {
 
                         {/* Box 2: Order Items */}
                         <div className="order-box">
-                            <h3><MdShoppingCart size={24} /> Order Items</h3>
+                            <h3><MdShoppingCart size={24} /> Order Items   <p style={{marginLeft: '10rem'}}>GSTNumber:  {selectedOrder.gstNumber}</p></h3>
                             <table className="order-items-table">
                                 <thead>
                                 <tr>

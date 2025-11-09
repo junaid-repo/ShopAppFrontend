@@ -468,6 +468,7 @@ const ReportsPage = () => {
                         <div className="form-group">
                             <label>From date</label>
                             <input
+                                className="date-input"
                                 type="date"
                                 value={fromDate}
                                 onChange={(e) => setFromDate(e.target.value)}
@@ -478,6 +479,7 @@ const ReportsPage = () => {
                         <div className="form-group">
                             <label>To date</label>
                             <input
+                                className="date-input"
                                 type="date"
                                 value={toDate}
                                 onChange={(e) => setToDate(e.target.value)}
@@ -546,7 +548,7 @@ const ReportsPage = () => {
                                 disabled={!previewData.blob}
                             >
                                 <i className="fa-solid fa-paper-plane"></i>
-                                Email
+                                Send via Email
                             </button>
                             <button
                                 className="btn btn-download"

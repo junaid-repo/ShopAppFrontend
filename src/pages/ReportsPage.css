@@ -13,6 +13,13 @@
     min-height: 0; /* Fix for flexbox overflow */
 }
 
+.page-container.reports-page {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;  /* This makes it fill its parent container */
+    min-height: 0; /* This is the key. It allows the container to shrink */
+}
+
 /* Base style for all 3 columns */
 .report-column {
     display: flex;
@@ -311,8 +318,8 @@
 /* --- NEW: Excel Preview Table Styles --- */
 .excel-preview-container {
     width: 100%;
-    flex-grow: 1;
-    overflow: auto; /* Add scrollbars if table is too big */
+    height: 100%;  /* <-- CHANGE: Replaced flex-grow: 1 */
+    overflow: auto; /* This will now work perfectly */
     background: var(--glass-bg);
 }
 

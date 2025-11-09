@@ -42,7 +42,10 @@ const BillingPage = ({ setSelectedPage }) => {
         payingAmount,
         setPayingAmount,
         isPayingAmountManuallySet,
-        setIsPayingAmountManuallySet
+        setIsPayingAmountManuallySet,
+        useGstinBill, setUseGstinBill,
+        gstinNumber, setGstinNumber,
+        useCustomerGstin, setUseCustomerGstin
     } = useBilling();
 
     // --- Component State ---
@@ -88,9 +91,7 @@ const BillingPage = ({ setSelectedPage }) => {
     const [isCustomerLoading, setIsCustomerLoading] = useState(false);
     const [isShortcutListVisible, setIsShortcutListVisible] = useState(false); // <-- ADD THIS
 
-    const [useGstinBill, setUseGstinBill] = useState(false);
-    const [gstinNumber, setGstinNumber] = useState("");
-    const [useCustomerGstin, setUseCustomerGstin] = useState(false);
+
    // const BILLING_SESSION_KEY = 'billingPageData';
     // --- NEW: Refs for Hotkeys ---
     const productSearchInputRef = useRef(null);
@@ -160,9 +161,7 @@ const BillingPage = ({ setSelectedPage }) => {
         clearBill();
         setProductSearchTerm("");
         setRemarks("");
-        setUseGstinBill(false);
-        setGstinNumber("");
-        setUseCustomerGstin(false);
+
         setIsPayingAmountManuallySet(false); // Reset the manual override
         setPayingAmount(0);
     };

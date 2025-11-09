@@ -156,7 +156,7 @@ body {
 .btn {
     padding: 0.75rem 1.5rem;
     border-radius: 25px;
-    background: rgba(0, 170, 255, 0.12) ; /* faint glassy background */
+    background: var(--primary-color-light) ; /* faint glassy background */
     border: 1px solid rgba(0, 170, 255, 0.3); /* visible faint border */
     backdrop-filter: blur(8px); /* frosted effect */
     -webkit-backdrop-filter: blur(8px);

@@ -14,6 +14,9 @@ const initialState = {
     products: [], // This is transient search data, won't be saved
     payingAmount: 0,
     isPayingAmountManuallySet: false,
+    useGstinBill: false,
+    gstinNumber: "",
+    useCustomerGstin: false,
 };
 
 // 2. Create a "lazy initializer" to load state from session storage
@@ -93,6 +96,15 @@ const billingReducer = (state, action) => {
         case 'SET_MANUAL_PAY_FLAG':
             return { ...state, isPayingAmountManuallySet: action.payload };
 
+        case 'SET_USE_GSTIN_BILL':
+            return { ...state, useGstinBill: action.payload };
+
+        case 'SET_GSTIN_NUMBER':
+            return { ...state, gstinNumber: action.payload };
+
+        case 'SET_USE_CUSTOMER_GSTIN':
+            return { ...state, useCustomerGstin: action.payload };
+
         default:
             return state;
     }
@@ -150,6 +162,18 @@ export const BillingProvider = ({ children }) => {
         dispatch({ type: 'SET_MANUAL_PAY_FLAG', payload: isManual });
     }, []);
 
+    const setUseGstinBill = useCallback((value) => {
+        dispatch({ type: 'SET_USE_GSTIN_BILL', payload: value });
+    }, []);
+
+    const setGstinNumber = useCallback((value) => {
+        dispatch({ type: 'SET_GSTIN_NUMBER', payload: value });
+    }, []);
+
+    const setUseCustomerGstin = useCallback((value) => {
+        dispatch({ type: 'SET_USE_CUSTOMER_GSTIN', payload: value });
+    }, []);
+
     // 8. Define the context value
     // This no longer needs useMemo because 'state' is a stable object
     // and all functions are wrapped in useCallback.
@@ -161,6 +185,9 @@ export const BillingProvider = ({ children }) => {
         products: state.products,
         payingAmount: state.payingAmount,
         isPayingAmountManuallySet: state.isPayingAmountManuallySet,
+        useGstinBill: state.useGstinBill,
+        gstinNumber: state.gstinNumber,
+        useCustomerGstin: state.useCustomerGstin,
 
         // Setter functions
         setSelectedCustomer,
@@ -171,7 +198,10 @@ export const BillingProvider = ({ children }) => {
         loadProducts,
         updateCartItem,
         setPayingAmount,
-        setIsPayingAmountManuallySet
+        setIsPayingAmountManuallySet,
+        setUseGstinBill,
+        setGstinNumber,
+        setUseCustomerGstin
     };
 
     return (
