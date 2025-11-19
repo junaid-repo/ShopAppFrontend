@@ -1424,12 +1424,13 @@ const BillingPage = ({ setSelectedPage }) => {
                             </div>
                         )}
 
-                        <div className="gstin-section" style={{ margin: '1rem 0', padding: '10px', border: '1px solid var(--border-color)', borderRadius: '15px' }}>
+                        <div className="gstin-section" style={{ margin: '1rem 0', padding: '10px', border: '1px solid var(--border-color)', background:'var(--primary-color-light)', borderRadius: '15px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 <input
                                     type="checkbox"
                                     id="useGstinBill"
-                                    style={{ width: 'auto' }}
+                                    className="styled-checkbox"
+                                   // style={{ width: 'auto' }}
                                     checked={useGstinBill}
                                     onChange={(e) => {
                                         setUseGstinBill(e.target.checked);
@@ -1450,7 +1451,8 @@ const BillingPage = ({ setSelectedPage }) => {
                                         <input
                                             type="checkbox"
                                             id="useCustomerGstin"
-                                            style={{ width: 'auto' }}
+                                            className="styled-checkbox"
+
                                             checked={useCustomerGstin}
                                             onChange={handleUseCustomerGstinToggle}
                                         />

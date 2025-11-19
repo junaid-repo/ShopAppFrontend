@@ -69,7 +69,7 @@ const SalesPage = () => {
             const response = await axios.get(`${apiUrl}/api/shop/get/sales`, {
                 params: {
                     // Use page - 1 for backend's 0-based index
-                    page: page - 1,
+                    page: page,
                     size: pageSize,
                     search: finalSearchTerm || '', // Use the determined search term
                     sort: sortConfig.key,

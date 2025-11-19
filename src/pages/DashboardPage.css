@@ -121,6 +121,22 @@
   justify-content: center;
 }
 
+.dark-theme .delete-btn {
+    position: absolute;
+    right: 0.5rem;
+    bottom: 1.1rem;
+    background-color: #890c0c;
+    color:  #ffebee;
+    border: none;
+    border-radius: 20%;
+    padding: 0.4rem;
+    cursor: pointer;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 
 .delete-btn:hover {
     background-color: #e22438;
@@ -155,6 +171,38 @@
     align-items: center;
     justify-content: center;
 }
+
+.dark-theme .edit-btn {
+    position: absolute;
+    right: 2.9rem;
+    bottom: 1.1rem;
+    background-color: #486a6f;
+    color: #14edd4;
+    border: none;
+    border-radius: 20%;
+    padding: 0.4rem;
+    cursor: pointer;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.dark-theme .viewsales-btn {
+    position: absolute;
+    right: 5.5rem;
+    bottom: 1.1rem;
+    background-color: #486a6f;
+    color: #14edd4;
+    border: none;
+    border-radius: 20%;
+    padding: 0.4rem;
+    cursor: pointer;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .viewsales-btn:hover{
     background-color: #acd6db;
 }
